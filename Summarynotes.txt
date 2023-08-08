@@ -59,8 +59,12 @@ We use the Path() to create a URL pattern object
 
 Every django app can have its own url configuration module. But you need to add it to the main URL configuration for this project 
 
+FINISHED SETTING UP DEPENDENCIES 
+python manage.py makemigrations -helps in creating or modify our database tables.
 
+----Sarting project
 
+python manage.py makemigrations
 
 
 
