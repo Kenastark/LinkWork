@@ -1,0 +1,64 @@
+python3 --version - Used to check the version of python currently running`
+
+pip3 install pipenv - 
+
+pipenv is a dependency management tool for installing application dependencies in virtual environment. This prevents or application dependencies from clashing with other application dependencies.
+
+pipenv install Django - Used to install the Django package
+
+code . -Used to open the folder in VS code
+
+pipenv shell -Used to activate the virtual environment so we use the python interpreter inside the virtual environment and not the one installed globally on this machine
+
+django-admin -Used to start a new project. It is a utility that comes with django
+
+django-admin startproject <projectname> - Used to create a new Django project. Add a period (.) after the project name to use the current directory as the project directory
+
+__init.py__ -Defines this directory as a package 
+
+settings.py - Where we define the settings for our application
+
+urls.py -where we define the URLs of our application 
+
+asgi.py and wsgi.py - Are used for deployment 
+
+manage.py is a wrapper around django admin. Going forward we will use manage.py. The reason is that manage.py takes the settings of this project into account.
+
+python manage.py runserver <portnumber> - Used to start a web server. Default is port 8000
+
+
+
+
+pipenv --venv - USed to find the path to our virtual environment
+
+Every Django project is essentially a collection of various apps, each providing certain functionality
+
+'django.contrib.sessions' app - A session is a temporary memory on the server for managing user data
+
+ctrl + l - Used to clear terminal window
+
+python manage.py startapp <Appname> -Used to create a new django app. All django app have the exact same structure.
+
+Migrations folder is used for generating database tables
+
+admin.py module -where we define how the admin interface for this app is going to look like
+
+apps.py module is where we configure the app
+
+models.py module is where we define the model classes for this app. We use model classes to pull out data from the database and present to the user
+
+tests.py module where we write our unit test.
+
+NOTE: Anytime you create a new app, you have the register it in the list of INSTALLED_APPS
+
+
+
+
+
+
+
+
+
+
+
+
