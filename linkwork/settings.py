@@ -92,7 +92,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'linkwork',
-        'HOST': 'root',
+        'HOST': 'localhost',
         'PASSWORD': 'kena199892'
     }
 }
