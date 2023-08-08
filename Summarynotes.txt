@@ -51,7 +51,13 @@ tests.py module where we write our unit test.
 
 NOTE: Anytime you create a new app, you have the register it in the list of INSTALLED_APPS
 
+pipenv install django-debug-toolbar - to install to toolbar in terminal. Add it in the list of INSTALLED_APPS. Also create a path for it in urls.py
 
+Add a Middleware - Use middleware to hook into django's request response processing
+
+We use the Path() to create a URL pattern object
+
+Every django app can have its own url configuration module. But you need to add it to the main URL configuration for this project 
 
 
 
