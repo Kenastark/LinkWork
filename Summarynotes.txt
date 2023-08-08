@@ -64,11 +64,15 @@ python manage.py makemigrations -helps in creating or modify our database tables
 
 ----Sarting project
 
-python manage.py makemigrations
+python manage.py makemigrations - to build our models
 
+cmd + T - Go to symbol (class function, variable)
 
+shft + cmd + O - to symbol editor variables classes and functions 
 
+python manage.py migrate -Used ot generate our database tables
 
+python manage.py sqlmigrate - Used to see the SQL command that is sent to our database at runtime
 
 
 
