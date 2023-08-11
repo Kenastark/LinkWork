@@ -75,4 +75,19 @@ python manage.py migrate -Used ot generate our database tables
 python manage.py sqlmigrate - Used to see the SQL command that is sent to our database at runtime
 
 
+2 - What are RESTful APIs?
+
+Building an API is simply building an interface that client apps can use to get or save data
+
+
+
+
+
+
+
+
+
+
+
+
 
