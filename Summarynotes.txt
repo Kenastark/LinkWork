@@ -77,7 +77,22 @@ python manage.py sqlmigrate - Used to see the SQL command that is sent to our da
 
 2 - What are RESTful APIs?
 
-Building an API is simply building an interface that client apps can use to get or save data
+Building an API is simply building an interface that client apps can use to get or save data.
+
+An API is going to have a bunch of endpoints (/products, /carts, /orders) for different purposes. Client apps send requests to these endpoints
+
+Representational State Transfer (REST) - It defines a bunch for rules for clients and servers to communicate over the web. Following these rules help build systems that are:
+1. Fast
+2. Scalable
+3. Reliable
+4. Easy to understand
+5. Easy to change
+
+An API that conforms to the following rules are RESTful:
+1. Resources
+2. Representations 
+3. HTTP Methods
+
 
 
 
