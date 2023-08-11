@@ -118,6 +118,17 @@ JSON - It is a notation for representating objects in JavaScript
 
 5 - HTTP METHODS
 
+When building a REST API, you expose one or more endpoints for clients.
+
+Using HTTP Methods, the clients can tell the server what it wants to do with the resources
+GET - Getting a resource or collection of resource
+POST - for creating a resource POST /products
+PUT - Updating a resource
+PATCH - Updating part of it PATCH /products/1
+DELETE - Deleting a resource DELETE /products/1
+
+6 - Installing Django REST Framework
+
 
 
 
