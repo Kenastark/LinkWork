@@ -129,9 +129,11 @@ DELETE - Deleting a resource DELETE /products/1
 
 6 - Installing Django REST Framework
 
+It is a separate framework that sits on top on Django and makes it easy to build RESTful APIs
 
+`pipenv install djangorestframework`- To install the REST framework
 
-
+Then add it to the list of INSTALLED_APPS
 
 
 
