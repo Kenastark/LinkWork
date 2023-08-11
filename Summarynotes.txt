@@ -103,9 +103,20 @@ URL is a way to locate a Resource on the Web, it is a web address
 
 4 - Resource Representations
 
+We can identify a Resource using its URL. When we go to that URL, the server will return the Resource in a certain format or Representation such as HTML, XML, JSON none of which are the internal representation of a Resource on a server.
 
+On the Server, we identify a Resource using an Object or an instance of a python class. We return this object as either HTML, XML, JSON.  
 
+JSON - It is a notation for representating objects in JavaScript
+{
+    "name": "Kena",
+    "age": 24,
+    "is_online": True,
+    "employer": {},
+    "interests": []
+}
 
+5 - HTTP METHODS
 
 
 
