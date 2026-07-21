@@ -14,6 +14,7 @@ app.use(session({
 }));
 
 // ---------- helpers ----------
+const POLICY_VERSION = '2026-07-21';
 const STAGES = ['applied', 'skill_test', 'ai_interview', 'company_test', 'hr_interview', 'tech_interview', 'hired'];
 const nextStage = (s) => STAGES[Math.min(STAGES.indexOf(s) + 1, STAGES.length - 1)];
 
@@ -24,7 +25,15 @@ function requireAuth(role) {
     next();
   };
 }
-const publicUser = (u) => u && ({ id: u.id, role: u.role, email: u.email, name: u.name, university_id: u.university_id, faculty_id: u.faculty_id, major: u.major, doc_status: u.doc_status });
+function publicUser(u) {
+  if (!u) return u;
+  const base = { id: u.id, role: u.role, email: u.email, name: u.name, university_id: u.university_id, faculty_id: u.faculty_id, major: u.major, doc_status: u.doc_status };
+  if (u.role === 'company') {
+    const comp = db.prepare('SELECT name, website, description FROM companies WHERE owner_user_id = ?').get(u.id);
+    if (comp) Object.assign(base, { company_name: comp.name, website: comp.website, description: comp.description });
+  }
+  return base;
+}
 
 // ---------- meta ----------
 app.get('/api/meta', (req, res) => {
@@ -36,8 +45,9 @@ app.get('/api/meta', (req, res) => {
 
 // ---------- auth ----------
 app.post('/api/auth/register-student', (req, res) => {
-  const { email, password, name, faculty_id, major } = req.body || {};
+  const { email, password, name, faculty_id, major, terms_accepted } = req.body || {};
   if (!email || !password || !name || !faculty_id || !major) return res.status(400).json({ error: 'All fields are required.' });
+  if (!terms_accepted) return res.status(400).json({ error: 'You must accept the Terms of Service and Privacy Policy to register.' });
   if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
 
   const domain = String(email).split('@')[1]?.toLowerCase();
@@ -49,25 +59,27 @@ app.post('/api/auth/register-student', (req, res) => {
   if (!fac) return res.status(400).json({ error: 'Select a faculty belonging to your university.' });
   if (db.prepare('SELECT 1 FROM users WHERE email = ?').get(email)) return res.status(400).json({ error: 'An account with this email already exists.' });
 
-  const r = db.prepare(`INSERT INTO users (role,email,password_hash,name,university_id,faculty_id,major)
-    VALUES ('student',?,?,?,?,?,?)`)
-    .run(email, bcrypt.hashSync(password, 10), name, uni.id, fac.id, major);
+  const r = db.prepare(`INSERT INTO users (role,email,password_hash,name,university_id,faculty_id,major,terms_accepted_at,privacy_policy_version)
+    VALUES ('student',?,?,?,?,?,?,datetime('now'),?)`)
+    .run(email, bcrypt.hashSync(password, 10), name, uni.id, fac.id, major, POLICY_VERSION);
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(r.lastInsertRowid);
   req.session.user = publicUser(user);
   res.json({ user: req.session.user });
 });
 
 app.post('/api/auth/register-company', (req, res) => {
-  const { email, password, contact_name, company_name, website, description } = req.body || {};
+  const { email, password, contact_name, company_name, website, description, terms_accepted } = req.body || {};
   if (!email || !password || !contact_name || !company_name) return res.status(400).json({ error: 'All fields are required.' });
+  if (!terms_accepted) return res.status(400).json({ error: 'You must accept the Terms of Service and Privacy Policy to register.' });
   if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
   const domain = String(email).split('@')[1]?.toLowerCase() || '';
   const freeMail = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com', 'mail.com', 'proton.me', 'protonmail.com'];
   if (freeMail.includes(domain)) return res.status(400).json({ error: 'Register with your company work email, not a personal address.' });
   if (db.prepare('SELECT 1 FROM users WHERE email = ?').get(email)) return res.status(400).json({ error: 'An account with this email already exists.' });
 
-  const u = db.prepare(`INSERT INTO users (role,email,password_hash,name) VALUES ('company',?,?,?)`)
-    .run(email, bcrypt.hashSync(password, 10), contact_name);
+  const u = db.prepare(`INSERT INTO users (role,email,password_hash,name,terms_accepted_at,privacy_policy_version)
+    VALUES ('company',?,?,?,datetime('now'),?)`)
+    .run(email, bcrypt.hashSync(password, 10), contact_name, POLICY_VERSION);
   db.prepare(`INSERT INTO companies (owner_user_id,name,website,description) VALUES (?,?,?,?)`)
     .run(u.lastInsertRowid, company_name, website || '', description || '');
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(u.lastInsertRowid);
@@ -91,6 +103,50 @@ app.get('/api/auth/me', (req, res) => {
   const fresh = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.user.id);
   req.session.user = publicUser(fresh);
   res.json({ user: req.session.user });
+});
+
+// ---------- account: profile, password, job alerts ----------
+app.post('/api/auth/profile', requireAuth(), (req, res) => {
+  const u = req.session.user;
+  const { name, company_name, website, description } = req.body || {};
+  if (!name) return res.status(400).json({ error: 'Name is required.' });
+  db.prepare('UPDATE users SET name=? WHERE id=?').run(name, u.id);
+  if (u.role === 'company') {
+    db.prepare('UPDATE companies SET name=COALESCE(?,name), website=?, description=? WHERE owner_user_id=?')
+      .run(company_name || null, website || '', description || '', u.id);
+  }
+  const fresh = db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+  req.session.user = publicUser(fresh);
+  res.json({ user: req.session.user });
+});
+
+app.post('/api/auth/change-password', requireAuth(), (req, res) => {
+  const { current_password, new_password } = req.body || {};
+  if (!current_password || !new_password) return res.status(400).json({ error: 'All fields are required.' });
+  if (new_password.length < 8) return res.status(400).json({ error: 'New password must be at least 8 characters.' });
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.user.id);
+  if (!bcrypt.compareSync(current_password, user.password_hash)) {
+    return res.status(400).json({ error: 'Current password is incorrect.' });
+  }
+  db.prepare('UPDATE users SET password_hash=? WHERE id=?').run(bcrypt.hashSync(new_password, 10), user.id);
+  res.json({ ok: true });
+});
+
+app.get('/api/job-alerts', requireAuth('student'), (req, res) => {
+  const alerts = db.prepare('SELECT * FROM job_alerts WHERE student_id=? ORDER BY created_at DESC').all(req.session.user.id);
+  res.json({ alerts });
+});
+
+app.post('/api/job-alerts', requireAuth('student'), (req, res) => {
+  const { faculty_id, job_type, keyword, notify_email } = req.body || {};
+  const r = db.prepare(`INSERT INTO job_alerts (student_id, faculty_id, job_type, keyword, notify_email) VALUES (?,?,?,?,?)`)
+    .run(req.session.user.id, faculty_id || null, job_type || null, keyword || '', notify_email ? 1 : 0);
+  res.json({ id: r.lastInsertRowid });
+});
+
+app.post('/api/job-alerts/:id/delete', requireAuth('student'), (req, res) => {
+  db.prepare('DELETE FROM job_alerts WHERE id=? AND student_id=?').run(req.params.id, req.session.user.id);
+  res.json({ ok: true });
 });
 
 // ---------- student: identity documents ----------
@@ -304,6 +360,17 @@ app.post('/api/admin/students/:id/doc-status', requireAuth('admin'), (req, res) 
   if (!['verified', 'rejected'].includes(status)) return res.status(400).json({ error: 'Invalid status.' });
   db.prepare('UPDATE users SET doc_status=? WHERE id=? AND role=?').run(status, req.params.id, 'student');
   res.json({ ok: true });
+});
+
+// AI interview confidence scoring — admin-only, not wired into any student/company flow yet.
+app.post('/api/admin/applications/:id/score-ai-interview', requireAuth('admin'), async (req, res) => {
+  try {
+    const { scoreApplication } = require('./anthropic');
+    const result = await scoreApplication(req.params.id);
+    res.json({ ok: true, result });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
 });
 
 // ---------- static (production build) ----------

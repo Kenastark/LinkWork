@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
 
@@ -73,6 +73,10 @@ export default function Auth() {
               </select>
             </label>
             <label className="field">Password <span className="hint">(8+ characters)</span><input name="password" type="password" minLength={8} required autoComplete="new-password" /></label>
+            <label className="field" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontWeight: 400 }}>
+              <input type="checkbox" name="terms_accepted" required style={{ width: 'auto', margin: '3px 0 0' }} />
+              <span>I agree to the <Link to="/terms" target="_blank">Terms of Service</Link> and <Link to="/privacy" target="_blank">Privacy Policy</Link>.</span>
+            </label>
           </>
         )}
 
@@ -86,6 +90,10 @@ export default function Auth() {
             <label className="field">Website<input name="website" type="url" placeholder="https://" /></label>
             <label className="field">What does your company do?<textarea name="description" /></label>
             <label className="field">Password <span className="hint">(8+ characters)</span><input name="password" type="password" minLength={8} required autoComplete="new-password" /></label>
+            <label className="field" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontWeight: 400 }}>
+              <input type="checkbox" name="terms_accepted" required style={{ width: 'auto', margin: '3px 0 0' }} />
+              <span>I agree to the <Link to="/terms" target="_blank">Terms of Service</Link> and <Link to="/privacy" target="_blank">Privacy Policy</Link>.</span>
+            </label>
           </>
         )}
 

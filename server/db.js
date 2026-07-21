@@ -85,7 +85,27 @@ CREATE TABLE IF NOT EXISTS ai_answers (
   question TEXT NOT NULL,
   answer TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS job_alerts (
+  id INTEGER PRIMARY KEY,
+  student_id INTEGER NOT NULL REFERENCES users(id),
+  faculty_id INTEGER REFERENCES faculties(id),
+  job_type TEXT CHECK (job_type IN ('internship','entry_level') OR job_type IS NULL),
+  keyword TEXT,
+  notify_email INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now'))
+);
 `);
+
+// ---------- Migrations (add columns to tables that may already exist on disk) ----------
+function addColumnIfMissing(table, column, ddl) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all().map(c => c.name);
+  if (!cols.includes(column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
+}
+addColumnIfMissing('users', 'terms_accepted_at', 'terms_accepted_at TEXT');
+addColumnIfMissing('users', 'privacy_policy_version', 'privacy_policy_version TEXT');
+addColumnIfMissing('ai_answers', 'confidence_score', 'confidence_score INTEGER');
+addColumnIfMissing('ai_answers', 'confidence_rationale', 'confidence_rationale TEXT');
+addColumnIfMissing('ai_answers', 'scored_at', 'scored_at TEXT');
 
 // ---------- Seed ----------
 function seed() {

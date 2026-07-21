@@ -19,7 +19,7 @@ export default function JobDetail() {
   useEffect(load, [id]);
 
   if (error) return <main className="container"><div className="alert error">{error}</div></main>;
-  if (!data) return <main className="container" />;
+  if (!data || !data.job) return <main className="container"><div className="alert error">Couldn't load this posting. It may have been removed.</div></main>;
   const { job, application } = data;
   const isStudent = user.role === 'student';
 

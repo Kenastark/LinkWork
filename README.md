@@ -54,7 +54,7 @@ git push -u origin main
 ## Roadmap
 
 - [ ] Real file upload for student documents (currently a submit/verify status flow)
-- [ ] AI-scored interviews via the Anthropic API (answers are currently recorded for company review)
+- [ ] AI-scored interviews via the Anthropic API — backend scaffolding exists (`server/anthropic.js`, admin-only `POST /api/admin/applications/:id/score-ai-interview`); not yet surfaced to companies
 - [ ] Email verification links + notifications at each pipeline stage
 - [ ] Faculty coordinator role: propose/endorse partnerships in-app instead of only offline
 - [ ] Public (read-only) match ledger page for transparency

@@ -5,7 +5,13 @@ async function req(path, opts = {}) {
     ...opts,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
-  const data = await res.json().catch(() => ({}));
+  if (res.status === 204) return {};
+  let data;
+  try { data = await res.json(); }
+  catch {
+    if (res.ok) throw new Error('Unexpected response from server.');
+    data = {};
+  }
   if (!res.ok) throw new Error(data.error || 'Something went wrong.');
   return data;
 }
