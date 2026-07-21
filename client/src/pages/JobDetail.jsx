@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
 import Chain from '../components/Chain.jsx';
@@ -82,9 +82,21 @@ export default function JobDetail() {
         <h3>About the role</h3>
         <p style={{ marginTop: 8 }}>{job.description}</p>
         {job.requirements && <>
-          <h3 style={{ marginTop: 18 }}>What they're looking for</h3>
+          <h3 style={{ marginTop: 18 }}>Skills & requirements</h3>
           <p style={{ marginTop: 8 }}>{job.requirements}</p>
         </>}
+      </div>
+
+      <div className="card">
+        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+          <span className="company-mono">{job.company_name.charAt(0).toUpperCase()}</span>
+          <div>
+            <h3>{job.company_name}</h3>
+            {job.website && <a href={job.website} target="_blank" rel="noreferrer">{job.website}</a>}
+          </div>
+        </div>
+        {job.company_description && <p className="muted" style={{ marginTop: 12 }}>{job.company_description}</p>}
+        <Link to={`/companies/${job.company_id}`} className="btn sm ghost" style={{ marginTop: 14 }}>View company profile</Link>
       </div>
 
       {isStudent && (

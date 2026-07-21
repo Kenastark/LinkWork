@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { api } from '../api.js';
 
 function Icon({ d }) {
   return (
@@ -9,6 +11,10 @@ function Icon({ d }) {
 }
 
 export default function Landing() {
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => { api.get('/api/stats').then(setStats).catch(() => {}); }, []);
+
   return (
     <>
       <section className="hero">
@@ -72,6 +78,37 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {stats && (
+        <section className="trust-stats">
+          <div className="container">
+            <h2>Proof, not promises</h2>
+            <div className="grid cols-3">
+              <div className="stat-tile"><b>{stats.open_jobs}</b><span>Verified postings open right now</span></div>
+              <div className="stat-tile"><b>{stats.hires}</b><span>Students hired through the chain</span></div>
+              <div className="stat-tile"><b>{stats.approved_companies}</b><span>Companies committed to hiring here</span></div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {stats?.companies?.length > 0 && (
+        <section className="company-showcase">
+          <div className="container">
+            <h2>Companies hiring on LinkWork</h2>
+            <div className="showcase-row">
+              {stats.companies.map(c => (
+                <Link to="/auth" key={c.name} className="showcase-item">
+                  <span className="company-mono">{c.name.charAt(0).toUpperCase()}</span>
+                  <span>{c.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* TODO: hero image section — content pending user description */}
     </>
   );
 }

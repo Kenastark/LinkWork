@@ -132,21 +132,70 @@ app.post('/api/auth/change-password', requireAuth(), (req, res) => {
   res.json({ ok: true });
 });
 
-app.get('/api/job-alerts', requireAuth('student'), (req, res) => {
-  const alerts = db.prepare('SELECT * FROM job_alerts WHERE student_id=? ORDER BY created_at DESC').all(req.session.user.id);
-  res.json({ alerts });
+// ---------- companies: directory + follow ----------
+app.get('/api/companies', requireAuth(), (req, res) => {
+  const rows = db.prepare(`
+    SELECT c.id, c.name, c.website, c.description,
+           COUNT(CASE WHEN j.status='open' THEN 1 END) AS open_jobs
+    FROM companies c LEFT JOIN jobs j ON j.company_id = c.id
+    WHERE c.status='approved'
+    GROUP BY c.id ORDER BY open_jobs DESC, c.name ASC`).all();
+  res.json({ companies: rows });
 });
 
-app.post('/api/job-alerts', requireAuth('student'), (req, res) => {
-  const { faculty_id, job_type, keyword, notify_email } = req.body || {};
-  const r = db.prepare(`INSERT INTO job_alerts (student_id, faculty_id, job_type, keyword, notify_email) VALUES (?,?,?,?,?)`)
-    .run(req.session.user.id, faculty_id || null, job_type || null, keyword || '', notify_email ? 1 : 0);
-  res.json({ id: r.lastInsertRowid });
+app.get('/api/companies/:id', requireAuth(), (req, res) => {
+  const company = db.prepare(`SELECT id, name, website, description FROM companies WHERE id=? AND status='approved'`).get(req.params.id);
+  if (!company) return res.status(404).json({ error: 'Company not found.' });
+  const jobs = db.prepare(`SELECT j.*, f.name AS faculty_name FROM jobs j LEFT JOIN faculties f ON f.id=j.faculty_id
+    WHERE j.company_id=? AND j.status='open' ORDER BY j.created_at DESC`).all(company.id);
+  let following = false;
+  if (req.session.user.role === 'student') {
+    following = !!db.prepare('SELECT 1 FROM company_follows WHERE student_id=? AND company_id=?').get(req.session.user.id, company.id);
+  }
+  res.json({ company, jobs, following });
 });
 
-app.post('/api/job-alerts/:id/delete', requireAuth('student'), (req, res) => {
-  db.prepare('DELETE FROM job_alerts WHERE id=? AND student_id=?').run(req.params.id, req.session.user.id);
+app.post('/api/companies/:id/follow', requireAuth('student'), (req, res) => {
+  const company = db.prepare(`SELECT id FROM companies WHERE id=? AND status='approved'`).get(req.params.id);
+  if (!company) return res.status(404).json({ error: 'Company not found.' });
+  try { db.prepare('INSERT INTO company_follows (student_id, company_id) VALUES (?,?)').run(req.session.user.id, company.id); }
+  catch { /* already following */ }
   res.json({ ok: true });
+});
+
+app.post('/api/companies/:id/unfollow', requireAuth('student'), (req, res) => {
+  db.prepare('DELETE FROM company_follows WHERE student_id=? AND company_id=?').run(req.session.user.id, req.params.id);
+  res.json({ ok: true });
+});
+
+app.get('/api/my-follows', requireAuth('student'), (req, res) => {
+  const rows = db.prepare(`
+    SELECT cf.id AS follow_id, c.id AS company_id, c.name, c.website,
+           COUNT(CASE WHEN j.status='open' THEN 1 END) AS open_jobs
+    FROM company_follows cf JOIN companies c ON c.id = cf.company_id
+    LEFT JOIN jobs j ON j.company_id = c.id
+    WHERE cf.student_id = ? GROUP BY cf.id ORDER BY cf.created_at DESC`).all(req.session.user.id);
+  res.json({ follows: rows });
+});
+
+// ---------- stats ----------
+app.get('/api/my-applications/stats', requireAuth('student'), (req, res) => {
+  const rows = db.prepare('SELECT stage FROM applications WHERE student_id=?').all(req.session.user.id);
+  const ONGOING = ['applied', 'skill_test', 'ai_interview', 'company_test', 'hr_interview', 'tech_interview'];
+  res.json({ stats: {
+    ongoing: rows.filter(r => ONGOING.includes(r.stage)).length,
+    offers: rows.filter(r => r.stage === 'hired').length,
+    rejected: rows.filter(r => r.stage === 'rejected').length,
+  }});
+});
+
+app.get('/api/stats', (req, res) => {
+  res.json({
+    open_jobs: db.prepare(`SELECT COUNT(*) c FROM jobs WHERE status='open'`).get().c,
+    hires: db.prepare(`SELECT COUNT(*) c FROM matches`).get().c,
+    approved_companies: db.prepare(`SELECT COUNT(*) c FROM companies WHERE status='approved'`).get().c,
+    companies: db.prepare(`SELECT name FROM companies WHERE status='approved' ORDER BY created_at DESC LIMIT 6`).all(),
+  });
 });
 
 // ---------- student: identity documents ----------
@@ -174,7 +223,7 @@ app.get('/api/jobs', requireAuth(), (req, res) => {
 });
 
 app.get('/api/jobs/:id', requireAuth(), (req, res) => {
-  const job = db.prepare(`SELECT j.*, c.name AS company_name, c.website, f.name AS faculty_name, un.name AS university_name
+  const job = db.prepare(`SELECT j.*, c.name AS company_name, c.website, c.description AS company_description, f.name AS faculty_name, un.name AS university_name
     FROM jobs j JOIN companies c ON c.id=j.company_id
     LEFT JOIN faculties f ON f.id=j.faculty_id
     JOIN universities un ON un.id=j.university_id WHERE j.id=?`).get(req.params.id);

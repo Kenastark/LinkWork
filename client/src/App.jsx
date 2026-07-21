@@ -4,7 +4,7 @@ import { api } from './api.js';
 import LinkMark from './components/LinkMark.jsx';
 import Landing from './pages/Landing.jsx';
 import Auth from './pages/Auth.jsx';
-import StudentDashboard from './pages/StudentDashboard.jsx';
+import FindInternship from './pages/FindInternship.jsx';
 import JobDetail from './pages/JobDetail.jsx';
 import CompanyDashboard from './pages/CompanyDashboard.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
@@ -12,8 +12,12 @@ import Privacy from './pages/Privacy.jsx';
 import Terms from './pages/Terms.jsx';
 import Profile from './pages/Profile.jsx';
 import MyApplications from './pages/MyApplications.jsx';
-import JobAlerts from './pages/JobAlerts.jsx';
+import Alerts from './pages/Alerts.jsx';
 import Settings from './pages/Settings.jsx';
+import Companies from './pages/Companies.jsx';
+import CompanyProfile from './pages/CompanyProfile.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import Resources from './pages/Resources.jsx';
 import { ACCOUNT_MENU } from './menuConfig.js';
 
 const AuthCtx = createContext(null);
@@ -24,8 +28,7 @@ function homeFor(user) {
   return { student: '/student', company: '/company', admin: '/admin' }[user.role];
 }
 
-function AccountMenu({ user, onSignOut }) {
-  const [open, setOpen] = useState(false);
+function useCloseOnOutsideOrRoute(open, setOpen) {
   const ref = useRef(null);
   const location = useLocation();
 
@@ -38,6 +41,13 @@ function AccountMenu({ user, onSignOut }) {
     return () => document.removeEventListener('mousedown', onClick);
   }, [open]);
 
+  return ref;
+}
+
+function AccountMenu({ user, onSignOut }) {
+  const [open, setOpen] = useState(false);
+  const ref = useCloseOnOutsideOrRoute(open, setOpen);
+
   const items = ACCOUNT_MENU.filter(i => i.roles.includes(user.role));
 
   return (
@@ -46,6 +56,7 @@ function AccountMenu({ user, onSignOut }) {
         className="account-menu-trigger"
         aria-haspopup="menu"
         aria-expanded={open}
+        title="My space"
         onClick={() => setOpen(o => !o)}
       >
         <span className="hamburger"><span /><span /><span /></span>
@@ -60,6 +71,25 @@ function AccountMenu({ user, onSignOut }) {
           ))}
           <div className="account-menu-divider" />
           <button className="account-menu-item danger" role="menuitem" onClick={onSignOut}>Sign out</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RegisterMenu() {
+  const [open, setOpen] = useState(false);
+  const ref = useCloseOnOutsideOrRoute(open, setOpen);
+
+  return (
+    <div className="account-menu-wrap" ref={ref}>
+      <button className="btn sm" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(o => !o)}>
+        Register
+      </button>
+      {open && (
+        <div className="account-menu" role="menu">
+          <Link to="/auth?mode=student" className="account-menu-item" role="menuitem">Join as a student</Link>
+          <Link to="/auth?mode=company" className="account-menu-item" role="menuitem">Join as a company</Link>
         </div>
       )}
     </div>
@@ -82,16 +112,29 @@ export default function App() {
         <nav className="nav">
           <div className="container nav-inner">
             <Link to={homeFor(user)} className="brand"><LinkMark /> LinkWork</Link>
-            {user?.role === 'student' && <NavLink className="navlink" to="/student">Openings</NavLink>}
+
+            {user?.role === 'student' && <>
+              <NavLink className="navlink navlink-lg" to="/student">Find an internship</NavLink>
+              <NavLink className="navlink navlink-lg" to="/companies">Explore companies</NavLink>
+              <NavLink className="navlink navlink-lg" to="/resources">Resources</NavLink>
+            </>}
+            {!user && <>
+              <NavLink className="navlink navlink-lg" to="/auth">Find a job</NavLink>
+              <NavLink className="navlink navlink-lg" to="/auth">Explore companies</NavLink>
+              <NavLink className="navlink navlink-lg" to="/auth">Resources</NavLink>
+            </>}
             {user?.role === 'company' && <NavLink className="navlink" to="/company">Dashboard</NavLink>}
             {user?.role === 'admin' && <NavLink className="navlink" to="/admin">Admin</NavLink>}
+
             <span className="spacer" />
+
+            {user?.role === 'student' && <NavLink className="navlink" to="/my-applications">Applications</NavLink>}
             {user ? (
               <AccountMenu user={user} onSignOut={logout} />
             ) : (
               <>
                 <NavLink className="navlink" to="/auth">Sign in</NavLink>
-                <Link to="/auth?mode=student" className="btn sm">Join as a student</Link>
+                <RegisterMenu />
               </>
             )}
           </div>
@@ -100,7 +143,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={user ? <Navigate to={homeFor(user)} /> : <Landing />} />
           <Route path="/auth" element={user ? <Navigate to={homeFor(user)} /> : <Auth />} />
-          <Route path="/student" element={user?.role === 'student' ? <StudentDashboard /> : <Navigate to="/auth" />} />
+          <Route path="/student" element={user?.role === 'student' ? <FindInternship /> : <Navigate to="/auth" />} />
           <Route path="/jobs/:id" element={user ? <JobDetail /> : <Navigate to="/auth" />} />
           <Route path="/company" element={user?.role === 'company' ? <CompanyDashboard /> : <Navigate to="/auth" />} />
           <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/auth" />} />
@@ -108,8 +151,12 @@ export default function App() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/profile" element={user ? <Profile /> : <Navigate to="/auth" />} />
           <Route path="/my-applications" element={user?.role === 'student' ? <MyApplications /> : <Navigate to="/auth" />} />
-          <Route path="/job-alerts" element={user?.role === 'student' ? <JobAlerts /> : <Navigate to="/auth" />} />
+          <Route path="/alerts" element={user?.role === 'student' ? <Alerts /> : <Navigate to="/auth" />} />
           <Route path="/settings" element={user ? <Settings /> : <Navigate to="/auth" />} />
+          <Route path="/companies" element={user ? <Companies /> : <Navigate to="/auth" />} />
+          <Route path="/companies/:id" element={user ? <CompanyProfile /> : <Navigate to="/auth" />} />
+          <Route path="/dashboard" element={user?.role === 'student' ? <Dashboard /> : <Navigate to="/auth" />} />
+          <Route path="/resources" element={user ? <Resources /> : <Navigate to="/auth" />} />
         </Routes>
 
         <footer className="site">

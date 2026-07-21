@@ -65,6 +65,7 @@ main.container { flex: 1; padding: 32px 0 72px; }
 .brand .link-mark { display: inline-flex; }
 .nav a.navlink { color: #cfd6e4; font-weight: 500; font-size: 15px; transition: color .15s var(--ease); }
 .nav a.navlink:hover, .nav a.navlink.active { color: #fff; text-decoration: none; }
+.nav a.navlink-lg { font-size: 16.5px; font-weight: 600; }
 .nav .spacer { flex: 1; }
 .nav .who { font-family: var(--font-mono); font-size: 12.5px; color: #9aa7bf; }
 
@@ -157,6 +158,13 @@ textarea { min-height: 110px; resize: vertical; }
 
 .id-tag { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-soft); letter-spacing: 0.02em; }
 
+.company-mono {
+  display: inline-grid; place-items: center; flex-shrink: 0;
+  width: 44px; height: 44px; border-radius: var(--radius-sm);
+  background: var(--verify-tint); color: var(--verify);
+  font-family: var(--font-display); font-weight: 700; font-size: 18px;
+}
+
 /* ============ the signature: verification chain ============ */
 .chain { display: flex; align-items: center; flex-wrap: wrap; gap: 0; margin: 14px 0; }
 .chain .node {
@@ -210,6 +218,28 @@ textarea { min-height: 110px; resize: vertical; }
 .how { padding: 72px 0; }
 .how h2 { font-size: 32px; margin-bottom: 8px; }
 .how .sub { color: var(--ink-soft); margin-bottom: 32px; max-width: 62ch; }
+
+/* ============ trust stats ============ */
+.trust-stats { padding: 0 0 72px; }
+.trust-stats h2 { font-size: 28px; margin-bottom: 24px; }
+.stat-tile {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: var(--space-5); text-align: center; box-shadow: var(--shadow-sm);
+}
+.stat-tile b { display: block; font-family: var(--font-display); font-size: 40px; color: var(--verify); line-height: 1.1; }
+.stat-tile span { display: block; margin-top: 8px; color: var(--ink-soft); font-size: 14px; }
+
+/* ============ company showcase ============ */
+.company-showcase { padding: 0 0 80px; }
+.company-showcase h2 { font-size: 26px; margin-bottom: 20px; }
+.showcase-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.showcase-item {
+  display: flex; align-items: center; gap: 10px; padding: 12px 18px;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-sm);
+  color: var(--ink); font-weight: 600; box-shadow: var(--shadow-sm);
+  transition: transform .15s var(--ease), box-shadow .15s var(--ease);
+}
+.showcase-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); text-decoration: none; }
 
 /* ============ misc ============ */
 .alert { border-radius: var(--radius-sm); padding: 12px 16px; font-size: 14.5px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }

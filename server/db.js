@@ -85,16 +85,15 @@ CREATE TABLE IF NOT EXISTS ai_answers (
   question TEXT NOT NULL,
   answer TEXT NOT NULL
 );
-CREATE TABLE IF NOT EXISTS job_alerts (
+CREATE TABLE IF NOT EXISTS company_follows (
   id INTEGER PRIMARY KEY,
   student_id INTEGER NOT NULL REFERENCES users(id),
-  faculty_id INTEGER REFERENCES faculties(id),
-  job_type TEXT CHECK (job_type IN ('internship','entry_level') OR job_type IS NULL),
-  keyword TEXT,
-  notify_email INTEGER NOT NULL DEFAULT 0,
-  created_at TEXT DEFAULT (datetime('now'))
+  company_id INTEGER NOT NULL REFERENCES companies(id),
+  created_at TEXT DEFAULT (datetime('now')),
+  UNIQUE(student_id, company_id)
 );
 `);
+db.exec('DROP TABLE IF EXISTS job_alerts');
 
 // ---------- Migrations (add columns to tables that may already exist on disk) ----------
 function addColumnIfMissing(table, column, ddl) {
