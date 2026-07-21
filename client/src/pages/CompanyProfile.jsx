@@ -14,7 +14,7 @@ export default function CompanyProfile() {
   const [busy, setBusy] = useState(false);
 
   const load = () => api.get(`/api/companies/${id}`).then(setData).catch(e => setError(e.message));
-  useEffect(load, [id]);
+  useEffect(() => { load(); }, [id]);
 
   if (error) return <main className="container"><div className="alert error">{error}</div></main>;
   if (!data) return <main className="container" />;

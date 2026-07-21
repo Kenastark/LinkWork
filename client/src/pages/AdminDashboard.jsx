@@ -6,7 +6,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState('');
 
   const load = () => api.get('/api/admin/overview').then(setData).catch(e => setError(e.message));
-  useEffect(load, []);
+  useEffect(() => { load(); }, []);
 
   const setCompany = async (id, status) => { await api.post(`/api/admin/companies/${id}/status`, { status }); load(); };
   const setDocs = async (id, status) => { await api.post(`/api/admin/students/${id}/doc-status`, { status }); load(); };

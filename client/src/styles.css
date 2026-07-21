@@ -25,8 +25,8 @@
   --shadow-md: 0 4px 16px rgba(22, 35, 63, 0.08), 0 2px 6px rgba(22, 35, 63, 0.05);
   --shadow-lg: 0 12px 32px rgba(22, 35, 63, 0.14), 0 4px 12px rgba(22, 35, 63, 0.06);
   --ease: cubic-bezier(0.2, 0.65, 0.3, 1);
-  --font-display: "Bricolage Grotesque", system-ui, sans-serif;
-  --font-body: "Instrument Sans", system-ui, sans-serif;
+  --font-display: "Work Sans", system-ui, sans-serif;
+  --font-body: "Work Sans", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
 
@@ -39,7 +39,7 @@ body {
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
-h1, h2, h3 { font-family: var(--font-display); line-height: 1.12; letter-spacing: -0.015em; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
 a { color: var(--verify); text-decoration: none; }
 a:hover { text-decoration: underline; }
 button { font-family: var(--font-body); cursor: pointer; }
@@ -185,13 +185,14 @@ textarea { min-height: 110px; resize: vertical; }
 .hero .container { display: grid; grid-template-columns: 1.15fr 1fr; gap: 56px; align-items: center; }
 @media (max-width: 860px) { .hero .container { grid-template-columns: 1fr; } }
 .hero .eyebrow {
-  font-family: var(--font-mono); font-size: 13px; color: var(--verify-bright);
-  letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 18px;
+  font-family: var(--font-mono); font-size: 14px; color: var(--verify-bright);
+  letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 20px;
 }
-.hero h1 { font-size: clamp(38px, 5.4vw, 62px); font-weight: 750; margin-bottom: 20px; }
+.hero h1 { font-size: clamp(44px, 6.2vw, 74px); font-weight: 900; margin-bottom: 22px; }
 .hero h1 em { font-style: normal; color: var(--verify-bright); }
-.hero p.lede { font-size: 18px; color: #c4cddd; max-width: 52ch; margin-bottom: 30px; }
+.hero p.lede { font-size: 21px; line-height: 1.5; color: #c4cddd; max-width: 54ch; margin-bottom: 32px; }
 .hero .cta-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.hero .cta-row .btn { font-size: 17px; padding: 13px 24px; }
 
 .hero-chain { display: flex; flex-direction: column; gap: 0; }
 .hero-chain .hnode {
@@ -206,13 +207,43 @@ textarea { min-height: 110px; resize: vertical; }
   width: 40px; height: 40px; border-radius: 12px; background: var(--verify);
   display: grid; place-items: center; flex-shrink: 0;
 }
-.hero-chain b { font-family: var(--font-display); font-size: 16px; display: block; }
-.hero-chain span { font-size: 13.5px; color: #b7c1d4; }
+.hero-chain b { font-family: var(--font-display); font-size: 17px; font-weight: 700; display: block; }
+.hero-chain span { font-size: 14.5px; color: #b7c1d4; }
 @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
-.how { padding: 72px 0; }
-.how h2 { font-size: 32px; margin-bottom: 8px; }
-.how .sub { color: var(--ink-soft); margin-bottom: 32px; max-width: 62ch; }
+/* ============ how it works ============ */
+.how { padding: 96px 0 88px; }
+.how .eyebrow {
+  font-family: var(--font-mono); font-size: 13px; color: var(--verify);
+  letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; display: block;
+}
+.how h2 { font-size: 40px; margin-bottom: 12px; }
+.how .sub { font-size: 18px; color: var(--ink-soft); margin-bottom: 48px; max-width: 62ch; }
+
+.how-flow { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+@media (max-width: 800px) { .how-flow { grid-template-columns: 1fr; } }
+.how-flow::before {
+  content: ''; position: absolute; top: 34px; left: 16.5%; right: 16.5%; height: 2px;
+  background: repeating-linear-gradient(90deg, var(--line) 0 10px, transparent 10px 18px);
+}
+@media (max-width: 800px) { .how-flow::before { display: none; } }
+.how-step {
+  position: relative; opacity: 0; transform: translateY(24px);
+  transition: opacity .6s var(--ease), transform .6s var(--ease);
+}
+.how-flow.revealed .how-step { opacity: 1; transform: none; }
+.how-step:nth-child(2) { transition-delay: .12s; }
+.how-step:nth-child(3) { transition-delay: .24s; }
+.how-step .how-icon {
+  width: 68px; height: 68px; border-radius: 50%; background: var(--card);
+  border: 2.5px solid var(--verify); color: var(--verify);
+  display: grid; place-items: center; position: relative; z-index: 2;
+  font-family: var(--font-display); font-weight: 800; font-size: 22px;
+  box-shadow: var(--shadow-md); transition: transform .25s var(--ease), background .25s var(--ease), color .25s var(--ease);
+}
+.how-step:hover .how-icon { transform: scale(1.08); background: var(--verify); color: #fff; }
+.how-step h3 { margin: 20px 0 8px; font-size: 20px; }
+.how-step p { color: var(--ink-soft); font-size: 15px; max-width: 34ch; }
 
 /* ============ overlap band — floats over the hero's bottom edge ============ */
 .overlap-band {
@@ -222,14 +253,15 @@ textarea { min-height: 110px; resize: vertical; }
   position: relative; z-index: 5;
 }
 .overlap-band .stat { text-align: center; padding: var(--space-3); }
-.overlap-band .stat b { display: block; font-family: var(--font-display); font-size: 36px; color: var(--verify); line-height: 1.1; }
-.overlap-band .stat span { display: block; margin-top: 6px; color: var(--ink-soft); font-size: 13.5px; }
+.overlap-band .stat b { display: block; font-family: var(--font-display); font-size: 44px; font-weight: 900; color: var(--verify); line-height: 1.1; }
+.overlap-band .stat span { display: block; margin-top: 6px; color: var(--ink-soft); font-size: 15px; }
 @media (max-width: 800px) { .overlap-band { grid-template-columns: 1fr; margin-top: -40px; } }
 
 /* ============ company showcase ============ */
 .company-showcase { padding: 0 0 80px; }
-.company-showcase h2 { font-size: 26px; margin-bottom: 20px; }
+.company-showcase h2 { font-size: 30px; margin-bottom: 24px; }
 .showcase-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.showcase-item { font-size: 16px; }
 .showcase-item {
   display: flex; align-items: center; gap: 10px; padding: 12px 18px;
   background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-sm);

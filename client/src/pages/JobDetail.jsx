@@ -16,7 +16,7 @@ export default function JobDetail() {
   const [result, setResult] = useState(null);
 
   const load = () => api.get(`/api/jobs/${id}`).then(setData).catch(e => setError(e.message));
-  useEffect(load, [id]);
+  useEffect(() => { load(); }, [id]);
 
   if (error) return <main className="container"><div className="alert error">{error}</div></main>;
   if (!data || !data.job) return <main className="container"><div className="alert error">Couldn't load this posting. It may have been removed.</div></main>;

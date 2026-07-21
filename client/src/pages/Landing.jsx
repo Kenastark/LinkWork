@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
@@ -8,6 +8,49 @@ function Icon({ d }) {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d={d} />
     </svg>
+  );
+}
+
+const HOW_STEPS = [
+  { icon: '1', title: 'Verify who you are', body: 'Sign up with your university email, submit your student documents, and get verified once — then apply to anything.' },
+  { icon: '2', title: 'Prove what you know', body: 'A skill test based on your major and a structured interview qualify you before the company ever sees your file. Same test, same bar, for everyone.' },
+  { icon: '3', title: 'The hire goes on the ledger', body: 'When a company hires, the job ID and candidate ID are matched publicly and the posting is taken down. Proof the job was real.' },
+];
+
+function HowItWorks() {
+  const ref = useRef(null);
+  const [revealed, setRevealed] = useState(false);
+
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') { setRevealed(true); return; }
+    const el = ref.current;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setRevealed(true); observer.disconnect(); }
+    }, { threshold: 0.2 });
+    if (el) observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <section className="how">
+      <div className="container">
+        <span className="eyebrow">The chain</span>
+        <h2>How it works</h2>
+        <p className="sub">
+          It shouldn't matter whether you know someone inside the company. On LinkWork, everyone
+          walks the same chain — and when a posting closes, the hire is recorded openly.
+        </p>
+        <div className={`how-flow${revealed ? ' revealed' : ''}`} ref={ref}>
+          {HOW_STEPS.map(s => (
+            <div className="how-step" key={s.icon}>
+              <div className="how-icon">{s.icon}</div>
+              <h3>{s.title}</h3>
+              <p>{s.body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -23,11 +66,11 @@ export default function Landing() {
         <div className="container">
           <div>
             <div className="eyebrow">University of Debrecen · Pilot</div>
-            <h1>Every posting here is <em>real</em>.</h1>
+            <h1>No ghost jobs. Just <em>real</em> roles, <em>real</em> hires.</h1>
             <p className="lede">
-              LinkWork lists only internships and entry-level roles that companies have committed to
-              filling from this platform — most of them negotiated directly with your faculty.
-              No ghost jobs. No pre-filled positions. If you see it, someone will be hired for it.
+              LinkWork only lists internships and entry-level roles that companies have committed to
+              filling — most of them negotiated directly with your faculty. No fake listings, no
+              pre-filled positions. If you see it here, someone is getting hired for it.
             </p>
             <div className="cta-row">
               {user ? (
@@ -73,32 +116,7 @@ export default function Landing() {
         </div>
       )}
 
-      <section className="how">
-        <div className="container">
-          <h2>Merit, on the record</h2>
-          <p className="sub">
-            It shouldn't matter whether you know someone inside the company. On LinkWork, everyone
-            walks the same chain — and when a posting closes, the hire is recorded openly.
-          </p>
-          <div className="grid cols-3">
-            <div className="card">
-              <span className="id-tag">STEP 01</span>
-              <h3>Verify who you are</h3>
-              <p className="muted">Sign up with your university email, submit your student documents, and get verified once — then apply to anything.</p>
-            </div>
-            <div className="card">
-              <span className="id-tag">STEP 02</span>
-              <h3>Prove what you know</h3>
-              <p className="muted">A skill test based on your major and a structured interview qualify you before the company ever sees your file. Same test, same bar, for everyone.</p>
-            </div>
-            <div className="card">
-              <span className="id-tag">STEP 03</span>
-              <h3>The hire goes on the ledger</h3>
-              <p className="muted">When a company hires, the job ID and candidate ID are matched publicly and the posting is taken down. Proof the job was real.</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HowItWorks />
 
       {stats?.companies?.length > 0 && (
         <section className="company-showcase">

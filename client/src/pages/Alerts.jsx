@@ -9,7 +9,7 @@ export default function Alerts() {
   const [error, setError] = useState('');
 
   const load = () => api.get('/api/my-follows').then(d => setFollows(d.follows)).catch(e => setError(e.message));
-  useEffect(load, []);
+  useEffect(() => { load(); }, []);
 
   const unfollow = async (companyId) => {
     setError('');
