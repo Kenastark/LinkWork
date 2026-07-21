@@ -1,4 +1,5 @@
 node_modules/
 client/dist/
 server/linkwork.db*
+server/uploads/
 .env

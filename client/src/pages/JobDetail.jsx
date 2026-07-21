@@ -89,14 +89,14 @@ export default function JobDetail() {
 
       <div className="card">
         <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-          <span className="company-mono">{job.company_name.charAt(0).toUpperCase()}</span>
+          <span className="company-mono">{(job.company_name || '?').charAt(0).toUpperCase()}</span>
           <div>
             <h3>{job.company_name}</h3>
             {job.website && <a href={job.website} target="_blank" rel="noreferrer">{job.website}</a>}
           </div>
         </div>
         {job.company_description && <p className="muted" style={{ marginTop: 12 }}>{job.company_description}</p>}
-        <Link to={`/companies/${job.company_id}`} className="btn sm ghost" style={{ marginTop: 14 }}>View company profile</Link>
+        {job.company_id != null && <Link to={`/companies/${job.company_id}`} className="btn sm ghost" style={{ marginTop: 14 }}>View company profile</Link>}
       </div>
 
       {isStudent && (

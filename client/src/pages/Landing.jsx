@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
+import { useAuth } from '../App.jsx';
 
 function Icon({ d }) {
   return (
@@ -11,6 +12,7 @@ function Icon({ d }) {
 }
 
 export default function Landing() {
+  const { user } = useAuth();
   const [stats, setStats] = useState(null);
 
   useEffect(() => { api.get('/api/stats').then(setStats).catch(() => {}); }, []);
@@ -28,8 +30,17 @@ export default function Landing() {
               No ghost jobs. No pre-filled positions. If you see it, someone will be hired for it.
             </p>
             <div className="cta-row">
-              <Link to="/auth?mode=student" className="btn">Join with your university email</Link>
-              <Link to="/auth?mode=company" className="btn secondary" style={{ borderColor: '#fff', color: '#fff' }}>Hire students</Link>
+              {user ? (
+                <>
+                  <Link to="/student" className="btn">Find an internship</Link>
+                  <Link to="/companies" className="btn secondary" style={{ borderColor: '#fff', color: '#fff' }}>Explore companies</Link>
+                </>
+              ) : (
+                <>
+                  <Link to="/auth?mode=student" className="btn">Join with your university email</Link>
+                  <Link to="/auth?mode=company" className="btn secondary" style={{ borderColor: '#fff', color: '#fff' }}>Hire students</Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -51,6 +62,16 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {stats && (
+        <div className="container">
+          <div className="overlap-band">
+            <div className="stat"><b>{stats.open_jobs}</b><span>Verified postings open right now</span></div>
+            <div className="stat"><b>{stats.hires}</b><span>Students hired through the chain</span></div>
+            <div className="stat"><b>{stats.approved_companies}</b><span>Companies committed to hiring here</span></div>
+          </div>
+        </div>
+      )}
 
       <section className="how">
         <div className="container">
@@ -79,26 +100,13 @@ export default function Landing() {
         </div>
       </section>
 
-      {stats && (
-        <section className="trust-stats">
-          <div className="container">
-            <h2>Proof, not promises</h2>
-            <div className="grid cols-3">
-              <div className="stat-tile"><b>{stats.open_jobs}</b><span>Verified postings open right now</span></div>
-              <div className="stat-tile"><b>{stats.hires}</b><span>Students hired through the chain</span></div>
-              <div className="stat-tile"><b>{stats.approved_companies}</b><span>Companies committed to hiring here</span></div>
-            </div>
-          </div>
-        </section>
-      )}
-
       {stats?.companies?.length > 0 && (
         <section className="company-showcase">
           <div className="container">
             <h2>Companies hiring on LinkWork</h2>
             <div className="showcase-row">
               {stats.companies.map(c => (
-                <Link to="/auth" key={c.name} className="showcase-item">
+                <Link to={user ? '/companies' : '/auth'} key={c.name} className="showcase-item">
                   <span className="company-mono">{c.name.charAt(0).toUpperCase()}</span>
                   <span>{c.name}</span>
                 </Link>

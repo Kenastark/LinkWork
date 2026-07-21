@@ -69,19 +69,14 @@ main.container { flex: 1; padding: 32px 0 72px; }
 .nav .spacer { flex: 1; }
 .nav .who { font-family: var(--font-mono); font-size: 12.5px; color: #9aa7bf; }
 
-/* ============ account menu (hamburger) ============ */
+/* ============ account menu ============ */
 .account-menu-wrap { position: relative; }
-.account-menu-trigger {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 38px; height: 38px; border: 1.5px solid rgba(255,255,255,0.22);
-  background: rgba(255,255,255,0.06); border-radius: var(--radius-sm);
-  transition: background .15s var(--ease), border-color .15s var(--ease);
+.my-space-trigger.btn.secondary {
+  border-color: rgba(255,255,255,0.3); color: #fff; background: rgba(255,255,255,0.06);
 }
-.account-menu-trigger:hover, .account-menu-trigger[aria-expanded="true"] {
-  background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.4);
+.my-space-trigger.btn.secondary:hover, .my-space-trigger[aria-expanded="true"] {
+  background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.5); color: #fff;
 }
-.hamburger { display: flex; flex-direction: column; gap: 4px; width: 18px; }
-.hamburger span { display: block; height: 2px; border-radius: 2px; background: #fff; }
 .account-menu {
   position: absolute; top: calc(100% + 10px); right: 0; z-index: 30;
   min-width: 220px; background: var(--card); color: var(--ink);
@@ -219,15 +214,17 @@ textarea { min-height: 110px; resize: vertical; }
 .how h2 { font-size: 32px; margin-bottom: 8px; }
 .how .sub { color: var(--ink-soft); margin-bottom: 32px; max-width: 62ch; }
 
-/* ============ trust stats ============ */
-.trust-stats { padding: 0 0 72px; }
-.trust-stats h2 { font-size: 28px; margin-bottom: 24px; }
-.stat-tile {
-  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
-  padding: var(--space-5); text-align: center; box-shadow: var(--shadow-sm);
+/* ============ overlap band — floats over the hero's bottom edge ============ */
+.overlap-band {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4);
+  background: var(--card); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); margin-top: -64px; padding: var(--space-5) var(--space-4);
+  position: relative; z-index: 5;
 }
-.stat-tile b { display: block; font-family: var(--font-display); font-size: 40px; color: var(--verify); line-height: 1.1; }
-.stat-tile span { display: block; margin-top: 8px; color: var(--ink-soft); font-size: 14px; }
+.overlap-band .stat { text-align: center; padding: var(--space-3); }
+.overlap-band .stat b { display: block; font-family: var(--font-display); font-size: 36px; color: var(--verify); line-height: 1.1; }
+.overlap-band .stat span { display: block; margin-top: 6px; color: var(--ink-soft); font-size: 13.5px; }
+@media (max-width: 800px) { .overlap-band { grid-template-columns: 1fr; margin-top: -40px; } }
 
 /* ============ company showcase ============ */
 .company-showcase { padding: 0 0 80px; }

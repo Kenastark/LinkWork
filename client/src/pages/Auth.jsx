@@ -25,7 +25,7 @@ export default function Auth() {
       else if (mode === 'student') d = await api.post('/api/auth/register-student', fd);
       else d = await api.post('/api/auth/register-company', fd);
       setUser(d.user);
-      nav({ student: '/student', company: '/company', admin: '/admin' }[d.user.role]);
+      nav({ student: '/', company: '/company', admin: '/admin' }[d.user.role]);
     } catch (err) {
       setError(err.message);
     } finally { setBusy(false); }

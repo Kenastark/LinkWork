@@ -105,6 +105,8 @@ addColumnIfMissing('users', 'privacy_policy_version', 'privacy_policy_version TE
 addColumnIfMissing('ai_answers', 'confidence_score', 'confidence_score INTEGER');
 addColumnIfMissing('ai_answers', 'confidence_rationale', 'confidence_rationale TEXT');
 addColumnIfMissing('ai_answers', 'scored_at', 'scored_at TEXT');
+addColumnIfMissing('users', 'phone', 'phone TEXT');
+addColumnIfMissing('users', 'photo_path', 'photo_path TEXT');
 
 // ---------- Seed ----------
 function seed() {

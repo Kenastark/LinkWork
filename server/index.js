@@ -2,6 +2,8 @@ const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const db = require('./db');
 
 const app = express();
@@ -12,6 +14,18 @@ app.use(session({
   saveUninitialized: false,
   cookie: { httpOnly: true, sameSite: 'lax' },
 }));
+
+const UPLOAD_ROOT = path.join(__dirname, 'uploads');
+fs.mkdirSync(path.join(UPLOAD_ROOT, 'photos'), { recursive: true });
+app.use('/uploads', express.static(UPLOAD_ROOT));
+const photoUpload = multer({
+  storage: multer.diskStorage({
+    destination: path.join(UPLOAD_ROOT, 'photos'),
+    filename: (req, file, cb) => cb(null, `u${req.session.user.id}-${Date.now()}${path.extname(file.originalname) || '.jpg'}`),
+  }),
+  limits: { fileSize: 4 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => cb(null, /^image\/(png|jpe?g|webp)$/.test(file.mimetype)),
+});
 
 // ---------- helpers ----------
 const POLICY_VERSION = '2026-07-21';
@@ -27,7 +41,7 @@ function requireAuth(role) {
 }
 function publicUser(u) {
   if (!u) return u;
-  const base = { id: u.id, role: u.role, email: u.email, name: u.name, university_id: u.university_id, faculty_id: u.faculty_id, major: u.major, doc_status: u.doc_status };
+  const base = { id: u.id, role: u.role, email: u.email, name: u.name, university_id: u.university_id, faculty_id: u.faculty_id, major: u.major, doc_status: u.doc_status, phone: u.phone, photo_path: u.photo_path };
   if (u.role === 'company') {
     const comp = db.prepare('SELECT name, website, description FROM companies WHERE owner_user_id = ?').get(u.id);
     if (comp) Object.assign(base, { company_name: comp.name, website: comp.website, description: comp.description });
@@ -108,14 +122,22 @@ app.get('/api/auth/me', (req, res) => {
 // ---------- account: profile, password, job alerts ----------
 app.post('/api/auth/profile', requireAuth(), (req, res) => {
   const u = req.session.user;
-  const { name, company_name, website, description } = req.body || {};
+  const { name, phone, company_name, website, description } = req.body || {};
   if (!name) return res.status(400).json({ error: 'Name is required.' });
-  db.prepare('UPDATE users SET name=? WHERE id=?').run(name, u.id);
+  db.prepare('UPDATE users SET name=?, phone=? WHERE id=?').run(name, phone || '', u.id);
   if (u.role === 'company') {
     db.prepare('UPDATE companies SET name=COALESCE(?,name), website=?, description=? WHERE owner_user_id=?')
       .run(company_name || null, website || '', description || '', u.id);
   }
   const fresh = db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+  req.session.user = publicUser(fresh);
+  res.json({ user: req.session.user });
+});
+
+app.post('/api/auth/upload-photo', requireAuth(), photoUpload.single('photo'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Upload a PNG, JPEG, or WebP image.' });
+  db.prepare('UPDATE users SET photo_path=? WHERE id=?').run(`/uploads/photos/${req.file.filename}`, req.session.user.id);
+  const fresh = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.user.id);
   req.session.user = publicUser(fresh);
   res.json({ user: req.session.user });
 });

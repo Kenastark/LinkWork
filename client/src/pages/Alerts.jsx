@@ -6,16 +6,23 @@ import Button from '../components/Button.jsx';
 
 export default function Alerts() {
   const [follows, setFollows] = useState([]);
+  const [error, setError] = useState('');
 
-  const load = () => api.get('/api/my-follows').then(d => setFollows(d.follows));
+  const load = () => api.get('/api/my-follows').then(d => setFollows(d.follows)).catch(e => setError(e.message));
   useEffect(load, []);
 
-  const unfollow = async (companyId) => { await api.post(`/api/companies/${companyId}/unfollow`); load(); };
+  const unfollow = async (companyId) => {
+    setError('');
+    try { await api.post(`/api/companies/${companyId}/unfollow`); await load(); }
+    catch (e) { setError(e.message); }
+  };
 
   return (
     <main className="container" style={{ maxWidth: 640 }}>
       <h2 style={{ fontSize: 30, marginBottom: 6 }}>Alerts</h2>
       <p className="muted" style={{ marginBottom: 20 }}>Follow companies from their profile page to see their new openings here.</p>
+
+      {error && <div className="alert error">{error}</div>}
 
       {follows.length === 0 ? (
         <Card>

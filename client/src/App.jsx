@@ -18,14 +18,15 @@ import Companies from './pages/Companies.jsx';
 import CompanyProfile from './pages/CompanyProfile.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Resources from './pages/Resources.jsx';
+import Inbox from './pages/Inbox.jsx';
 import { ACCOUNT_MENU } from './menuConfig.js';
 
 const AuthCtx = createContext(null);
 export const useAuth = () => useContext(AuthCtx);
 
 function homeFor(user) {
-  if (!user) return '/';
-  return { student: '/student', company: '/company', admin: '/admin' }[user.role];
+  if (!user || user.role === 'student') return '/';
+  return { company: '/company', admin: '/admin' }[user.role];
 }
 
 function useCloseOnOutsideOrRoute(open, setOpen) {
@@ -53,13 +54,12 @@ function AccountMenu({ user, onSignOut }) {
   return (
     <div className="account-menu-wrap" ref={ref}>
       <button
-        className="account-menu-trigger"
+        className="btn sm secondary my-space-trigger"
         aria-haspopup="menu"
         aria-expanded={open}
-        title="My space"
         onClick={() => setOpen(o => !o)}
       >
-        <span className="hamburger"><span /><span /><span /></span>
+        My space ▾
       </button>
       {open && (
         <div className="account-menu" role="menu">
@@ -128,7 +128,10 @@ export default function App() {
 
             <span className="spacer" />
 
-            {user?.role === 'student' && <NavLink className="navlink" to="/my-applications">Applications</NavLink>}
+            {user?.role === 'student' && <>
+              <NavLink className="navlink" to="/my-applications">Applications</NavLink>
+              <NavLink className="navlink" to="/inbox">Inbox</NavLink>
+            </>}
             {user ? (
               <AccountMenu user={user} onSignOut={logout} />
             ) : (
@@ -141,7 +144,7 @@ export default function App() {
         </nav>
 
         <Routes>
-          <Route path="/" element={user ? <Navigate to={homeFor(user)} /> : <Landing />} />
+          <Route path="/" element={!user || user.role === 'student' ? <Landing /> : <Navigate to={homeFor(user)} />} />
           <Route path="/auth" element={user ? <Navigate to={homeFor(user)} /> : <Auth />} />
           <Route path="/student" element={user?.role === 'student' ? <FindInternship /> : <Navigate to="/auth" />} />
           <Route path="/jobs/:id" element={user ? <JobDetail /> : <Navigate to="/auth" />} />
@@ -157,6 +160,7 @@ export default function App() {
           <Route path="/companies/:id" element={user ? <CompanyProfile /> : <Navigate to="/auth" />} />
           <Route path="/dashboard" element={user?.role === 'student' ? <Dashboard /> : <Navigate to="/auth" />} />
           <Route path="/resources" element={user ? <Resources /> : <Navigate to="/auth" />} />
+          <Route path="/inbox" element={user?.role === 'student' ? <Inbox /> : <Navigate to="/auth" />} />
         </Routes>
 
         <footer className="site">
