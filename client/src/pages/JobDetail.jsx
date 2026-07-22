@@ -9,11 +9,14 @@ export default function JobDetail() {
   const { user } = useAuth();
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
-  const [test, setTest] = useState(null);       // {questions}
+  const [test, setTest] = useState(null);       // {attemptNumber, questions}
   const [answers, setAnswers] = useState({});
+  const [pendingResult, setPendingResult] = useState(null); // {attemptNumber, score, canRetake}
+  const [result, setResult] = useState(null);   // finalized skill-test result
+  const [aiAttempt, setAiAttempt] = useState(1);
   const [aiQs, setAiQs] = useState(null);
   const [aiAnswers, setAiAnswers] = useState([]);
-  const [result, setResult] = useState(null);
+  const [pendingAi, setPendingAi] = useState(false); // round 1 submitted, awaiting Retake/Finish choice
 
   const load = () => api.get(`/api/jobs/${id}`).then(setData).catch(e => setError(e.message));
   useEffect(() => { load(); }, [id]);
@@ -29,9 +32,10 @@ export default function JobDetail() {
     catch (e) { setError(e.message); }
   };
 
+  // ---------- skill test ----------
   const startTest = async () => {
-    setError('');
-    try { setTest(await api.get(`/api/applications/${application.id}/skill-test`)); }
+    setError(''); setResult(null); setPendingResult(null);
+    try { setTest(await api.get(`/api/applications/${application.id}/skill-test`)); setAnswers({}); }
     catch (e) { setError(e.message); }
   };
 
@@ -39,23 +43,67 @@ export default function JobDetail() {
     setError('');
     try {
       const r = await api.post(`/api/applications/${application.id}/skill-test`, { answers });
-      setResult(r); setTest(null); await load();
+      setTest(null);
+      if (r.attemptNumber === 1) {
+        setPendingResult(r);
+      } else {
+        setResult(r); await load();
+      }
     } catch (e) { setError(e.message); }
   };
 
-  const startAI = async () => {
+  const retakeTest = async () => {
     setError('');
     try {
+      const t = await api.get(`/api/applications/${application.id}/skill-test?retake=1`);
+      setTest(t); setAnswers({}); setPendingResult(null);
+    } catch (e) { setError(e.message); }
+  };
+
+  const continueTest = async () => {
+    setError('');
+    try {
+      const r = await api.post(`/api/applications/${application.id}/skill-test/continue`);
+      setResult(r); setPendingResult(null); await load();
+    } catch (e) { setError(e.message); }
+  };
+
+  // ---------- AI interview ----------
+  const startAI = async () => {
+    setError(''); setPendingAi(false);
+    try {
       const d = await api.get(`/api/applications/${application.id}/ai-interview`);
-      setAiQs(d.questions); setAiAnswers(d.questions.map(() => ''));
+      setAiAttempt(d.attempt); setAiQs(d.questions); setAiAnswers(d.questions.map(() => ''));
     } catch (e) { setError(e.message); }
   };
 
   const submitAI = async () => {
     setError('');
     try {
-      await api.post(`/api/applications/${application.id}/ai-interview`, { answers: aiAnswers });
-      setAiQs(null); await load();
+      const r = await api.post(`/api/applications/${application.id}/ai-interview`, { answers: aiAnswers, attempt: aiAttempt });
+      setAiQs(null);
+      if (r.canRetake) {
+        setPendingAi(true);
+      } else {
+        await api.post(`/api/applications/${application.id}/ai-interview/continue`);
+        await load();
+      }
+    } catch (e) { setError(e.message); }
+  };
+
+  const retakeAI = async () => {
+    setError('');
+    try {
+      const d = await api.get(`/api/applications/${application.id}/ai-interview?retake=1`);
+      setAiAttempt(d.attempt); setAiQs(d.questions); setAiAnswers(d.questions.map(() => '')); setPendingAi(false);
+    } catch (e) { setError(e.message); }
+  };
+
+  const finishAI = async () => {
+    setError('');
+    try {
+      await api.post(`/api/applications/${application.id}/ai-interview/continue`);
+      setPendingAi(false); await load();
     } catch (e) { setError(e.message); }
   };
 
@@ -75,7 +123,7 @@ export default function JobDetail() {
 
       {error && <div className="alert error">{error}</div>}
       {result && <div className={result.passed ? 'alert ok' : 'alert error'}>
-        Skill test score: <b>{result.score}%</b>. {result.passed ? 'You passed — the AI interview is next.' : 'Below the 60% bar for this round. Keep building — new openings arrive regularly.'}
+        Final skill test score: <b>{result.finalScore}%</b>. {result.passed ? 'You passed — the AI interview is next.' : 'Below the 60% bar for this round. Keep building — new openings arrive regularly.'}
       </div>}
 
       <div className="card">
@@ -112,11 +160,12 @@ export default function JobDetail() {
           ) : (
             <>
               <Chain stage={application.stage} />
-              {application.stage === 'skill_test' && !test && (
+              {application.stage === 'skill_test' && !test && !pendingResult && (
                 <button className="btn" onClick={startTest}>Take the skill test ({user.major})</button>
               )}
               {test && (
                 <div style={{ marginTop: 10 }}>
+                  {test.attemptNumber === 2 && <p className="muted" style={{ marginBottom: 12 }}>Retake — attempt 2 of 2, different questions.</p>}
                   {test.questions.map((q, qi) => (
                     <div key={q.id} style={{ marginBottom: 18 }}>
                       <p style={{ fontWeight: 600 }}>{qi + 1}. {q.question}</p>
@@ -133,19 +182,39 @@ export default function JobDetail() {
                   <button className="btn" onClick={submitTest} disabled={Object.keys(answers).length < test.questions.length}>Submit answers</button>
                 </div>
               )}
+              {pendingResult && (
+                <div style={{ marginTop: 10 }}>
+                  <p className="muted" style={{ marginBottom: 14 }}>Attempt 1 score: <b>{pendingResult.score}%</b>. You can retake the test once with different questions — your final score will be the average of both attempts — or continue with this score now.</p>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button className="btn secondary" onClick={retakeTest}>Retake test (new questions)</button>
+                    <button className="btn" onClick={continueTest}>Continue with this score</button>
+                  </div>
+                </div>
+              )}
 
-              {application.stage === 'ai_interview' && !aiQs && (
+              {application.stage === 'ai_interview' && !aiQs && !pendingAi && (
                 <button className="btn" onClick={startAI}>Start the AI interview</button>
               )}
               {aiQs && (
                 <div style={{ marginTop: 10 }}>
-                  <p className="muted" style={{ marginBottom: 14 }}>Answer in your own words. Your answers go on file for the company alongside your skill score.</p>
+                  <p className="muted" style={{ marginBottom: 14 }}>
+                    {aiAttempt === 2 ? 'Retake — a fresh set of questions.' : 'Answer in your own words. Your answers go on file for the company alongside your skill score.'}
+                  </p>
                   {aiQs.map((q, i) => (
                     <label className="field" key={i}>{q}
                       <textarea value={aiAnswers[i]} onChange={e => setAiAnswers(a => a.map((x, xi) => xi === i ? e.target.value : x))} />
                     </label>
                   ))}
                   <button className="btn" onClick={submitAI}>Submit interview</button>
+                </div>
+              )}
+              {pendingAi && (
+                <div style={{ marginTop: 10 }}>
+                  <p className="muted" style={{ marginBottom: 14 }}>Your answers are recorded. You can answer a second, different set of reflection questions — both rounds go on file for the company — or finish here.</p>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button className="btn secondary" onClick={retakeAI}>Retake interview (new questions)</button>
+                    <button className="btn" onClick={finishAI}>Finish interview</button>
+                  </div>
                 </div>
               )}
 

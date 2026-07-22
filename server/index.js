@@ -41,7 +41,7 @@ function requireAuth(role) {
 }
 function publicUser(u) {
   if (!u) return u;
-  const base = { id: u.id, role: u.role, email: u.email, name: u.name, university_id: u.university_id, faculty_id: u.faculty_id, major: u.major, doc_status: u.doc_status, phone: u.phone, photo_path: u.photo_path };
+  const base = { id: u.id, role: u.role, email: u.email, name: u.name, university_id: u.university_id, faculty_id: u.faculty_id, major: u.major, education_level: u.education_level, doc_status: u.doc_status, phone: u.phone, photo_path: u.photo_path };
   if (u.role === 'company') {
     const comp = db.prepare('SELECT name, website, description FROM companies WHERE owner_user_id = ?').get(u.id);
     if (comp) Object.assign(base, { company_name: comp.name, website: comp.website, description: comp.description });
@@ -53,14 +53,14 @@ function publicUser(u) {
 app.get('/api/meta', (req, res) => {
   const universities = db.prepare('SELECT id, name, domains FROM universities').all();
   const faculties = db.prepare('SELECT id, university_id, name FROM faculties').all();
-  const majors = db.prepare('SELECT DISTINCT major FROM skill_questions').all().map(r => r.major);
+  const majors = db.prepare('SELECT id, faculty_id, name FROM majors ORDER BY name').all();
   res.json({ universities, faculties, majors });
 });
 
 // ---------- auth ----------
 app.post('/api/auth/register-student', (req, res) => {
-  const { email, password, name, faculty_id, major, terms_accepted } = req.body || {};
-  if (!email || !password || !name || !faculty_id || !major) return res.status(400).json({ error: 'All fields are required.' });
+  const { email, password, name, faculty_id, major, education_level, terms_accepted } = req.body || {};
+  if (!email || !password || !name || !faculty_id || !major || !education_level) return res.status(400).json({ error: 'All fields are required.' });
   if (!terms_accepted) return res.status(400).json({ error: 'You must accept the Terms of Service and Privacy Policy to register.' });
   if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters.' });
 
@@ -71,11 +71,14 @@ app.post('/api/auth/register-student', (req, res) => {
 
   const fac = db.prepare('SELECT * FROM faculties WHERE id = ? AND university_id = ?').get(faculty_id, uni.id);
   if (!fac) return res.status(400).json({ error: 'Select a faculty belonging to your university.' });
+  if (!db.prepare('SELECT 1 FROM majors WHERE faculty_id = ? AND name = ?').get(fac.id, major)) {
+    return res.status(400).json({ error: 'Select a major that belongs to your faculty.' });
+  }
   if (db.prepare('SELECT 1 FROM users WHERE email = ?').get(email)) return res.status(400).json({ error: 'An account with this email already exists.' });
 
-  const r = db.prepare(`INSERT INTO users (role,email,password_hash,name,university_id,faculty_id,major,terms_accepted_at,privacy_policy_version)
-    VALUES ('student',?,?,?,?,?,?,datetime('now'),?)`)
-    .run(email, bcrypt.hashSync(password, 10), name, uni.id, fac.id, major, POLICY_VERSION);
+  const r = db.prepare(`INSERT INTO users (role,email,password_hash,name,university_id,faculty_id,major,education_level,terms_accepted_at,privacy_policy_version)
+    VALUES ('student',?,?,?,?,?,?,?,datetime('now'),?)`)
+    .run(email, bcrypt.hashSync(password, 10), name, uni.id, fac.id, major, education_level, POLICY_VERSION);
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(r.lastInsertRowid);
   req.session.user = publicUser(user);
   res.json({ user: req.session.user });
@@ -291,49 +294,125 @@ app.get('/api/my-applications', requireAuth('student'), (req, res) => {
   res.json({ applications: rows });
 });
 
-// Skill test (based on major)
+// Skill test (based on major) — supports one retake with different questions; final score
+// is the average of both attempts if retaken, or just attempt 1's score otherwise.
+function pickQuestions(major, excludeIds) {
+  const all = db.prepare('SELECT id FROM skill_questions WHERE major=?').all(major).map(r => r.id);
+  const pool = all.filter(id => !excludeIds.includes(id));
+  const source = pool.length ? pool : all; // graceful fallback if the bank is too small
+  return source.sort(() => Math.random() - 0.5).slice(0, 5);
+}
+
 app.get('/api/applications/:id/skill-test', requireAuth('student'), (req, res) => {
   const a = db.prepare('SELECT * FROM applications WHERE id=? AND student_id=?').get(req.params.id, req.session.user.id);
   if (!a) return res.status(404).json({ error: 'Application not found.' });
   if (a.stage !== 'skill_test') return res.status(400).json({ error: 'The skill test is not the current step.' });
-  const qs = db.prepare('SELECT id, question, options FROM skill_questions WHERE major=?').all(req.session.user.major);
-  res.json({ questions: qs.map(q => ({ ...q, options: JSON.parse(q.options) })) });
+
+  const attempts = db.prepare('SELECT * FROM skill_test_attempts WHERE application_id=? ORDER BY attempt_number').all(a.id);
+  const wantRetake = req.query.retake === '1';
+  let attempt = attempts.find(x => x.score == null);
+
+  if (!attempt) {
+    if (wantRetake) {
+      if (attempts.length !== 1 || attempts[0].score == null) return res.status(400).json({ error: 'No attempt available to retake.' });
+      const usedIds = JSON.parse(attempts[0].question_ids);
+      const ids = pickQuestions(req.session.user.major, usedIds);
+      if (!ids.length) return res.status(400).json({ error: 'No question bank for your major yet. Contact your faculty coordinator.' });
+      db.prepare('INSERT INTO skill_test_attempts (application_id, attempt_number, question_ids) VALUES (?,2,?)').run(a.id, JSON.stringify(ids));
+      attempt = db.prepare('SELECT * FROM skill_test_attempts WHERE application_id=? AND attempt_number=2').get(a.id);
+    } else if (!attempts.length) {
+      const ids = pickQuestions(req.session.user.major, []);
+      if (!ids.length) return res.status(400).json({ error: 'No question bank for your major yet. Contact your faculty coordinator.' });
+      db.prepare('INSERT INTO skill_test_attempts (application_id, attempt_number, question_ids) VALUES (?,1,?)').run(a.id, JSON.stringify(ids));
+      attempt = db.prepare('SELECT * FROM skill_test_attempts WHERE application_id=? AND attempt_number=1').get(a.id);
+    } else {
+      return res.status(400).json({ error: 'Test already completed.' });
+    }
+  }
+  const ids = JSON.parse(attempt.question_ids);
+  const qs = ids.map(id => db.prepare('SELECT id, question, options FROM skill_questions WHERE id=?').get(id));
+  res.json({ attemptNumber: attempt.attempt_number, questions: qs.map(q => ({ ...q, options: JSON.parse(q.options) })) });
 });
 
 app.post('/api/applications/:id/skill-test', requireAuth('student'), (req, res) => {
   const a = db.prepare('SELECT * FROM applications WHERE id=? AND student_id=?').get(req.params.id, req.session.user.id);
   if (!a || a.stage !== 'skill_test') return res.status(400).json({ error: 'The skill test is not the current step.' });
+  const attempt = db.prepare('SELECT * FROM skill_test_attempts WHERE application_id=? AND score IS NULL ORDER BY attempt_number DESC').get(a.id);
+  if (!attempt) return res.status(400).json({ error: 'No active attempt to submit.' });
+
   const answers = req.body?.answers || {}; // {questionId: optionIdx}
-  const qs = db.prepare('SELECT * FROM skill_questions WHERE major=?').all(req.session.user.major);
-  if (!qs.length) return res.status(400).json({ error: 'No question bank for your major yet. Contact your faculty coordinator.' });
+  const ids = JSON.parse(attempt.question_ids);
+  const qs = ids.map(id => db.prepare('SELECT * FROM skill_questions WHERE id=?').get(id));
   const correct = qs.filter(q => +answers[q.id] === q.answer_idx).length;
   const score = Math.round((correct / qs.length) * 100);
-  const passed = score >= 60;
+  db.prepare('UPDATE skill_test_attempts SET score=? WHERE id=?').run(score, attempt.id);
+
+  if (attempt.attempt_number === 1) {
+    return res.json({ attemptNumber: 1, score, canRetake: true });
+  }
+  // Attempt 2: auto-finalize with the average of both attempts, no further retake.
+  const first = db.prepare('SELECT score FROM skill_test_attempts WHERE application_id=? AND attempt_number=1').get(a.id);
+  const finalScore = Math.round((first.score + score) / 2);
+  const passed = finalScore >= 60;
   db.prepare(`UPDATE applications SET skill_score=?, stage=?, updated_at=datetime('now') WHERE id=?`)
-    .run(score, passed ? 'ai_interview' : 'rejected', a.id);
-  res.json({ score, passed });
+    .run(finalScore, passed ? 'ai_interview' : 'rejected', a.id);
+  res.json({ attemptNumber: 2, score, finalScore, passed });
 });
 
-// AI interview (MVP: structured questions recorded for review; AI scoring is a planned integration)
+app.post('/api/applications/:id/skill-test/continue', requireAuth('student'), (req, res) => {
+  const a = db.prepare('SELECT * FROM applications WHERE id=? AND student_id=?').get(req.params.id, req.session.user.id);
+  if (!a || a.stage !== 'skill_test') return res.status(400).json({ error: 'The skill test is not the current step.' });
+  const attempt = db.prepare('SELECT * FROM skill_test_attempts WHERE application_id=? AND attempt_number=1').get(a.id);
+  if (!attempt || attempt.score == null) return res.status(400).json({ error: 'Complete the skill test first.' });
+  const passed = attempt.score >= 60;
+  db.prepare(`UPDATE applications SET skill_score=?, stage=?, updated_at=datetime('now') WHERE id=?`)
+    .run(attempt.score, passed ? 'ai_interview' : 'rejected', a.id);
+  res.json({ finalScore: attempt.score, passed });
+});
+
+// AI interview (MVP: structured questions recorded for review; AI scoring is a planned integration).
+// Supports one retake with a different set of questions — both rounds are stored and shown to the
+// company, since there's no live numeric score to average here (see server/anthropic.js).
 const AI_QUESTIONS = [
   'Describe a project or coursework you are most proud of, and your specific contribution.',
   'Why do you want this particular role, and what do you hope to learn in the first 3 months?',
   'Tell us about a time you had to learn something difficult quickly. How did you approach it?',
 ];
+const AI_QUESTIONS_ROUND2 = [
+  'Tell us about a time you disagreed with a teammate or classmate. How did you handle it?',
+  'What does success in this role look like to you after six months?',
+  'Describe a mistake you made on a project and what you changed afterward.',
+];
 app.get('/api/applications/:id/ai-interview', requireAuth('student'), (req, res) => {
   const a = db.prepare('SELECT * FROM applications WHERE id=? AND student_id=?').get(req.params.id, req.session.user.id);
   if (!a || a.stage !== 'ai_interview') return res.status(400).json({ error: 'The AI interview is not the current step.' });
-  res.json({ questions: AI_QUESTIONS });
+  const round1Done = db.prepare('SELECT 1 FROM ai_answers WHERE application_id=? AND attempt=1').get(a.id);
+  const round2Done = db.prepare('SELECT 1 FROM ai_answers WHERE application_id=? AND attempt=2').get(a.id);
+  if (req.query.retake === '1') {
+    if (!round1Done || round2Done) return res.status(400).json({ error: 'No retake available.' });
+    return res.json({ attempt: 2, questions: AI_QUESTIONS_ROUND2 });
+  }
+  if (round1Done) return res.status(400).json({ error: 'Interview already answered.' });
+  res.json({ attempt: 1, questions: AI_QUESTIONS });
 });
 app.post('/api/applications/:id/ai-interview', requireAuth('student'), (req, res) => {
   const a = db.prepare('SELECT * FROM applications WHERE id=? AND student_id=?').get(req.params.id, req.session.user.id);
   if (!a || a.stage !== 'ai_interview') return res.status(400).json({ error: 'The AI interview is not the current step.' });
+  const attempt = req.body?.attempt === 2 ? 2 : 1;
+  const questions = attempt === 2 ? AI_QUESTIONS_ROUND2 : AI_QUESTIONS;
   const answers = req.body?.answers || [];
-  if (answers.length !== AI_QUESTIONS.length || answers.some(x => !x || x.trim().length < 30)) {
+  if (answers.length !== questions.length || answers.some(x => !x || x.trim().length < 30)) {
     return res.status(400).json({ error: 'Answer every question with at least a short paragraph (30+ characters).' });
   }
-  const ins = db.prepare('INSERT INTO ai_answers (application_id, question, answer) VALUES (?,?,?)');
-  AI_QUESTIONS.forEach((q, i) => ins.run(a.id, q, answers[i]));
+  const ins = db.prepare('INSERT INTO ai_answers (application_id, question, answer, attempt) VALUES (?,?,?,?)');
+  questions.forEach((q, i) => ins.run(a.id, q, answers[i], attempt));
+  res.json({ ok: true, attempt, canRetake: attempt === 1 });
+});
+app.post('/api/applications/:id/ai-interview/continue', requireAuth('student'), (req, res) => {
+  const a = db.prepare('SELECT * FROM applications WHERE id=? AND student_id=?').get(req.params.id, req.session.user.id);
+  if (!a || a.stage !== 'ai_interview') return res.status(400).json({ error: 'The AI interview is not the current step.' });
+  const answered = db.prepare('SELECT 1 FROM ai_answers WHERE application_id=?').get(a.id);
+  if (!answered) return res.status(400).json({ error: 'Complete the interview first.' });
   db.prepare(`UPDATE applications SET stage='company_test', ai_summary='Interview answers recorded, pending company review.', updated_at=datetime('now') WHERE id=?`).run(a.id);
   res.json({ ok: true, stage: 'company_test' });
 });
@@ -352,7 +431,7 @@ app.get('/api/company/applicants/:id', requireAuth('company'), (req, res) => {
   const a = db.prepare(`SELECT a.*, u.name AS student_name, u.email AS student_email, u.major, j.title, j.company_id
     FROM applications a JOIN users u ON u.id=a.student_id JOIN jobs j ON j.id=a.job_id WHERE a.id=?`).get(req.params.id);
   if (!a || a.company_id !== comp?.id) return res.status(404).json({ error: 'Applicant not found.' });
-  const aiAnswers = db.prepare('SELECT question, answer FROM ai_answers WHERE application_id=?').all(a.id);
+  const aiAnswers = db.prepare('SELECT question, answer, attempt FROM ai_answers WHERE application_id=? ORDER BY attempt, id').all(a.id);
   res.json({ applicant: a, aiAnswers });
 });
 

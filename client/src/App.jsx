@@ -165,8 +165,29 @@ export default function App() {
 
         <footer className="site">
           <div className="container">
-            <span>LinkWork · Faculty-verified hiring for the University of Debrecen</span>
-            <span>Every posting is real. Every hire is on the ledger.</span>
+            <div className="footer-cols">
+              <div className="footer-col">
+                <h4>For students</h4>
+                <Link to="/student">Find an internship</Link>
+                <Link to="/companies">Explore companies</Link>
+                <Link to="/resources">Resources</Link>
+                {!user && <Link to="/auth">Sign in</Link>}
+              </div>
+              <div className="footer-col">
+                <h4>For companies</h4>
+                <Link to="/auth?mode=company">Hire from LinkWork</Link>
+                {!user && <Link to="/auth">Sign in</Link>}
+              </div>
+              <div className="footer-col">
+                <h4>About</h4>
+                <Link to="/privacy">Privacy Policy</Link>
+                <Link to="/terms">Terms of Service</Link>
+              </div>
+            </div>
+            <div className="footer-bottom">
+              <span className="footer-brand"><LinkMark size={28} /> LinkWork</span>
+              <span>© {new Date().getFullYear()} LinkWork · Every posting is real. Every hire is on the ledger.</span>
+            </div>
           </div>
         </footer>
       </div>

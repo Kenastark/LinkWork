@@ -11,6 +11,41 @@ function Icon({ d }) {
   );
 }
 
+function MatchIllustration() {
+  return (
+    <svg viewBox="0 0 380 340" width="100%" style={{ display: 'block' }} role="img" aria-label="Illustration of matched job cards">
+      <defs>
+        <linearGradient id="blob1" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="var(--verify-tint)" />
+          <stop offset="100%" stopColor="var(--gold-tint)" />
+        </linearGradient>
+        <linearGradient id="cardGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="var(--verify-bright)" />
+          <stop offset="100%" stopColor="var(--verify)" />
+        </linearGradient>
+      </defs>
+      <ellipse cx="190" cy="175" rx="175" ry="150" fill="url(#blob1)" />
+      <g transform="translate(60,190) rotate(-8)">
+        <rect width="220" height="110" rx="18" fill="#fff" stroke="var(--line)" strokeWidth="1.5" />
+        <rect x="20" y="20" width="90" height="12" rx="6" fill="var(--line)" />
+        <rect x="20" y="42" width="140" height="9" rx="4.5" fill="var(--line)" />
+        <rect x="20" y="60" width="110" height="9" rx="4.5" fill="var(--line)" />
+        <rect x="20" y="82" width="64" height="16" rx="8" fill="var(--gold-tint)" />
+      </g>
+      <g transform="translate(90,60) rotate(6)">
+        <rect width="220" height="120" rx="18" fill="url(#cardGrad)" />
+        <rect x="20" y="22" width="110" height="13" rx="6.5" fill="rgba(255,255,255,.85)" />
+        <rect x="20" y="46" width="150" height="9" rx="4.5" fill="rgba(255,255,255,.5)" />
+        <rect x="20" y="64" width="70" height="18" rx="9" fill="rgba(255,255,255,.28)" />
+        <rect x="98" y="64" width="60" height="18" rx="9" fill="rgba(255,255,255,.28)" />
+        <rect x="20" y="90" width="80" height="18" rx="9" fill="#fff" />
+      </g>
+      <circle cx="300" cy="240" r="26" fill="var(--gold)" opacity="0.9" />
+      <circle cx="300" cy="240" r="26" fill="none" stroke="#fff" strokeWidth="2" />
+    </svg>
+  );
+}
+
 const HOW_STEPS = [
   { icon: '1', title: 'Verify who you are', body: 'Sign up with your university email, submit your student documents, and get verified once — then apply to anything.' },
   { icon: '2', title: 'Prove what you know', body: 'A skill test based on your major and a structured interview qualify you before the company ever sees your file. Same test, same bar, for everyone.' },
@@ -66,7 +101,7 @@ export default function Landing() {
         <div className="container">
           <div>
             <div className="eyebrow">University of Debrecen · Pilot</div>
-            <h1>No ghost jobs. Just <em>real</em> roles, <em>real</em> hires.</h1>
+            <h1>Real companies. Open roles. <em>Actual hires.</em></h1>
             <p className="lede">
               LinkWork only lists internships and entry-level roles that companies have committed to
               filling — most of them negotiated directly with your faculty. No fake listings, no
@@ -115,6 +150,26 @@ export default function Landing() {
           </div>
         </div>
       )}
+
+      <section className="match-pitch">
+        <div className="container match-pitch-grid">
+          <div>
+            <span className="eyebrow" style={{ color: 'var(--verify)' }}>Built for students, not recruiters</span>
+            <h2>Finally, a job search that works for you.</h2>
+            <h3 style={{ marginTop: 18, fontSize: 22 }}>Looking for the right role?</h3>
+            <p className="muted" style={{ marginTop: 10, fontSize: 16.5, maxWidth: '46ch' }}>
+              Every posting on LinkWork is scoped to your university and, often, your faculty — so you're
+              only ever looking at roles you're actually eligible for. A skill test based on your major and
+              a structured interview qualify you before a company ever opens your file. No cover-letter
+              guessing games, no ghost listings — just real openings matched to what you're studying.
+            </p>
+            <Link to={user ? '/student' : '/auth?mode=student'} className="btn" style={{ marginTop: 22 }}>
+              {user ? 'Browse openings' : 'Get started'}
+            </Link>
+          </div>
+          <div className="match-pitch-art"><MatchIllustration /></div>
+        </div>
+      </section>
 
       <HowItWorks />
 

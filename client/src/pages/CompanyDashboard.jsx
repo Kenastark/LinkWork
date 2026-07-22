@@ -125,10 +125,17 @@ export default function CompanyDashboard() {
           <h3 style={{ marginTop: 16, fontSize: 17 }}>AI interview answers</h3>
           {detail.aiAnswers.length === 0
             ? <p className="muted">Not completed yet.</p>
-            : detail.aiAnswers.map((qa, i) => (
-              <div key={i} style={{ marginTop: 12 }}>
-                <p style={{ fontWeight: 600, fontSize: 14 }}>{qa.question}</p>
-                <p className="muted">{qa.answer}</p>
+            : [1, 2].filter(round => detail.aiAnswers.some(qa => qa.attempt === round)).map(round => (
+              <div key={round}>
+                {detail.aiAnswers.some(qa => qa.attempt === 2) && (
+                  <p className="id-tag" style={{ marginTop: 16 }}>ROUND {round}</p>
+                )}
+                {detail.aiAnswers.filter(qa => qa.attempt === round).map((qa, i) => (
+                  <div key={i} style={{ marginTop: 12 }}>
+                    <p style={{ fontWeight: 600, fontSize: 14 }}>{qa.question}</p>
+                    <p className="muted">{qa.answer}</p>
+                  </div>
+                ))}
               </div>
             ))}
         </div>
