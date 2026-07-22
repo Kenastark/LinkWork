@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS faculties (
 CREATE TABLE IF NOT EXISTS majors (
   id INTEGER PRIMARY KEY,
   faculty_id INTEGER NOT NULL REFERENCES faculties(id),
-  name TEXT NOT NULL
+  name TEXT NOT NULL,
+  min_level TEXT -- NULL = any level; otherwise the minimum of Bachelor's/Master's/PhD required
 );
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY,
@@ -123,6 +124,7 @@ addColumnIfMissing('users', 'phone', 'phone TEXT');
 addColumnIfMissing('users', 'photo_path', 'photo_path TEXT');
 addColumnIfMissing('ai_answers', 'attempt', 'attempt INTEGER NOT NULL DEFAULT 1');
 addColumnIfMissing('users', 'education_level', 'education_level TEXT');
+addColumnIfMissing('majors', 'min_level', "min_level TEXT");
 
 // ---------- Seed ----------
 function seed() {
@@ -139,7 +141,7 @@ function seed() {
     'Faculty of Dentistry': ['Dentistry'],
     'Faculty of Economics and Business': ['Business Administration', 'Economics', 'Finance and Accounting'],
     'Faculty of Medicine': ['Medicine'],
-    'Faculty of Informatics': ['Computer Science', 'Software Engineering', 'Information Technology'],
+    'Faculty of Informatics': ['Computer Science', 'Software Engineering', 'Information Technology', 'Business Informatics', ['Data Science', "Master's"]],
     'Faculty of Law': ['Law'],
     'Faculty of Music': ['Music Performance', 'Music Theory'],
     'Faculty of Pharmacy': ['Pharmacy'],
@@ -150,11 +152,14 @@ function seed() {
   };
 
   const facIds = {};
-  const insMajor = db.prepare('INSERT INTO majors (faculty_id, name) VALUES (?, ?)');
+  const insMajor = db.prepare('INSERT INTO majors (faculty_id, name, min_level) VALUES (?, ?, ?)');
   for (const [facName, majors] of Object.entries(facultyMajors)) {
     const facId = db.prepare('INSERT INTO faculties (university_id, name) VALUES (?, ?)').run(uniId, facName).lastInsertRowid;
     facIds[facName] = facId;
-    for (const m of majors) insMajor.run(facId, m);
+    for (const m of majors) {
+      const [name, minLevel] = Array.isArray(m) ? m : [m, null];
+      insMajor.run(facId, name, minLevel);
+    }
   }
 
   const hash = (p) => bcrypt.hashSync(p, 10);

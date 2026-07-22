@@ -8,6 +8,7 @@ export default function Auth() {
   const [mode, setMode] = useState(params.get('mode') || 'login');
   const [meta, setMeta] = useState(null);
   const [facultyId, setFacultyId] = useState('');
+  const [educationLevel, setEducationLevel] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
@@ -16,10 +17,19 @@ export default function Auth() {
 
   useEffect(() => { api.get('/api/meta').then(setMeta); }, []);
 
+  const EDU_LEVEL_RANK = { "Bachelor's": 0, "Master's": 1, PhD: 2, Other: 0 };
+  const EDUCATION_LEVELS = ["Bachelor's", "Master's", 'PhD', 'Other'];
+
   const submit = async (e) => {
     e.preventDefault();
-    setError(''); setBusy(true);
+    setError('');
     const fd = Object.fromEntries(new FormData(e.target));
+    if ((mode === 'student' || mode === 'company') && fd.password !== fd.confirm_password) {
+      setError('Passwords do not match.');
+      return;
+    }
+    delete fd.confirm_password;
+    setBusy(true);
     try {
       let d;
       if (mode === 'login') d = await api.post('/api/auth/login', fd);
@@ -33,8 +43,8 @@ export default function Auth() {
   };
 
   const uniFaculties = meta?.faculties?.filter(f => f.university_id === meta?.universities?.[0]?.id) || [];
-  const facultyMajors = meta?.majors?.filter(m => m.faculty_id === Number(facultyId)) || [];
-  const EDUCATION_LEVELS = ["Bachelor's", "Master's", 'PhD', 'Other'];
+  const facultyMajors = meta?.majors?.filter(m => m.faculty_id === Number(facultyId)
+    && (!m.min_level || (EDU_LEVEL_RANK[educationLevel] ?? -1) >= EDU_LEVEL_RANK[m.min_level])) || [];
 
   return (
     <main className="container" style={{ maxWidth: 560 }}>
@@ -63,6 +73,12 @@ export default function Auth() {
             <p className="muted" style={{ marginBottom: 18 }}>Only official university addresses are accepted — this keeps every profile real.</p>
             <label className="field">Full name<input name="name" required /></label>
             <label className="field">University email <span className="hint">(e.g. you@mailbox.unideb.hu)</span><input name="email" type="email" required /></label>
+            <label className="field">Current level of education
+              <select name="education_level" required value={educationLevel} onChange={e => setEducationLevel(e.target.value)}>
+                <option value="" disabled>Select your education level</option>
+                {EDUCATION_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
+              </select>
+            </label>
             <label className="field">Faculty
               <select name="faculty_id" required value={facultyId} onChange={e => setFacultyId(e.target.value)}>
                 <option value="" disabled>Select your faculty</option>
@@ -72,16 +88,11 @@ export default function Auth() {
             <label className="field">Major <span className="hint">(your skill test is based on this)</span>
               <select name="major" required defaultValue="" disabled={!facultyId}>
                 <option value="" disabled>{facultyId ? 'Select your major' : 'Select a faculty first'}</option>
-                {facultyMajors.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
-              </select>
-            </label>
-            <label className="field">Highest level of education
-              <select name="education_level" required defaultValue="">
-                <option value="" disabled>Select your education level</option>
-                {EDUCATION_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
+                {facultyMajors.map(m => <option key={m.id} value={m.name}>{m.name}{m.min_level ? ` (${m.min_level}+)` : ''}</option>)}
               </select>
             </label>
             <label className="field">Password <span className="hint">(8+ characters)</span><input name="password" type="password" minLength={8} required autoComplete="new-password" /></label>
+            <label className="field">Confirm password<input name="confirm_password" type="password" minLength={8} required autoComplete="new-password" /></label>
             <label className="field" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontWeight: 400 }}>
               <input type="checkbox" name="terms_accepted" required style={{ width: 'auto', margin: '3px 0 0' }} />
               <span>I agree to the <Link to="/terms" target="_blank">Terms of Service</Link> and <Link to="/privacy" target="_blank">Privacy Policy</Link>.</span>
@@ -99,6 +110,7 @@ export default function Auth() {
             <label className="field">Website<input name="website" type="url" placeholder="https://" /></label>
             <label className="field">What does your company do?<textarea name="description" /></label>
             <label className="field">Password <span className="hint">(8+ characters)</span><input name="password" type="password" minLength={8} required autoComplete="new-password" /></label>
+            <label className="field">Confirm password<input name="confirm_password" type="password" minLength={8} required autoComplete="new-password" /></label>
             <label className="field" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontWeight: 400 }}>
               <input type="checkbox" name="terms_accepted" required style={{ width: 'auto', margin: '3px 0 0' }} />
               <span>I agree to the <Link to="/terms" target="_blank">Terms of Service</Link> and <Link to="/privacy" target="_blank">Privacy Policy</Link>.</span>

@@ -3,6 +3,20 @@ import { Link } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
 
+const BRAND_PALETTE = [
+  { bg: '#e3f3ec', fg: '#147d5b' }, // verify
+  { bg: '#fbf3dd', fg: '#7c5a00' }, // gold
+  { bg: '#e6ecf7', fg: '#2b4a8c' }, // blue
+  { bg: '#f3e8f5', fg: '#7a3d8c' }, // plum
+  { bg: '#fbe9e2', fg: '#a24a2b' }, // terracotta
+  { bg: '#e4f0f0', fg: '#1c6b6b' }, // teal
+];
+function brandColors(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  return BRAND_PALETTE[hash % BRAND_PALETTE.length];
+}
+
 function Icon({ d }) {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -173,17 +187,56 @@ export default function Landing() {
 
       <HowItWorks />
 
+      {/* Illustrative placeholder testimonials — replace with real student quotes before public launch. */}
+      <section className="testimonials">
+        <div className="container testimonials-grid">
+          <div className="testimonials-photo">
+            <img src="/images/students-testimonial.jpg" alt="A multicultural group of students studying together" />
+          </div>
+          <div>
+            <span className="eyebrow" style={{ color: 'var(--verify)' }}>From the chain</span>
+            <h2 style={{ fontSize: 32, marginBottom: 24 }}>Students are already in the chain.</h2>
+            <div className="notes-grid">
+              <div className="note note-tint-a">
+                <p>"I didn't have to wonder if the internship was already filled before I even applied. Applied, tested, hired — no guessing games."</p>
+                <span>— Computer Science student</span>
+              </div>
+              <div className="note note-stat">
+                <b>{stats ? stats.open_jobs : '—'}</b>
+                <span>Verified postings open right now</span>
+              </div>
+              <div className="note note-stat note-tint-b">
+                <b>{stats ? stats.approved_companies : '—'}</b>
+                <span>Companies committed to hiring here</span>
+              </div>
+              <div className="note note-tint-c">
+                <p>"The skill test gave me a real shot without needing an inside connection at the company."</p>
+                <span>— Business Administration student</span>
+              </div>
+              <div className="note note-stat note-tint-a" style={{ gridColumn: 'span 2' }}>
+                <b>100%</b>
+                <span>Faculty-verified process — same test, same bar, for everyone</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {stats?.companies?.length > 0 && (
         <section className="company-showcase">
           <div className="container">
+            <span className="eyebrow" style={{ color: 'var(--verify)' }}>Trusted employers</span>
             <h2>Companies hiring on LinkWork</h2>
-            <div className="showcase-row">
-              {stats.companies.map(c => (
-                <Link to={user ? '/companies' : '/auth'} key={c.name} className="showcase-item">
-                  <span className="company-mono">{c.name.charAt(0).toUpperCase()}</span>
-                  <span>{c.name}</span>
-                </Link>
-              ))}
+            <div className="showcase-grid">
+              {stats.companies.map(c => {
+                const colors = brandColors(c.name);
+                return (
+                  <Link to={user ? '/companies' : '/auth'} key={c.name} className="showcase-card" style={{ '--brand-bg': colors.bg, '--brand-fg': colors.fg }}>
+                    <span className="showcase-mono">{c.name.charAt(0).toUpperCase()}</span>
+                    <span className="showcase-wordmark">{c.name}</span>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </section>

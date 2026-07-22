@@ -53,7 +53,7 @@ function publicUser(u) {
 app.get('/api/meta', (req, res) => {
   const universities = db.prepare('SELECT id, name, domains FROM universities').all();
   const faculties = db.prepare('SELECT id, university_id, name FROM faculties').all();
-  const majors = db.prepare('SELECT id, faculty_id, name FROM majors ORDER BY name').all();
+  const majors = db.prepare('SELECT id, faculty_id, name, min_level FROM majors ORDER BY name').all();
   res.json({ universities, faculties, majors });
 });
 
@@ -71,8 +71,11 @@ app.post('/api/auth/register-student', (req, res) => {
 
   const fac = db.prepare('SELECT * FROM faculties WHERE id = ? AND university_id = ?').get(faculty_id, uni.id);
   if (!fac) return res.status(400).json({ error: 'Select a faculty belonging to your university.' });
-  if (!db.prepare('SELECT 1 FROM majors WHERE faculty_id = ? AND name = ?').get(fac.id, major)) {
-    return res.status(400).json({ error: 'Select a major that belongs to your faculty.' });
+  const majorRow = db.prepare('SELECT * FROM majors WHERE faculty_id = ? AND name = ?').get(fac.id, major);
+  if (!majorRow) return res.status(400).json({ error: 'Select a major that belongs to your faculty.' });
+  const EDU_LEVEL_RANK = { "Bachelor's": 0, "Master's": 1, 'PhD': 2, 'Other': 0 };
+  if (majorRow.min_level && (EDU_LEVEL_RANK[education_level] ?? -1) < EDU_LEVEL_RANK[majorRow.min_level]) {
+    return res.status(400).json({ error: `${major} requires at least a ${majorRow.min_level} level of education.` });
   }
   if (db.prepare('SELECT 1 FROM users WHERE email = ?').get(email)) return res.status(400).json({ error: 'An account with this email already exists.' });
 
