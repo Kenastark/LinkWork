@@ -226,6 +226,19 @@ app.get('/api/stats', (req, res) => {
   });
 });
 
+// ---------- translation (Google Cloud Translation API, DB-cached) ----------
+app.post('/api/translate', requireAuth(), async (req, res) => {
+  const { texts, lang } = req.body || {};
+  if (!Array.isArray(texts) || !lang) return res.status(400).json({ error: 'texts[] and lang are required.' });
+  const { translateBatch, FEATURE_ENABLED } = require('./translate');
+  if (!FEATURE_ENABLED || lang === 'en') return res.json({ texts });
+  try {
+    res.json({ texts: await translateBatch(texts.map(t => t || ''), lang) });
+  } catch (e) {
+    res.json({ texts }); // never break a page over a translation-provider hiccup
+  }
+});
+
 // ---------- student: identity documents ----------
 app.post('/api/student/submit-docs', requireAuth('student'), (req, res) => {
   const { note } = req.body || {};

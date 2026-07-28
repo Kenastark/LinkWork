@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
+import { useTranslatedTexts } from '../useTranslatedTexts.js';
 import Chain from '../components/Chain.jsx';
 
 export default function JobDetail() {
@@ -21,9 +22,14 @@ export default function JobDetail() {
   const load = () => api.get(`/api/jobs/${id}`).then(setData).catch(e => setError(e.message));
   useEffect(() => { load(); }, [id]);
 
+  const job = data?.job;
+  const [description, requirements, companyDescription] = useTranslatedTexts([
+    job?.description || '', job?.requirements || '', job?.company_description || '',
+  ]);
+
   if (error) return <main className="container"><div className="alert error">{error}</div></main>;
   if (!data || !data.job) return <main className="container"><div className="alert error">Couldn't load this posting. It may have been removed.</div></main>;
-  const { job, application } = data;
+  const { application } = data;
   const isStudent = user.role === 'student';
 
   const apply = async () => {
@@ -131,10 +137,10 @@ export default function JobDetail() {
 
       <div className="card">
         <h3>About the role</h3>
-        <p style={{ marginTop: 8 }}>{job.description}</p>
+        <p style={{ marginTop: 8 }}>{description}</p>
         {job.requirements && <>
           <h3 style={{ marginTop: 18 }}>Skills & requirements</h3>
-          <p style={{ marginTop: 8 }}>{job.requirements}</p>
+          <p style={{ marginTop: 8 }}>{requirements}</p>
         </>}
       </div>
 
@@ -146,7 +152,7 @@ export default function JobDetail() {
             {job.website && <a href={job.website} target="_blank" rel="noreferrer">{job.website}</a>}
           </div>
         </div>
-        {job.company_description && <p className="muted" style={{ marginTop: 12 }}>{job.company_description}</p>}
+        {job.company_description && <p className="muted" style={{ marginTop: 12 }}>{companyDescription}</p>}
         {job.company_id != null && <Link to={`/companies/${job.company_id}`} className="btn sm ghost" style={{ marginTop: 14 }}>View company profile</Link>}
       </div>
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
+import { useTranslatedTexts } from '../useTranslatedTexts.js';
 import Card from '../components/Card.jsx';
 import Badge from '../components/Badge.jsx';
 import Button from '../components/Button.jsx';
@@ -15,6 +16,8 @@ export default function CompanyProfile() {
 
   const load = () => api.get(`/api/companies/${id}`).then(setData).catch(e => setError(e.message));
   useEffect(() => { load(); }, [id]);
+
+  const [description] = useTranslatedTexts([data?.company?.description || '']);
 
   if (error) return <main className="container"><div className="alert error">{error}</div></main>;
   if (!data) return <main className="container" />;
@@ -43,7 +46,7 @@ export default function CompanyProfile() {
             </Button>
           )}
         </div>
-        {company.description && <p className="muted" style={{ marginTop: 16 }}>{company.description}</p>}
+        {company.description && <p className="muted" style={{ marginTop: 16 }}>{description}</p>}
       </Card>
 
       <h3 style={{ margin: '24px 0 12px', fontSize: 18 }}>Open positions ({jobs.length})</h3>

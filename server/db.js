@@ -107,6 +107,15 @@ CREATE TABLE IF NOT EXISTS company_follows (
   created_at TEXT DEFAULT (datetime('now')),
   UNIQUE(student_id, company_id)
 );
+CREATE TABLE IF NOT EXISTS translation_cache (
+  id INTEGER PRIMARY KEY,
+  text_hash TEXT NOT NULL,
+  target_lang TEXT NOT NULL,
+  source_text TEXT NOT NULL,
+  translated_text TEXT NOT NULL,
+  created_at TEXT DEFAULT (datetime('now')),
+  UNIQUE(text_hash, target_lang)
+);
 `);
 db.exec('DROP TABLE IF EXISTS job_alerts');
 
