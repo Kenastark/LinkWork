@@ -60,6 +60,108 @@ function MatchIllustration() {
   );
 }
 
+// Category icons — hand-drawn inline SVG (no external asset / flaticon dependency).
+const FEATURE_ICONS = {
+  track: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <circle cx="5" cy="12" r="2.4" /><circle cx="12" cy="12" r="2.4" /><circle cx="19" cy="12" r="2.4" opacity="0.5" />
+    </svg>
+  ),
+  offers: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <rect x="4" y="12" width="4" height="7" rx="1.2" /><rect x="10" y="8" width="4" height="11" rx="1.2" /><rect x="16" y="4" width="4" height="15" rx="1.2" />
+    </svg>
+  ),
+  transparent: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 2c.6 4.1 2.3 5.8 6.4 6.4C14.3 9 12.6 10.7 12 14.8 11.4 10.7 9.7 9 5.6 8.4 9.7 7.8 11.4 6.1 12 2Z" />
+      <path d="M19 3.5c.2 1.3.7 1.8 2 2-1.3.2-1.8.7-2 2-.2-1.3-.7-1.8-2-2 1.3-.2 1.8-.7 2-2Z" />
+    </svg>
+  ),
+};
+const CARD_ICONS = {
+  doc: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="M9 13h6M9 17h6" />
+    </svg>
+  ),
+  bell: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" />
+    </svg>
+  ),
+};
+
+function FeatureRow({ tone, icon, title, body, ctaTo, ctaLabel, art, reverse }) {
+  return (
+    <section className={`feature-row feature-${tone}${reverse ? ' reverse' : ''}`}>
+      <div className="container feature-grid">
+        <div className="feature-copy">
+          <span className="feature-badge">{icon}</span>
+          <h2>{title}</h2>
+          <p>{body}</p>
+          <Link to={ctaTo} className="btn secondary">{ctaLabel}</Link>
+        </div>
+        <div className="feature-art-wrap">{art}</div>
+      </div>
+    </section>
+  );
+}
+
+// Product-preview mockups — real LinkWork content, echoing the reference's panel + card + floating tags.
+const TrackArt = (
+  <div className="feature-panel panel-purple">
+    <div className="mock-card">
+      <span className="mock-mono">JOB-0042</span>
+      <h4>Software Engineering Intern</h4>
+      <p>DataTech Hungary · Faculty of Informatics</p>
+      <ul className="mock-track">
+        <li className="done"><span className="dot" />Application received</li>
+        <li className="done"><span className="dot" />Skill test passed</li>
+        <li className="current"><span className="dot" />AI interview in review</li>
+        <li><span className="dot" />Company review</li>
+        <li><span className="dot" />Offer</li>
+      </ul>
+    </div>
+    <span className="feature-tag tag-a">🔔 Application update</span>
+  </div>
+);
+const OffersArt = (
+  <div className="feature-panel panel-blue">
+    <div className="mock-card">
+      <span className="mock-mono">JOB-0037</span>
+      <h4>Data Analyst Intern</h4>
+      <p>Voltix Electronics · Debrecen</p>
+      <div className="mock-tags">
+        <span className="mock-chip strong">280K HUF / mo</span>
+        <span className="mock-chip">Hybrid</span>
+        <span className="mock-chip">Internship</span>
+        <span className="mock-chip">6 months</span>
+      </div>
+    </div>
+    <span className="feature-tag tag-b">💰 Salary shown upfront</span>
+    <span className="feature-tag tag-c">🏠 Remote-friendly</span>
+  </div>
+);
+const TransparentArt = (
+  <div className="feature-panel panel-green">
+    <div className="mock-card">
+      <span className="mock-mono">GreenField AgroTech Zrt.</span>
+      <h4 style={{ marginTop: 6 }}>What to expect</h4>
+      <ul className="mock-facts">
+        <li><b>★ Faculty-verified</b> partnership</li>
+        <li><b>~3 days</b> average response time</li>
+        <li><b>5 steps</b>, all shown before you apply</li>
+      </ul>
+      <div className="mock-tags">
+        <span className="mock-chip">Mentorship</span>
+        <span className="mock-chip">Paid</span>
+      </div>
+    </div>
+    <span className="feature-tag tag-a">✓ Committed to hire</span>
+  </div>
+);
+
 const HOW_STEPS = [
   { icon: '1', title: 'Verify who you are', body: 'Sign up with your university email, submit your student documents, and get verified once — then apply to anything.' },
   { icon: '2', title: 'Prove what you know', body: 'A skill test based on your major and a structured interview qualify you before the company ever sees your file. Same test, same bar, for everyone.' },
@@ -182,6 +284,68 @@ export default function Landing() {
             </Link>
           </div>
           <div className="match-pitch-art"><MatchIllustration /></div>
+        </div>
+      </section>
+
+      <FeatureRow
+        tone="purple"
+        reverse
+        icon={FEATURE_ICONS.track}
+        title="Track your application"
+        body="Finally, real-time, step-by-step visibility. Apply now, and you'll be notified as soon as we have any updates on the progress of your application!"
+        ctaTo={user ? '/my-applications' : '/auth?mode=student'}
+        ctaLabel="View my applications"
+        art={TrackArt}
+      />
+
+      <FeatureRow
+        tone="blue"
+        icon={FEATURE_ICONS.offers}
+        title="Offers that hide nothing"
+        body="Salary, remote work… Don't go into the unknown when choosing your future job."
+        ctaTo={user ? '/student' : '/auth?mode=student'}
+        ctaLabel="Find an internship"
+        art={OffersArt}
+      />
+
+      <FeatureRow
+        tone="green"
+        reverse
+        icon={FEATURE_ICONS.transparent}
+        title="Transparent companies"
+        body="Recruitment process, response time, benefits… You deserve real answers, not to waste time."
+        ctaTo={user ? '/companies' : '/auth'}
+        ctaLabel="View companies"
+        art={TransparentArt}
+      />
+
+      <section className="land-job">
+        <div className="container">
+          <h2 className="land-title">Prepare to <em>Land your job!</em></h2>
+          <div className="land-grid">
+            <div className="land-card stat land-lav">
+              <b>{stats ? stats.open_jobs : '—'}</b>
+              <p>Verified roles are open right now — <b>be the next hire.</b></p>
+            </div>
+            <div className="land-card action land-peri">
+              <div className="land-card-top">
+                <h4>Make yourself visible to companies</h4>
+                <span className="land-ic">{CARD_ICONS.doc}</span>
+              </div>
+              <Link to={user ? '/profile' : '/auth?mode=student'} className="btn dark">Upload my CV</Link>
+            </div>
+            <div className="land-card stat land-cream">
+              <b>{stats ? stats.approved_companies : '—'}</b>
+              <p>Companies are committed to hiring here. <b>Want the roles that match your major?</b></p>
+            </div>
+            <div className="land-card action land-coral">
+              <div className="land-card-top">
+                <h4>Be alerted quickly</h4>
+                <span className="land-ic">{CARD_ICONS.bell}</span>
+              </div>
+              <Link to={user ? '/alerts' : '/auth?mode=student'} className="btn dark">Create my alert</Link>
+            </div>
+          </div>
         </div>
       </section>
 
