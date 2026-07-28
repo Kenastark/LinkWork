@@ -21,6 +21,7 @@ import Resources from './pages/Resources.jsx';
 import Inbox from './pages/Inbox.jsx';
 import ComingSoon from './pages/ComingSoon.jsx';
 import { ACCOUNT_MENU } from './menuConfig.js';
+import { I18nProvider, useI18n, LANGUAGES } from './i18n.jsx';
 
 // Social brand glyphs (single-path SVG, 24x24). Links point to a placeholder until real accounts exist.
 const SOCIALS = [
@@ -59,6 +60,7 @@ function useCloseOnOutsideOrRoute(open, setOpen) {
 }
 
 function AccountMenu({ user, onSignOut }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useCloseOnOutsideOrRoute(open, setOpen);
 
@@ -72,7 +74,7 @@ function AccountMenu({ user, onSignOut }) {
         aria-expanded={open}
         onClick={() => setOpen(o => !o)}
       >
-        My space ▾
+        {t('nav.mySpace')} ▾
       </button>
       {open && (
         <div className="account-menu" role="menu">
@@ -83,7 +85,42 @@ function AccountMenu({ user, onSignOut }) {
             </NavLink>
           ))}
           <div className="account-menu-divider" />
-          <button className="account-menu-item danger" role="menuitem" onClick={onSignOut}>Sign out</button>
+          <button className="account-menu-item danger" role="menuitem" onClick={onSignOut}>{t('nav.signOut')}</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LanguageSwitcher() {
+  const { lang, setLang } = useI18n();
+  const [open, setOpen] = useState(false);
+  const ref = useCloseOnOutsideOrRoute(open, setOpen);
+  const current = LANGUAGES.find(l => l.code === lang) || LANGUAGES[0];
+
+  return (
+    <div className="account-menu-wrap" ref={ref}>
+      <button
+        className="btn sm ghost lang-trigger"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen(o => !o)}
+        title="Change language"
+      >
+        {current.flag} {current.code.toUpperCase()} ▾
+      </button>
+      {open && (
+        <div className="account-menu lang-menu" role="menu">
+          {LANGUAGES.map(l => (
+            <button
+              key={l.code}
+              className={`account-menu-item${l.code === lang ? ' active' : ''}`}
+              role="menuitem"
+              onClick={() => { setLang(l.code); setOpen(false); }}
+            >
+              {l.flag} {l.label}
+            </button>
+          ))}
         </div>
       )}
     </div>
@@ -91,33 +128,27 @@ function AccountMenu({ user, onSignOut }) {
 }
 
 function RegisterMenu() {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useCloseOnOutsideOrRoute(open, setOpen);
 
   return (
     <div className="account-menu-wrap" ref={ref}>
       <button className="btn sm" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(o => !o)}>
-        Register
+        {t('nav.register')}
       </button>
       {open && (
         <div className="account-menu" role="menu">
-          <Link to="/auth?mode=student" className="account-menu-item" role="menuitem">Join as a student</Link>
-          <Link to="/auth?mode=company" className="account-menu-item" role="menuitem">Join as a company</Link>
+          <Link to="/auth?mode=student" className="account-menu-item" role="menuitem">{t('nav.joinAsStudent')}</Link>
+          <Link to="/auth?mode=company" className="account-menu-item" role="menuitem">{t('nav.joinAsCompany')}</Link>
         </div>
       )}
     </div>
   );
 }
 
-export default function App() {
-  const [user, setUser] = useState(undefined); // undefined = loading
-  const nav = useNavigate();
-
-  useEffect(() => { api.get('/api/auth/me').then(d => setUser(d.user)); }, []);
-
-  const logout = async () => { await api.post('/api/auth/logout'); setUser(null); nav('/'); };
-
-  if (user === undefined) return null;
+function AppShell({ user, setUser, logout }) {
+  const { t } = useI18n();
 
   return (
     <AuthCtx.Provider value={{ user, setUser }}>
@@ -127,29 +158,30 @@ export default function App() {
             <Link to={homeFor(user)} className="brand"><LinkMark /> LinkWork</Link>
 
             {user?.role === 'student' && <>
-              <NavLink className="navlink navlink-lg" to="/student">Find an internship</NavLink>
-              <NavLink className="navlink navlink-lg" to="/companies">Explore companies</NavLink>
-              <NavLink className="navlink navlink-lg" to="/resources">Resources</NavLink>
+              <NavLink className="navlink navlink-lg" to="/student">{t('nav.findInternship')}</NavLink>
+              <NavLink className="navlink navlink-lg" to="/companies">{t('nav.exploreCompanies')}</NavLink>
+              <NavLink className="navlink navlink-lg" to="/resources">{t('nav.resources')}</NavLink>
             </>}
             {!user && <>
-              <NavLink className="navlink navlink-lg" to="/auth">Find a job</NavLink>
-              <NavLink className="navlink navlink-lg" to="/auth">Explore companies</NavLink>
-              <NavLink className="navlink navlink-lg" to="/auth">Resources</NavLink>
+              <NavLink className="navlink navlink-lg" to="/auth">{t('nav.findAJob')}</NavLink>
+              <NavLink className="navlink navlink-lg" to="/auth">{t('nav.exploreCompanies')}</NavLink>
+              <NavLink className="navlink navlink-lg" to="/auth">{t('nav.resources')}</NavLink>
             </>}
-            {user?.role === 'company' && <NavLink className="navlink" to="/company">Dashboard</NavLink>}
-            {user?.role === 'admin' && <NavLink className="navlink" to="/admin">Admin</NavLink>}
+            {user?.role === 'company' && <NavLink className="navlink" to="/company">{t('nav.dashboard')}</NavLink>}
+            {user?.role === 'admin' && <NavLink className="navlink" to="/admin">{t('nav.admin')}</NavLink>}
 
             <span className="spacer" />
 
             {user?.role === 'student' && <>
-              <NavLink className="navlink" to="/my-applications">Applications</NavLink>
-              <NavLink className="navlink" to="/inbox">Inbox</NavLink>
+              <NavLink className="navlink" to="/my-applications">{t('nav.applications')}</NavLink>
+              <NavLink className="navlink" to="/inbox">{t('nav.inbox')}</NavLink>
             </>}
+            <LanguageSwitcher />
             {user ? (
               <AccountMenu user={user} onSignOut={logout} />
             ) : (
               <>
-                <NavLink className="navlink" to="/auth">Sign in</NavLink>
+                <NavLink className="navlink" to="/auth">{t('nav.signIn')}</NavLink>
                 <RegisterMenu />
               </>
             )}
@@ -181,31 +213,31 @@ export default function App() {
           <div className="container">
             <div className="footer-cols">
               <div className="footer-col">
-                <h4>For students</h4>
-                <Link to="/student">Find an internship</Link>
-                <Link to="/companies">Explore companies</Link>
-                <Link to="/resources">Resources</Link>
-                {!user && <Link to="/auth">Sign in</Link>}
+                <h4>{t('footer.forStudents')}</h4>
+                <Link to="/student">{t('nav.findInternship')}</Link>
+                <Link to="/companies">{t('nav.exploreCompanies')}</Link>
+                <Link to="/resources">{t('nav.resources')}</Link>
+                {!user && <Link to="/auth">{t('nav.signIn')}</Link>}
               </div>
               <div className="footer-col">
-                <h4>Hire the right talent</h4>
-                <Link to="/coming-soon?feature=Welcome Hiring Suite">Welcome Hiring Suite</Link>
-                <Link to="/coming-soon?feature=Employer branding">Employer branding</Link>
-                <Link to="/coming-soon?feature=Pricing">Pricing</Link>
-                <Link to="/coming-soon?feature=Clients' testimonials">Clients' testimonials</Link>
-                <Link to="/coming-soon?feature=Resources">Resources</Link>
-                <Link to="/coming-soon?feature=Need help?">Need help?</Link>
-                <Link to="/auth?mode=company">Have an account? Log in</Link>
+                <h4>{t('footer.hireTalent')}</h4>
+                <Link to="/coming-soon?feature=Welcome Hiring Suite">{t('footer.welcomeHiringSuite')}</Link>
+                <Link to="/coming-soon?feature=Employer branding">{t('footer.employerBranding')}</Link>
+                <Link to="/coming-soon?feature=Pricing">{t('footer.pricing')}</Link>
+                <Link to="/coming-soon?feature=Clients' testimonials">{t('footer.testimonials')}</Link>
+                <Link to="/coming-soon?feature=Resources">{t('nav.resources')}</Link>
+                <Link to="/coming-soon?feature=Need help?">{t('footer.needHelp')}</Link>
+                <Link to="/auth?mode=company">{t('footer.haveAccount')}</Link>
               </div>
               <div className="footer-col">
-                <h4>About</h4>
-                <Link to="/privacy">Privacy Policy</Link>
-                <Link to="/terms">Terms of Service</Link>
+                <h4>{t('footer.about')}</h4>
+                <Link to="/privacy">{t('footer.privacyPolicy')}</Link>
+                <Link to="/terms">{t('footer.termsOfService')}</Link>
               </div>
             </div>
 
             <div className="footer-social">
-              <span>Follow us on:</span>
+              <span>{t('footer.followUs')}</span>
               <div className="footer-social-icons">
                 {SOCIALS.map(s => (
                   <Link key={s.name} to="/coming-soon?feature=Social media" aria-label={s.name} title={s.name}>
@@ -217,11 +249,28 @@ export default function App() {
 
             <div className="footer-bottom">
               <span className="footer-brand"><LinkMark size={28} /> LinkWork</span>
-              <span>© {new Date().getFullYear()} LinkWork · Every posting is real. Every hire is on the ledger.</span>
+              <span>© {new Date().getFullYear()} LinkWork · {t('footer.tagline')}</span>
             </div>
           </div>
         </footer>
       </div>
     </AuthCtx.Provider>
+  );
+}
+
+export default function App() {
+  const [user, setUser] = useState(undefined); // undefined = loading
+  const nav = useNavigate();
+
+  useEffect(() => { api.get('/api/auth/me').then(d => setUser(d.user)); }, []);
+
+  const logout = async () => { await api.post('/api/auth/logout'); setUser(null); nav('/'); };
+
+  if (user === undefined) return null;
+
+  return (
+    <I18nProvider>
+      <AppShell user={user} setUser={setUser} logout={logout} />
+    </I18nProvider>
   );
 }

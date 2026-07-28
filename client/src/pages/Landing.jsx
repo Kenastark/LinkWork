@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
+import { useI18n } from '../i18n.jsx';
 
 const BRAND_PALETTE = [
   { bg: '#e3f3ec', fg: '#147d5b' }, // verify
@@ -109,68 +110,75 @@ function FeatureRow({ tone, icon, title, body, ctaTo, ctaLabel, art, reverse }) 
 }
 
 // Product-preview mockups — real LinkWork content, echoing the reference's panel + card + floating tags.
-const TrackArt = (
-  <div className="feature-panel panel-purple">
-    <div className="mock-card">
-      <span className="mock-mono">JOB-0042</span>
-      <h4>Software Engineering Intern</h4>
-      <p>DataTech Hungary · Faculty of Informatics</p>
-      <ul className="mock-track">
-        <li className="done"><span className="dot" />Application received</li>
-        <li className="done"><span className="dot" />Skill test passed</li>
-        <li className="current"><span className="dot" />AI interview in review</li>
-        <li><span className="dot" />Company review</li>
-        <li><span className="dot" />Offer</li>
-      </ul>
-    </div>
-    <span className="feature-tag tag-a">🔔 Application update</span>
-  </div>
-);
-const OffersArt = (
-  <div className="feature-panel panel-blue">
-    <div className="mock-card">
-      <span className="mock-mono">JOB-0037</span>
-      <h4>Data Analyst Intern</h4>
-      <p>Voltix Electronics · Debrecen</p>
-      <div className="mock-tags">
-        <span className="mock-chip strong">280K HUF / mo</span>
-        <span className="mock-chip">Hybrid</span>
-        <span className="mock-chip">Internship</span>
-        <span className="mock-chip">6 months</span>
+function TrackArt({ t }) {
+  return (
+    <div className="feature-panel panel-purple">
+      <div className="mock-card">
+        <span className="mock-mono">JOB-0042</span>
+        <h4>{t('mock.trackRole')}</h4>
+        <p>{t('mock.trackCompany')}</p>
+        <ul className="mock-track">
+          <li className="done"><span className="dot" />{t('mock.trackStep1')}</li>
+          <li className="done"><span className="dot" />{t('mock.trackStep2')}</li>
+          <li className="current"><span className="dot" />{t('mock.trackStep3')}</li>
+          <li><span className="dot" />{t('mock.trackStep4')}</li>
+          <li><span className="dot" />{t('mock.trackStep5')}</li>
+        </ul>
       </div>
+      <span className="feature-tag tag-a">🔔 {t('mock.trackTag')}</span>
     </div>
-    <span className="feature-tag tag-b">💰 Salary shown upfront</span>
-    <span className="feature-tag tag-c">🏠 Remote-friendly</span>
-  </div>
-);
-const TransparentArt = (
-  <div className="feature-panel panel-green">
-    <div className="mock-card">
-      <span className="mock-mono">GreenField AgroTech Zrt.</span>
-      <h4 style={{ marginTop: 6 }}>What to expect</h4>
-      <ul className="mock-facts">
-        <li><b>★ Faculty-verified</b> partnership</li>
-        <li><b>~3 days</b> average response time</li>
-        <li><b>5 steps</b>, all shown before you apply</li>
-      </ul>
-      <div className="mock-tags">
-        <span className="mock-chip">Mentorship</span>
-        <span className="mock-chip">Paid</span>
+  );
+}
+function OffersArt({ t }) {
+  return (
+    <div className="feature-panel panel-blue">
+      <div className="mock-card">
+        <span className="mock-mono">JOB-0037</span>
+        <h4>{t('mock.offersRole')}</h4>
+        <p>{t('mock.offersCompany')}</p>
+        <div className="mock-tags">
+          <span className="mock-chip strong">280K HUF / mo</span>
+          <span className="mock-chip">{t('mock.chipHybrid')}</span>
+          <span className="mock-chip">{t('mock.chipInternship')}</span>
+          <span className="mock-chip">{t('mock.chip6Months')}</span>
+        </div>
       </div>
+      <span className="feature-tag tag-b">💰 {t('mock.tagSalary')}</span>
+      <span className="feature-tag tag-c">🏠 {t('mock.tagRemote')}</span>
     </div>
-    <span className="feature-tag tag-a">✓ Committed to hire</span>
-  </div>
-);
-
-const HOW_STEPS = [
-  { icon: '1', title: 'Verify who you are', body: 'Sign up with your university email, submit your student documents, and get verified once — then apply to anything.' },
-  { icon: '2', title: 'Prove what you know', body: 'A skill test based on your major and a structured interview qualify you before the company ever sees your file. Same test, same bar, for everyone.' },
-  { icon: '3', title: 'The hire goes on the ledger', body: 'When a company hires, the job ID and candidate ID are matched publicly and the posting is taken down. Proof the job was real.' },
-];
+  );
+}
+function TransparentArt({ t }) {
+  return (
+    <div className="feature-panel panel-green">
+      <div className="mock-card">
+        <span className="mock-mono">GreenField AgroTech Zrt.</span>
+        <h4 style={{ marginTop: 6 }}>{t('mock.whatToExpect')}</h4>
+        <ul className="mock-facts">
+          <li><b>{t('mock.factVerified')}</b> {t('mock.factVerifiedRest')}</li>
+          <li><b>{t('mock.factResponse')}</b> {t('mock.factResponseRest')}</li>
+          <li><b>{t('mock.factSteps')}</b>{t('mock.factStepsRest')}</li>
+        </ul>
+        <div className="mock-tags">
+          <span className="mock-chip">{t('mock.chipMentorship')}</span>
+          <span className="mock-chip">{t('mock.chipPaid')}</span>
+        </div>
+      </div>
+      <span className="feature-tag tag-a">✓ {t('mock.tagCommitted')}</span>
+    </div>
+  );
+}
 
 function HowItWorks() {
+  const { t } = useI18n();
   const ref = useRef(null);
   const [revealed, setRevealed] = useState(false);
+
+  const steps = [
+    { icon: '1', title: t('how.step1Title'), body: t('how.step1Body') },
+    { icon: '2', title: t('how.step2Title'), body: t('how.step2Body') },
+    { icon: '3', title: t('how.step3Title'), body: t('how.step3Body') },
+  ];
 
   useEffect(() => {
     if (typeof IntersectionObserver === 'undefined') { setRevealed(true); return; }
@@ -185,14 +193,11 @@ function HowItWorks() {
   return (
     <section className="how">
       <div className="container">
-        <span className="eyebrow">The chain</span>
-        <h2>How it works</h2>
-        <p className="sub">
-          It shouldn't matter whether you know someone inside the company. On LinkWork, everyone
-          walks the same chain — and when a posting closes, the hire is recorded openly.
-        </p>
+        <span className="eyebrow">{t('how.eyebrow')}</span>
+        <h2>{t('how.title')}</h2>
+        <p className="sub">{t('how.subtitle')}</p>
         <div className={`how-flow${revealed ? ' revealed' : ''}`} ref={ref}>
-          {HOW_STEPS.map(s => (
+          {steps.map(s => (
             <div className="how-step" key={s.icon}>
               <div className="how-icon">{s.icon}</div>
               <h3>{s.title}</h3>
@@ -207,6 +212,7 @@ function HowItWorks() {
 
 export default function Landing() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [stats, setStats] = useState(null);
 
   useEffect(() => { api.get('/api/stats').then(setStats).catch(() => {}); }, []);
@@ -216,23 +222,19 @@ export default function Landing() {
       <section className="hero">
         <div className="container">
           <div>
-            <div className="eyebrow">University of Debrecen · Pilot</div>
-            <h1>Real companies. Open roles. <em>Actual hires.</em></h1>
-            <p className="lede">
-              LinkWork only lists internships and entry-level roles that companies have committed to
-              filling — most of them negotiated directly with your faculty. No fake listings, no
-              pre-filled positions. If you see it here, someone is getting hired for it.
-            </p>
+            <div className="eyebrow">{t('hero.eyebrow')}</div>
+            <h1>{t('hero.title')} <em>{t('hero.titleEm')}</em></h1>
+            <p className="lede">{t('hero.lede')}</p>
             <div className="cta-row">
               {user ? (
                 <>
-                  <Link to="/student" className="btn">Find an internship</Link>
-                  <Link to="/companies" className="btn secondary" style={{ borderColor: '#fff', color: '#fff' }}>Explore companies</Link>
+                  <Link to="/student" className="btn">{t('nav.findInternship')}</Link>
+                  <Link to="/companies" className="btn secondary" style={{ borderColor: '#fff', color: '#fff' }}>{t('nav.exploreCompanies')}</Link>
                 </>
               ) : (
                 <>
-                  <Link to="/auth?mode=student" className="btn">Join with your university email</Link>
-                  <Link to="/auth?mode=company" className="btn secondary" style={{ borderColor: '#fff', color: '#fff' }}>Hire students</Link>
+                  <Link to="/auth?mode=student" className="btn">{t('hero.ctaJoinStudent')}</Link>
+                  <Link to="/auth?mode=company" className="btn secondary" style={{ borderColor: '#fff', color: '#fff' }}>{t('hero.ctaHireStudents')}</Link>
                 </>
               )}
             </div>
@@ -241,17 +243,17 @@ export default function Landing() {
           <div className="hero-chain" aria-label="How verification flows">
             <div className="hnode">
               <div className="hicon"><Icon d="M12 3 2 8l10 5 10-5-10-5Zm-6 7.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-5.5" /></div>
-              <div><b>Faculty</b><span>Your coordinator negotiates real openings with companies</span></div>
+              <div><b>{t('hero.chainFacultyTitle')}</b><span>{t('hero.chainFacultyBody')}</span></div>
             </div>
             <div className="hlink" />
             <div className="hnode">
               <div className="hicon"><Icon d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6" /></div>
-              <div><b>Company</b><span>Commits to hiring from LinkWork — verified by the admin</span></div>
+              <div><b>{t('hero.chainCompanyTitle')}</b><span>{t('hero.chainCompanyBody')}</span></div>
             </div>
             <div className="hlink" />
             <div className="hnode">
               <div className="hicon"><Icon d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" /></div>
-              <div><b>You</b><span>Verified profile, merit-based tests, and a real shot at the role</span></div>
+              <div><b>{t('hero.chainYouTitle')}</b><span>{t('hero.chainYouBody')}</span></div>
             </div>
           </div>
         </div>
@@ -260,9 +262,9 @@ export default function Landing() {
       {stats && (
         <div className="container">
           <div className="overlap-band">
-            <div className="stat"><b>{stats.open_jobs}</b><span>Verified postings open right now</span></div>
-            <div className="stat"><b>{stats.hires}</b><span>Students hired through the chain</span></div>
-            <div className="stat"><b>{stats.approved_companies}</b><span>Companies committed to hiring here</span></div>
+            <div className="stat"><b>{stats.open_jobs}</b><span>{t('stats.openPostings')}</span></div>
+            <div className="stat"><b>{stats.hires}</b><span>{t('stats.hires')}</span></div>
+            <div className="stat"><b>{stats.approved_companies}</b><span>{t('stats.companies')}</span></div>
           </div>
         </div>
       )}
@@ -270,17 +272,12 @@ export default function Landing() {
       <section className="match-pitch">
         <div className="container match-pitch-grid">
           <div>
-            <span className="eyebrow" style={{ color: 'var(--verify)' }}>Built for students, not recruiters</span>
-            <h2>Finally, a job search that works for you.</h2>
-            <h3 style={{ marginTop: 18, fontSize: 22 }}>Looking for the right role?</h3>
-            <p className="muted" style={{ marginTop: 10, fontSize: 16.5, maxWidth: '46ch' }}>
-              Every posting on LinkWork is scoped to your university and, often, your faculty — so you're
-              only ever looking at roles you're actually eligible for. A skill test based on your major and
-              a structured interview qualify you before a company ever opens your file. No cover-letter
-              guessing games, no ghost listings — just real openings matched to what you're studying.
-            </p>
+            <span className="eyebrow" style={{ color: 'var(--verify)' }}>{t('matchPitch.eyebrow')}</span>
+            <h2>{t('matchPitch.title')}</h2>
+            <h3 style={{ marginTop: 18, fontSize: 22 }}>{t('matchPitch.subtitle')}</h3>
+            <p className="muted" style={{ marginTop: 10, fontSize: 16.5, maxWidth: '46ch' }}>{t('matchPitch.body')}</p>
             <Link to={user ? '/student' : '/auth?mode=student'} className="btn" style={{ marginTop: 22 }}>
-              {user ? 'Browse openings' : 'Get started'}
+              {user ? t('matchPitch.ctaBrowse') : t('matchPitch.ctaGetStarted')}
             </Link>
           </div>
           <div className="match-pitch-art"><MatchIllustration /></div>
@@ -291,59 +288,59 @@ export default function Landing() {
         tone="purple"
         reverse
         icon={FEATURE_ICONS.track}
-        title="Track your application"
-        body="Finally, real-time, step-by-step visibility. Apply now, and you'll be notified as soon as we have any updates on the progress of your application!"
+        title={t('feature.trackTitle')}
+        body={t('feature.trackBody')}
         ctaTo={user ? '/my-applications' : '/auth?mode=student'}
-        ctaLabel="View my applications"
-        art={TrackArt}
+        ctaLabel={t('feature.trackCta')}
+        art={<TrackArt t={t} />}
       />
 
       <FeatureRow
         tone="blue"
         icon={FEATURE_ICONS.offers}
-        title="Offers that hide nothing"
-        body="Salary, remote work… Don't go into the unknown when choosing your future job."
+        title={t('feature.offersTitle')}
+        body={t('feature.offersBody')}
         ctaTo={user ? '/student' : '/auth?mode=student'}
-        ctaLabel="Find an internship"
-        art={OffersArt}
+        ctaLabel={t('nav.findInternship')}
+        art={<OffersArt t={t} />}
       />
 
       <FeatureRow
         tone="green"
         reverse
         icon={FEATURE_ICONS.transparent}
-        title="Transparent companies"
-        body="Recruitment process, response time, benefits… You deserve real answers, not to waste time."
+        title={t('feature.transparentTitle')}
+        body={t('feature.transparentBody')}
         ctaTo={user ? '/companies' : '/auth'}
-        ctaLabel="View companies"
-        art={TransparentArt}
+        ctaLabel={t('feature.transparentCta')}
+        art={<TransparentArt t={t} />}
       />
 
       <section className="land-job">
         <div className="container">
-          <h2 className="land-title"><span className="land-title-light">Prepare yourself to</span><span className="land-title-bold">Land your job!</span></h2>
+          <h2 className="land-title"><span className="land-title-light">{t('landJob.titleLight')}</span><span className="land-title-bold">{t('landJob.titleBold')}</span></h2>
           <div className="land-grid">
             <div className="land-card stat land-lav">
               <b>{stats ? stats.open_jobs : '—'}</b>
-              <p>Verified roles are open right now — <b>be the next hire.</b></p>
+              <p>{t('landJob.card1Pre')}<b>{t('landJob.card1Bold')}</b></p>
             </div>
             <div className="land-card action land-peri">
               <div className="land-card-top">
-                <h4>Make yourself visible to companies</h4>
+                <h4>{t('landJob.card2Title')}</h4>
                 <span className="land-ic">{CARD_ICONS.doc}</span>
               </div>
-              <Link to={user ? '/profile' : '/auth?mode=student'} className="btn dark">Upload my CV</Link>
+              <Link to={user ? '/profile' : '/auth?mode=student'} className="btn dark">{t('landJob.card2Cta')}</Link>
             </div>
             <div className="land-card stat land-cream">
               <b>{stats ? stats.approved_companies : '—'}</b>
-              <p>Companies are committed to hiring here. <b>Want the roles that match your major?</b></p>
+              <p>{t('landJob.card3Pre')}<b>{t('landJob.card3Bold')}</b></p>
             </div>
             <div className="land-card action land-gold">
               <div className="land-card-top">
-                <h4>Be alerted quickly</h4>
+                <h4>{t('landJob.card4Title')}</h4>
                 <span className="land-ic">{CARD_ICONS.bell}</span>
               </div>
-              <Link to={user ? '/alerts' : '/auth?mode=student'} className="btn dark">Create my alert</Link>
+              <Link to={user ? '/alerts' : '/auth?mode=student'} className="btn dark">{t('landJob.card4Cta')}</Link>
             </div>
           </div>
         </div>
@@ -358,28 +355,28 @@ export default function Landing() {
             <img src="/images/students-testimonial.jpg" alt="A multicultural group of students studying together" />
           </div>
           <div>
-            <span className="eyebrow" style={{ color: 'var(--verify)' }}>From the chain</span>
-            <h2 style={{ fontSize: 32, marginBottom: 24 }}>Students are already in the chain.</h2>
+            <span className="eyebrow" style={{ color: 'var(--verify)' }}>{t('testimonials.eyebrow')}</span>
+            <h2 style={{ fontSize: 32, marginBottom: 24 }}>{t('testimonials.title')}</h2>
             <div className="notes-grid">
               <div className="note note-tint-a">
-                <p>"I didn't have to wonder if the internship was already filled before I even applied. Applied, tested, hired — no guessing games."</p>
-                <span>— Computer Science student</span>
+                <p>{t('testimonials.quote1')}</p>
+                <span>{t('testimonials.author1')}</span>
               </div>
               <div className="note note-stat">
                 <b>{stats ? stats.open_jobs : '—'}</b>
-                <span>Verified postings open right now</span>
+                <span>{t('stats.openPostings')}</span>
               </div>
               <div className="note note-stat note-tint-b">
                 <b>{stats ? stats.approved_companies : '—'}</b>
-                <span>Companies committed to hiring here</span>
+                <span>{t('stats.companies')}</span>
               </div>
               <div className="note note-tint-c">
-                <p>"The skill test gave me a real shot without needing an inside connection at the company."</p>
-                <span>— Business Administration student</span>
+                <p>{t('testimonials.quote2')}</p>
+                <span>{t('testimonials.author2')}</span>
               </div>
               <div className="note note-stat note-tint-a" style={{ gridColumn: 'span 2' }}>
                 <b>100%</b>
-                <span>Faculty-verified process — same test, same bar, for everyone</span>
+                <span>{t('testimonials.stat100Label')}</span>
               </div>
             </div>
           </div>
@@ -389,8 +386,8 @@ export default function Landing() {
       {stats?.companies?.length > 0 && (
         <section className="company-showcase">
           <div className="container">
-            <span className="eyebrow" style={{ color: 'var(--verify)' }}>Trusted employers</span>
-            <h2>Companies hiring on LinkWork</h2>
+            <span className="eyebrow" style={{ color: 'var(--verify)' }}>{t('companyShowcase.eyebrow')}</span>
+            <h2>{t('companyShowcase.title')}</h2>
             <div className="showcase-grid">
               {stats.companies.map(c => {
                 const colors = brandColors(c.name);

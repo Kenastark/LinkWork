@@ -100,7 +100,17 @@ main.container { flex: 1; padding: 32px 0 72px; }
 }
 .account-menu-item:hover { background: var(--verify-tint); color: var(--verify); text-decoration: none; }
 .account-menu-item.danger:hover { background: var(--danger-tint); color: var(--danger); }
+.account-menu-item.active { background: var(--verify-tint); color: var(--verify); }
 .account-menu-divider { height: 1px; background: var(--line); margin: var(--space-1) 4px; }
+
+.lang-trigger.btn.ghost {
+  color: #fff; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.3);
+  padding: 7px 12px; font-size: 13.5px;
+}
+.lang-trigger.btn.ghost:hover, .lang-trigger[aria-expanded="true"] {
+  background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.5); color: #fff;
+}
+.lang-menu { min-width: 160px; }
 
 /* ============ buttons & forms ============ */
 .btn {
@@ -185,7 +195,7 @@ textarea { min-height: 110px; resize: vertical; }
 .chain .connector.done { background: var(--verify); }
 
 /* ============ landing hero ============ */
-.hero { background: var(--ink); color: #fff; padding: 88px 0 96px; overflow: hidden; }
+.hero { background: var(--ink); color: #fff; padding: 128px 0 96px; overflow: hidden; }
 .hero .container { display: grid; grid-template-columns: 1.15fr 1fr; gap: 56px; align-items: center; }
 @media (max-width: 860px) { .hero .container { grid-template-columns: 1fr; } }
 .hero .eyebrow {
@@ -318,7 +328,7 @@ textarea { min-height: 110px; resize: vertical; }
 .showcase-wordmark { font-family: var(--font-display); font-weight: 800; font-size: 19px; letter-spacing: -0.01em; color: var(--ink); }
 
 /* ============ homepage feature rows (Track / Offers / Transparent) ============ */
-.feature-row { padding: 34px 0; }
+.feature-row { padding: 17px 0; }
 .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
 .feature-row.reverse .feature-copy { order: 2; }
 .feature-row.reverse .feature-art-wrap { order: 1; }
