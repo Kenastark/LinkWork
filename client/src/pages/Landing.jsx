@@ -63,17 +63,17 @@ function MatchIllustration() {
 // Category icons — hand-drawn inline SVG (no external asset / flaticon dependency).
 const FEATURE_ICONS = {
   track: (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <svg width="52" height="52" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <circle cx="5" cy="12" r="2.4" /><circle cx="12" cy="12" r="2.4" /><circle cx="19" cy="12" r="2.4" opacity="0.5" />
     </svg>
   ),
   offers: (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <svg width="52" height="52" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <rect x="4" y="12" width="4" height="7" rx="1.2" /><rect x="10" y="8" width="4" height="11" rx="1.2" /><rect x="16" y="4" width="4" height="15" rx="1.2" />
     </svg>
   ),
   transparent: (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <svg width="52" height="52" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <path d="M12 2c.6 4.1 2.3 5.8 6.4 6.4C14.3 9 12.6 10.7 12 14.8 11.4 10.7 9.7 9 5.6 8.4 9.7 7.8 11.4 6.1 12 2Z" />
       <path d="M19 3.5c.2 1.3.7 1.8 2 2-1.3.2-1.8.7-2 2-.2-1.3-.7-1.8-2-2 1.3-.2 1.8-.7 2-2Z" />
     </svg>
@@ -321,7 +321,7 @@ export default function Landing() {
 
       <section className="land-job">
         <div className="container">
-          <h2 className="land-title">Prepare to <em>Land your job!</em></h2>
+          <h2 className="land-title"><span className="land-title-light">Prepare yourself to</span><span className="land-title-bold">Land your job!</span></h2>
           <div className="land-grid">
             <div className="land-card stat land-lav">
               <b>{stats ? stats.open_jobs : '—'}</b>
@@ -338,7 +338,7 @@ export default function Landing() {
               <b>{stats ? stats.approved_companies : '—'}</b>
               <p>Companies are committed to hiring here. <b>Want the roles that match your major?</b></p>
             </div>
-            <div className="land-card action land-coral">
+            <div className="land-card action land-gold">
               <div className="land-card-top">
                 <h4>Be alerted quickly</h4>
                 <span className="land-ic">{CARD_ICONS.bell}</span>
