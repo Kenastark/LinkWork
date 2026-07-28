@@ -125,6 +125,9 @@ addColumnIfMissing('users', 'photo_path', 'photo_path TEXT');
 addColumnIfMissing('ai_answers', 'attempt', 'attempt INTEGER NOT NULL DEFAULT 1');
 addColumnIfMissing('users', 'education_level', 'education_level TEXT');
 addColumnIfMissing('majors', 'min_level', "min_level TEXT");
+addColumnIfMissing('jobs', 'location', 'location TEXT');
+addColumnIfMissing('jobs', 'work_mode', "work_mode TEXT"); // on_site | hybrid | remote
+addColumnIfMissing('jobs', 'salary_huf', 'salary_huf INTEGER'); // gross HUF/month, NULL = undisclosed
 
 // ---------- Seed ----------
 function seed() {
@@ -196,59 +199,59 @@ function seed() {
     'A public health research and policy organization serving the Debrecen region.');
 
   // Jobs
-  const insJob = db.prepare(`INSERT INTO jobs (company_id,university_id,faculty_id,title,job_type,description,requirements,positions,faculty_verified)
-    VALUES (?,?,?,?,?,?,?,?,?)`);
+  const insJob = db.prepare(`INSERT INTO jobs (company_id,university_id,faculty_id,title,job_type,description,requirements,positions,faculty_verified,location,work_mode,salary_huf)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`);
 
   insJob.run(dataTechId, uniId, facIds['Faculty of Informatics'],
     'Software Engineering Intern', 'internship',
     'Join our backend team for a 6-month paid internship working on real logistics APIs. Mentored by senior engineers, with a path to a junior role.',
     'Basic Python or Java, SQL fundamentals, coursework in data structures.',
-    2, 1);
+    2, 1, 'Debrecen', 'hybrid', 280000);
   insJob.run(dataTechId, uniId, facIds['Faculty of Economics and Business'],
     'Junior Business Analyst', 'entry_level',
     'Entry-level analyst role supporting our product team with market and pricing analysis.',
     'Excel, basic statistics, strong written English.',
-    1, 0);
+    1, 0, 'Debrecen', 'on_site', 520000);
   insJob.run(dataTechId, uniId, facIds['Faculty of Informatics'],
     'Frontend Developer Intern', 'internship',
     'Build and ship features in our React-based logistics dashboard alongside a small product team.',
     'JavaScript fundamentals, some exposure to React or another component-based framework.',
-    2, 0);
+    2, 0, 'Debrecen', 'remote', 260000);
   insJob.run(dataTechId, uniId, facIds['Faculty of Informatics'],
     'Junior Software Engineer', 'entry_level',
     'Full-time role building backend services for our logistics platform. Great for a recent graduate.',
     'Software Engineering coursework, Git, basic understanding of REST APIs.',
-    1, 1);
+    1, 1, 'Debrecen', 'hybrid', 550000);
   insJob.run(voltixId, uniId, facIds['Faculty of Engineering'],
     'Embedded Systems Intern', 'internship',
     'Work with our hardware team on firmware for industrial power monitoring devices.',
     'C fundamentals, basic circuits knowledge, coursework in electrical engineering.',
-    1, 1);
+    1, 1, 'Debrecen', 'on_site', 300000);
   insJob.run(precisaId, uniId, facIds['Faculty of Engineering'],
     'Mechanical Design Intern', 'internship',
     'Support our design team with CAD modeling and tolerance analysis for automotive components.',
     'CAD software experience (SolidWorks or similar), coursework in mechanical engineering.',
-    2, 0);
+    2, 0, 'Budapest', 'on_site', 290000);
   insJob.run(greenFieldId, uniId, facIds['Faculty of Agriculture and Food Sciences and Environmental Management'],
     'Agricultural Data Analyst Intern', 'internship',
     'Analyze sensor and yield data to help our farming partners make better decisions.',
     'Comfort with spreadsheets or basic scripting, interest in agriculture or environmental science.',
-    1, 1);
+    1, 1, 'Debrecen', 'hybrid', 270000);
   insJob.run(greenFieldId, uniId, facIds['Faculty of Science and Technology'],
     'Data Science Intern', 'internship',
     'Build statistical models on agricultural datasets alongside our data team.',
     'Mathematics or statistics coursework, basic Python.',
-    1, 0);
+    1, 0, 'Budapest', 'remote', 320000);
   insJob.run(nyugatComId, uniId, facIds['Faculty of Law'],
     'Legal Research Assistant', 'entry_level',
     'Support our commercial law team with research, drafting, and client documentation.',
     'Law coursework, strong written Hungarian and English.',
-    1, 1);
+    1, 1, 'Debrecen', 'on_site', 480000);
   insJob.run(publicHealthId, uniId, facIds['Faculty of Public Health'],
     'Public Health Research Intern', 'internship',
     'Assist with data collection and analysis for a regional public health study.',
     'Public health or health sciences coursework, attention to detail.',
-    1, 0);
+    1, 0, 'Debrecen', 'hybrid', 250000);
 
   // Skill questions per major (10-question banks for STEM majors + Business Administration)
   const q = db.prepare('INSERT INTO skill_questions (major,question,options,answer_idx) VALUES (?,?,?,?)');

@@ -118,6 +118,9 @@ export default function JobDetail() {
           : <span className="badge verified">✓ Platform-committed — the company will hire from LinkWork</span>}
         <span className="badge pending">{job.job_type === 'internship' ? 'Internship' : 'Entry level'}</span>
         <span className="badge pending">{job.positions - job.filled} of {job.positions} open</span>
+        {job.location && <span className="badge pending">📍 {job.location}</span>}
+        {job.work_mode && <span className="badge pending">{{ on_site: 'On-site', hybrid: 'Hybrid', remote: 'Fully remote' }[job.work_mode] || job.work_mode}</span>}
+        {job.salary_huf ? <span className="badge pending">{Math.round(job.salary_huf / 1000)}K HUF/mo</span> : null}
         {job.status === 'closed' && <span className="badge danger">Filled & closed</span>}
       </div>
 

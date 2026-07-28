@@ -161,6 +161,19 @@ export default function CompanyDashboard() {
               {uniFaculties.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
             </select>
           </label>
+          <div className="grid cols-2">
+            <label className="field">Location<input name="location" placeholder="e.g. Debrecen" defaultValue="Debrecen" required /></label>
+            <label className="field">Work mode
+              <select name="work_mode" required defaultValue="on_site">
+                <option value="on_site">On-site</option>
+                <option value="hybrid">Hybrid</option>
+                <option value="remote">Remote</option>
+              </select>
+            </label>
+          </div>
+          <label className="field">Monthly gross salary (HUF) <span className="hint">(optional — leave blank to keep undisclosed)</span>
+            <input name="salary_huf" type="number" min="0" step="10000" placeholder="e.g. 300000" />
+          </label>
           <label className="field">Role description<textarea name="description" required /></label>
           <label className="field">Requirements<textarea name="requirements" /></label>
           <label className="field" style={{ display: 'flex', gap: 10, alignItems: 'center', fontWeight: 500 }}>

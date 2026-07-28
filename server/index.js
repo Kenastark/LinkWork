@@ -267,11 +267,13 @@ app.post('/api/jobs', requireAuth('company'), (req, res) => {
   const comp = db.prepare('SELECT * FROM companies WHERE owner_user_id = ?').get(req.session.user.id);
   if (!comp) return res.status(400).json({ error: 'No company profile found.' });
   if (comp.status !== 'approved') return res.status(403).json({ error: 'Your company must be approved by the admin before posting.' });
-  const { university_id, faculty_id, title, job_type, description, requirements, positions, faculty_verified } = req.body || {};
+  const { university_id, faculty_id, title, job_type, description, requirements, positions, faculty_verified, location, work_mode, salary_huf } = req.body || {};
   if (!university_id || !title || !job_type || !description || !positions) return res.status(400).json({ error: 'Fill in every required field.' });
-  const r = db.prepare(`INSERT INTO jobs (company_id,university_id,faculty_id,title,job_type,description,requirements,positions,faculty_verified)
-    VALUES (?,?,?,?,?,?,?,?,?)`)
-    .run(comp.id, university_id, faculty_id || null, title, job_type, description, requirements || '', Math.max(1, +positions), faculty_verified ? 1 : 0);
+  if (work_mode && !['on_site', 'hybrid', 'remote'].includes(work_mode)) return res.status(400).json({ error: 'Invalid work mode.' });
+  const r = db.prepare(`INSERT INTO jobs (company_id,university_id,faculty_id,title,job_type,description,requirements,positions,faculty_verified,location,work_mode,salary_huf)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)
+    .run(comp.id, university_id, faculty_id || null, title, job_type, description, requirements || '', Math.max(1, +positions), faculty_verified ? 1 : 0,
+      location || 'Debrecen', work_mode || 'on_site', salary_huf ? Math.max(0, +salary_huf) || null : null);
   res.json({ id: r.lastInsertRowid });
 });
 
