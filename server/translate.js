@@ -28,14 +28,16 @@ async function translateBatch(texts, targetLang) {
   });
   if (toFetch.length === 0) return results;
 
-  const res = await fetch(`https://translation.googleapis.com/language/translate2?key=${API_KEY}`, {
+  const res = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${API_KEY}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ q: toFetch.map(f => f.text), target: targetLang, source: 'en', format: 'text' }),
   });
 
   if (!res.ok) {
-    // Graceful fallback — never break a page over a translation-provider hiccup.
+    // Graceful fallback — never break a page over a translation-provider hiccup —
+    // but still log so a real misconfiguration (bad key, wrong endpoint) is visible.
+    console.error(`[translate] Google API request failed (${res.status}):`, (await res.text()).slice(0, 300));
     toFetch.forEach(({ index, text }) => { results[index] = text; });
     return results;
   }
