@@ -463,7 +463,7 @@ app.get('/api/company/applicants/:id', requireAuth('company'), (req, res) => {
 app.post('/api/company/applicants/:id/advance', requireAuth('company'), (req, res) => {
   const comp = db.prepare('SELECT * FROM companies WHERE owner_user_id=?').get(req.session.user.id);
   const a = db.prepare(`SELECT a.*, j.company_id, j.id AS jid FROM applications a JOIN jobs j ON j.id=a.job_id WHERE a.id=?`).get(req.params.id);
-  if (!a || a.company_id !== comp?.id) return res.status(404).json({ error: 'Applicant not found.' });
+  if (!a || (a.company_id !== comp?.id && !comp?.can_view_all_applicants)) return res.status(404).json({ error: 'Applicant not found.' });
   if (['hired', 'rejected'].includes(a.stage)) return res.status(400).json({ error: 'This application is already final.' });
   if (['applied', 'skill_test', 'ai_interview'].includes(a.stage)) return res.status(400).json({ error: 'The candidate must finish platform verification steps first.' });
 
@@ -476,7 +476,7 @@ app.post('/api/company/applicants/:id/advance', requireAuth('company'), (req, re
 app.post('/api/company/applicants/:id/reject', requireAuth('company'), (req, res) => {
   const comp = db.prepare('SELECT * FROM companies WHERE owner_user_id=?').get(req.session.user.id);
   const a = db.prepare(`SELECT a.*, j.company_id FROM applications a JOIN jobs j ON j.id=a.job_id WHERE a.id=?`).get(req.params.id);
-  if (!a || a.company_id !== comp?.id) return res.status(404).json({ error: 'Applicant not found.' });
+  if (!a || (a.company_id !== comp?.id && !comp?.can_view_all_applicants)) return res.status(404).json({ error: 'Applicant not found.' });
   if (a.stage === 'hired') return res.status(400).json({ error: 'A hired candidate cannot be rejected. Contact the admin.' });
   db.prepare(`UPDATE applications SET stage='rejected', updated_at=datetime('now') WHERE id=?`).run(a.id);
   res.json({ stage: 'rejected' });
