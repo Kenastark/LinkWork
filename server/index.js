@@ -422,6 +422,9 @@ app.post('/api/applications/:id/ai-interview', requireAuth('student'), (req, res
   if (answers.length !== questions.length || answers.some(x => !x || x.trim().length < 30)) {
     return res.status(400).json({ error: 'Answer every question with at least a short paragraph (30+ characters).' });
   }
+  if (answers.some(x => x.length > 1000)) {
+    return res.status(400).json({ error: 'Each answer must be 1000 characters or fewer.' });
+  }
   const ins = db.prepare('INSERT INTO ai_answers (application_id, question, answer, attempt) VALUES (?,?,?,?)');
   questions.forEach((q, i) => ins.run(a.id, q, answers[i], attempt));
   res.json({ ok: true, attempt, canRetake: attempt === 1 });
@@ -438,9 +441,13 @@ app.post('/api/applications/:id/ai-interview/continue', requireAuth('student'), 
 // ---------- applications: company side ----------
 app.get('/api/company/applicants', requireAuth('company'), (req, res) => {
   const comp = db.prepare('SELECT * FROM companies WHERE owner_user_id=?').get(req.session.user.id);
-  const rows = db.prepare(`SELECT a.*, u.name AS student_name, u.email AS student_email, u.major, j.title, j.id AS job_id
-    FROM applications a JOIN users u ON u.id=a.student_id JOIN jobs j ON j.id=a.job_id
-    WHERE j.company_id=? ORDER BY a.updated_at DESC`).all(comp?.id || -1);
+  // TEST-ONLY flag: a flagged company sees every submitted application. In production
+  // no company is flagged, so the WHERE clause scopes results to its own postings.
+  const base = `SELECT a.*, u.name AS student_name, u.email AS student_email, u.major, j.title, j.id AS job_id, co.name AS company_name
+    FROM applications a JOIN users u ON u.id=a.student_id JOIN jobs j ON j.id=a.job_id JOIN companies co ON co.id=j.company_id`;
+  const rows = comp?.can_view_all_applicants
+    ? db.prepare(`${base} ORDER BY a.updated_at DESC`).all()
+    : db.prepare(`${base} WHERE j.company_id=? ORDER BY a.updated_at DESC`).all(comp?.id || -1);
   res.json({ applicants: rows });
 });
 
@@ -448,7 +455,7 @@ app.get('/api/company/applicants/:id', requireAuth('company'), (req, res) => {
   const comp = db.prepare('SELECT * FROM companies WHERE owner_user_id=?').get(req.session.user.id);
   const a = db.prepare(`SELECT a.*, u.name AS student_name, u.email AS student_email, u.major, j.title, j.company_id
     FROM applications a JOIN users u ON u.id=a.student_id JOIN jobs j ON j.id=a.job_id WHERE a.id=?`).get(req.params.id);
-  if (!a || a.company_id !== comp?.id) return res.status(404).json({ error: 'Applicant not found.' });
+  if (!a || (a.company_id !== comp?.id && !comp?.can_view_all_applicants)) return res.status(404).json({ error: 'Applicant not found.' });
   const aiAnswers = db.prepare('SELECT question, answer, attempt FROM ai_answers WHERE application_id=? ORDER BY attempt, id').all(a.id);
   res.json({ applicant: a, aiAnswers });
 });

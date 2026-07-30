@@ -211,7 +211,14 @@ export default function JobDetail() {
                   </p>
                   {aiQs.map((q, i) => (
                     <label className="field" key={i}>{q}
-                      <textarea value={aiAnswers[i]} onChange={e => setAiAnswers(a => a.map((x, xi) => xi === i ? e.target.value : x))} />
+                      <textarea
+                        maxLength={1000}
+                        value={aiAnswers[i]}
+                        onChange={e => setAiAnswers(a => a.map((x, xi) => xi === i ? e.target.value : x))}
+                      />
+                      <span className="char-count" style={{ color: (aiAnswers[i] || '').length >= 1000 ? 'var(--danger)' : 'var(--ink-soft)' }}>
+                        {(aiAnswers[i] || '').length} / 1000
+                      </span>
                     </label>
                   ))}
                   <button className="btn" onClick={submitAI}>Submit interview</button>

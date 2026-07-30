@@ -114,9 +114,10 @@ main.container { flex: 1; padding: 32px 0 72px; }
 
 /* ============ buttons & forms ============ */
 .btn {
-  display: inline-flex; align-items: center; gap: 8px; border: 0;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0;
   background: var(--verify); color: #fff; font-weight: 600; font-size: 15px;
   padding: 11px 20px; border-radius: var(--radius-sm); box-shadow: var(--shadow-sm);
+  white-space: nowrap; text-align: center;
   transition: background .15s var(--ease), transform .1s var(--ease), box-shadow .15s var(--ease);
 }
 .btn:hover { background: var(--verify-bright); box-shadow: var(--shadow-md); transform: translateY(-1px); }
@@ -131,6 +132,7 @@ main.container { flex: 1; padding: 32px 0 72px; }
 
 label.field { display: block; margin-bottom: var(--space-4); font-weight: 600; font-size: 14px; }
 label.field span.hint { font-weight: 400; color: var(--ink-soft); font-size: 13px; }
+.char-count { display: block; text-align: right; font-weight: 400; font-size: 12px; margin-top: 4px; }
 input, select, textarea {
   width: 100%; margin-top: 6px; padding: 11px 13px; font: inherit; font-size: 15px;
   border: 1.5px solid var(--line); border-radius: var(--radius-sm); background: #fff; color: var(--ink);
@@ -415,6 +417,7 @@ textarea { min-height: 110px; resize: vertical; }
 
 .job-row { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; }
 .job-row .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.job-row > .btn { flex-shrink: 0; align-self: center; }
 
 /* ============ Find an internship — left filter sidebar ============ */
 .filter-layout { display: grid; grid-template-columns: 300px 1fr; gap: 20px; align-items: start; }

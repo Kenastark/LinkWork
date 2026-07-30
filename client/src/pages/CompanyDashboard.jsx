@@ -51,6 +51,8 @@ export default function CompanyDashboard() {
   };
 
   const uniFaculties = meta?.faculties || [];
+  // Test-reviewer view: applications span multiple companies, so show which one each belongs to.
+  const showCompanyCol = new Set(applicants.map(a => a.company_name)).size > 1;
 
   return (
     <main className="container">
@@ -89,11 +91,12 @@ export default function CompanyDashboard() {
           ? <div className="card"><p className="muted">No applicants yet. Candidates appear here after they pass identity verification and start your posting's chain.</p></div>
           : <div className="card">
               <table className="ledger">
-                <thead><tr><th>Candidate</th><th>Role</th><th>Skill score</th><th>Stage</th><th>Actions</th></tr></thead>
+                <thead><tr><th>Candidate</th>{showCompanyCol && <th>Company</th>}<th>Role</th><th>Skill score</th><th>Stage</th><th>Actions</th></tr></thead>
                 <tbody>
                   {applicants.map(a => (
                     <tr key={a.id}>
                       <td><b>{a.student_name}</b><br /><span className="muted">{a.major} · <span className="id-tag">STU-{String(a.student_id).padStart(4, '0')}</span></span></td>
+                      {showCompanyCol && <td>{a.company_name}</td>}
                       <td>{a.title}</td>
                       <td>{a.skill_score != null ? `${a.skill_score}%` : '—'}</td>
                       <td><span className={'badge ' + (a.stage === 'hired' ? 'verified' : a.stage === 'rejected' ? 'danger' : 'pending')}>{STAGE_LABEL[a.stage]}</span></td>

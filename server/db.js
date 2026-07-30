@@ -137,6 +137,31 @@ addColumnIfMissing('majors', 'min_level', "min_level TEXT");
 addColumnIfMissing('jobs', 'location', 'location TEXT');
 addColumnIfMissing('jobs', 'work_mode', "work_mode TEXT"); // on_site | hybrid | remote
 addColumnIfMissing('jobs', 'salary_huf', 'salary_huf INTEGER'); // gross HUF/month, NULL = undisclosed
+// TEST-ONLY: a company flagged here can view every submitted application, not just
+// applications to its own postings. In production no company has this flag — each
+// company sees only applications to its own jobs (enforced in server/index.js).
+addColumnIfMissing('companies', 'can_view_all_applicants', 'can_view_all_applicants INTEGER NOT NULL DEFAULT 0');
+
+// ---------- Idempotent test viewer account (runs on every boot, not just first seed) ----------
+// A dedicated company login for testing the applicant-review flow across ALL companies'
+// applications. Safe to keep in dev/demo; must not be created in a real production deploy.
+(function ensureTestViewer() {
+  const email = 'viewer@linkwork.test';
+  let u = db.prepare('SELECT id FROM users WHERE email=?').get(email);
+  if (!u) {
+    const r = db.prepare(`INSERT INTO users (role,email,password_hash,name) VALUES ('company',?,?,?)`)
+      .run(email, bcrypt.hashSync('viewer1234', 10), 'Test Reviewer');
+    u = { id: r.lastInsertRowid };
+  }
+  const comp = db.prepare('SELECT id FROM companies WHERE owner_user_id=?').get(u.id);
+  if (!comp) {
+    db.prepare(`INSERT INTO companies (owner_user_id,name,website,description,status,can_view_all_applicants)
+      VALUES (?,?,?,?, 'approved', 1)`)
+      .run(u.id, 'LinkWork Test Reviewer', null, 'Internal test account — sees all applications across every company.');
+  } else {
+    db.prepare('UPDATE companies SET can_view_all_applicants=1 WHERE id=?').run(comp.id);
+  }
+})();
 
 // ---------- Seed ----------
 function seed() {
