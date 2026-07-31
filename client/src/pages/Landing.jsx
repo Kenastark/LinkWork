@@ -18,6 +18,27 @@ function brandColors(name) {
   return BRAND_PALETTE[hash % BRAND_PALETTE.length];
 }
 
+// Original, industry-themed logo marks designed for our fictional companies.
+// Monochrome (currentColor) so the whole strip reads as one clean logo set.
+const LOGO_ICONS = {
+  data: <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="13" width="4" height="8" rx="1.2" /><rect x="10" y="7" width="4" height="14" rx="1.2" /><rect x="17" y="3" width="4" height="18" rx="1.2" /></svg>,
+  bolt: <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 4 13.5h5.5L8 22l11-13h-6l2-7z" /></svg>,
+  target: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none" /><path d="M12 1.5v3.5M12 19v3.5M1.5 12H5M19 12h3.5" strokeLinecap="round" /></svg>,
+  leaf: <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 3C9 3 4 8.5 4 16.5c0 1.4.2 2.7.5 3.9C6 12 11 7 20 6c-5 2.4-8.5 6-9.4 12.4C17 17.5 20.5 11.6 20 3Z" /></svg>,
+  scales: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v18M7.5 21h9M5 7.5l14-3M6 5 3 12a3 3 0 0 0 6 0L6 5ZM18 4.5 15 12a3 3 0 0 0 6 0l-3-7.5Z" /></svg>,
+  cross: <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9.5 3h5v6h6v5h-6v6h-5v-6h-6V9h6z" /></svg>,
+};
+
+// name -> { icon, primary (brand word), sub (descriptor) }. Full names preserved across primary+sub.
+const COMPANY_LOGOS = {
+  'DataTech Hungary Kft.': { icon: 'data', primary: 'DataTech', sub: 'Hungary Kft.' },
+  'Voltix Electronics Kft.': { icon: 'bolt', primary: 'Voltix', sub: 'Electronics' },
+  'Precisa Engineering Kft.': { icon: 'target', primary: 'Precisa', sub: 'Engineering' },
+  'GreenField AgroTech Zrt.': { icon: 'leaf', primary: 'GreenField', sub: 'AgroTech Zrt.' },
+  'NyugatCom Legal Partners': { icon: 'scales', primary: 'NyugatCom', sub: 'Legal Partners' },
+  'Debrecen Public Health Initiative': { icon: 'cross', primary: 'Debrecen', sub: 'Public Health' },
+};
+
 function Icon({ d }) {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -386,13 +407,23 @@ export default function Landing() {
           <div className="container">
             <span className="eyebrow" style={{ color: 'var(--verify)' }}>{t('companyShowcase.eyebrow')}</span>
             <h2>{t('companyShowcase.title')}</h2>
-            <div className="showcase-grid">
+            <div className="logo-strip">
               {stats.companies.map(c => {
+                const logo = COMPANY_LOGOS[c.name];
                 const colors = brandColors(c.name);
                 return (
-                  <Link to={user ? '/companies' : '/auth'} key={c.name} className="showcase-card" style={{ '--brand-bg': colors.bg, '--brand-fg': colors.fg }}>
-                    <span className="showcase-mono">{c.name.charAt(0).toUpperCase()}</span>
-                    <span className="showcase-wordmark">{c.name}</span>
+                  <Link to={user ? '/companies' : '/auth'} key={c.name} className="logo-lockup" title={c.name} style={{ '--brand-fg': colors.fg }}>
+                    {logo ? (
+                      <>
+                        <span className="logo-mark">{LOGO_ICONS[logo.icon]}</span>
+                        <span className="logo-word"><b>{logo.primary}</b><i>{logo.sub}</i></span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="logo-mark logo-mark-initial">{c.name.charAt(0).toUpperCase()}</span>
+                        <span className="logo-word"><b>{c.name}</b></span>
+                      </>
+                    )}
                   </Link>
                 );
               })}
