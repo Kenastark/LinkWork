@@ -57,4 +57,23 @@ Open the interview: ${link}
   };
 }
 
-module.exports = { notify, interviewProposed, slotPicked };
+// Sent to the student when a company rejects their application.
+function applicationRejected({ studentName, roleTitle, companyName }) {
+  return {
+    kind: 'application_rejected',
+    subject: `Update on your application for ${roleTitle}`,
+    body:
+`Hi ${studentName},
+
+Thank you for your interest in the ${roleTitle} role at ${companyName} and for the time you put into the process.
+
+After careful consideration, the team has decided not to move forward with your application at this time. This decision is final for this posting.
+
+Please don't be discouraged — new verified roles are posted regularly, and you're welcome to apply to any that match your skills. We wish you the very best in your search.
+
+— The LinkWork team`,
+    link: '/my-applications',
+  };
+}
+
+module.exports = { notify, interviewProposed, slotPicked, applicationRejected };

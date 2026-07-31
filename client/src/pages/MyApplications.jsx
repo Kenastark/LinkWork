@@ -3,9 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
 import Chain from '../components/Chain.jsx';
-import { formatSlot } from './CompanyDashboard.jsx';
-
-const KIND_LABEL = { hr_interview: 'HR interview', tech_interview: 'Technical interview' };
+import { formatSlot, KIND_LABEL } from '../stages.js';
 
 // Student-side interview block: shows proposed slots to pick from, or the
 // scheduled time + a Join button once a slot has been chosen.

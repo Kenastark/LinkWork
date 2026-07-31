@@ -6,7 +6,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const multer = require('multer');
 const db = require('./db');
-const { notify, interviewProposed, slotPicked } = require('./notify');
+const { notify, interviewProposed, slotPicked, applicationRejected } = require('./notify');
 
 const app = express();
 app.use(express.json());
@@ -503,10 +503,13 @@ app.post('/api/company/applicants/:id/advance', requireAuth('company'), (req, re
 
 app.post('/api/company/applicants/:id/reject', requireAuth('company'), (req, res) => {
   const comp = db.prepare('SELECT * FROM companies WHERE owner_user_id=?').get(req.session.user.id);
-  const a = db.prepare(`SELECT a.*, j.company_id FROM applications a JOIN jobs j ON j.id=a.job_id WHERE a.id=?`).get(req.params.id);
+  const a = db.prepare(`SELECT a.*, j.company_id, j.title AS role_title, u.name AS student_name, co.name AS company_name
+    FROM applications a JOIN jobs j ON j.id=a.job_id JOIN users u ON u.id=a.student_id JOIN companies co ON co.id=j.company_id WHERE a.id=?`).get(req.params.id);
   if (!a || (a.company_id !== comp?.id && !comp?.can_view_all_applicants)) return res.status(404).json({ error: 'Applicant not found.' });
   if (a.stage === 'hired') return res.status(400).json({ error: 'A hired candidate cannot be rejected. Contact the admin.' });
+  if (a.stage === 'rejected') return res.status(400).json({ error: 'This application is already rejected.' });
   db.prepare(`UPDATE applications SET stage='rejected', updated_at=datetime('now') WHERE id=?`).run(a.id);
+  notify(a.student_id, applicationRejected({ studentName: a.student_name, roleTitle: a.role_title, companyName: a.company_name }));
   res.json({ stage: 'rejected' });
 });
 

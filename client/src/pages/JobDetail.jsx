@@ -22,7 +22,7 @@ function CompanyTest({ applicationId, onDone }) {
   if (data.submitted) {
     return (
       <div className="alert ok" style={{ marginTop: 8 }}>
-        Company test submitted — your multiple-choice score is <b>{data.score}%</b>. The company reviews your written answers and decides on next steps; progress updates here.
+        Company test submitted — your score is <b>{data.score}%</b>. The company reviews results and decides on next steps; progress updates here.
       </div>
     );
   }
@@ -45,7 +45,7 @@ function CompanyTest({ applicationId, onDone }) {
 
   return (
     <div style={{ marginTop: 10 }}>
-      <p className="muted" style={{ marginBottom: 14 }}>The company has set a short test. Multiple-choice answers are scored automatically; written answers go to the hiring team.</p>
+      <p className="muted" style={{ marginBottom: 14 }}>The company has set a short multiple-choice test. Your answers are scored automatically on submit.</p>
       {data.questions.map((q, qi) => (
         <div key={q.id} style={{ marginBottom: 18 }}>
           <p style={{ fontWeight: 600 }}>{qi + 1}. {q.question}</p>

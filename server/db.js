@@ -223,25 +223,26 @@ addColumnIfMissing('applications', 'ai_score', 'ai_score INTEGER');             
 })();
 
 // ---------- Idempotent shared sample company test bank (runs on every boot) ----------
-// Placeholder until companies upload their own tests. A mix of MCQ (auto-scored)
-// and essay (stored for the company to read/score).
+// Placeholder until companies upload their own tests. MCQ only — auto-scored on submit.
 (function ensureSampleCompanyTest() {
-  const existing = db.prepare('SELECT COUNT(*) c FROM company_test_questions WHERE company_id IS NULL').get().c;
+  // Remove any legacy essay questions (and their answers) — the sample test is MCQ-only now.
+  const essays = db.prepare(`SELECT id FROM company_test_questions WHERE company_id IS NULL AND type='essay'`).all().map(r => r.id);
+  if (essays.length) {
+    const del = db.prepare('DELETE FROM company_test_answers WHERE question_id=?');
+    essays.forEach(id => del.run(id));
+    db.prepare(`DELETE FROM company_test_questions WHERE company_id IS NULL AND type='essay'`).run();
+  }
+  const existing = db.prepare(`SELECT COUNT(*) c FROM company_test_questions WHERE company_id IS NULL AND type='mcq'`).get().c;
   if (existing > 0) return;
-  const ins = db.prepare('INSERT INTO company_test_questions (company_id, type, question, options, answer_idx, position) VALUES (NULL,?,?,?,?,?)');
+  const ins = db.prepare('INSERT INTO company_test_questions (company_id, type, question, options, answer_idx, position) VALUES (NULL, \'mcq\', ?,?,?,?)');
   const mcq = [
     ['Which best describes a REST API?', ['A styling framework', 'An architectural style for networked applications', 'A database engine', 'A version control system'], 1],
     ['In a team, you disagree with a decision that has already been made. What is the most professional first step?', ['Ignore it and do your own thing', 'Raise your concern respectfully with reasoning, then commit to the team decision', 'Complain to other teammates', 'Do nothing and hope it works out'], 1],
     ['What does "version control" (e.g. Git) primarily help teams do?', ['Design logos', 'Track and merge changes to code over time', 'Host live meetings', 'Write documentation only'], 1],
     ['A stakeholder gives you an ambiguous task. What is the best approach?', ['Guess and start building immediately', 'Ask clarifying questions to align on the goal before starting', 'Wait until someone else clarifies', 'Decline the task'], 1],
   ];
-  const essay = [
-    'Describe a project you worked on and one specific problem you solved. What was your approach and the outcome?',
-    'Why do you want to work at this company, and what would you hope to contribute in your first three months?',
-  ];
   let pos = 0;
-  mcq.forEach(([q, opts, idx]) => ins.run('mcq', q, JSON.stringify(opts), idx, pos++));
-  essay.forEach(q => ins.run('essay', q, null, null, pos++));
+  mcq.forEach(([q, opts, idx]) => ins.run(q, JSON.stringify(opts), idx, pos++));
 })();
 
 // ---------- Seed ----------

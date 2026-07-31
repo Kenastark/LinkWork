@@ -21,6 +21,7 @@ import Resources from './pages/Resources.jsx';
 import ComingSoon from './pages/ComingSoon.jsx';
 import Meeting from './pages/Meeting.jsx';
 import Notifications from './pages/Notifications.jsx';
+import ApplicantReview from './pages/ApplicantReview.jsx';
 import { ACCOUNT_MENU } from './menuConfig.js';
 import { I18nProvider, useI18n, LANGUAGES } from './i18n.jsx';
 
@@ -211,6 +212,7 @@ function AppShell({ user, setUser, logout }) {
           <Route path="/student" element={user?.role === 'student' ? <FindInternship /> : <Navigate to="/auth" />} />
           <Route path="/jobs/:id" element={user ? <JobDetail /> : <Navigate to="/auth" />} />
           <Route path="/company" element={user?.role === 'company' ? <CompanyDashboard /> : <Navigate to="/auth" />} />
+          <Route path="/company/applicants/:id" element={user?.role === 'company' ? <ApplicantReview /> : <Navigate to="/auth" />} />
           <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/auth" />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
