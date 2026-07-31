@@ -6,7 +6,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const multer = require('multer');
 const db = require('./db');
-const { notify, interviewProposed, slotPicked, applicationRejected, applicationAdvanced, applicationHired } = require('./notify');
+const { notify, interviewProposed, slotPicked, applicationRejected, applicationAdvanced, applicationHired, aiInterviewReviewed } = require('./notify');
 
 const app = express();
 app.use(express.json());
@@ -520,8 +520,10 @@ app.post('/api/company/applicants/:id/reject', requireAuth('company'), (req, res
 // for now the company grades the recorded answers.)
 app.post('/api/company/applicants/:id/ai-scores', requireAuth('company'), (req, res) => {
   const comp = db.prepare('SELECT * FROM companies WHERE owner_user_id=?').get(req.session.user.id);
-  const a = db.prepare(`SELECT a.*, j.company_id FROM applications a JOIN jobs j ON j.id=a.job_id WHERE a.id=?`).get(req.params.id);
+  const a = db.prepare(`SELECT a.*, j.company_id, j.title AS role_title, u.name AS student_name, co.name AS company_name
+    FROM applications a JOIN jobs j ON j.id=a.job_id JOIN users u ON u.id=a.student_id JOIN companies co ON co.id=j.company_id WHERE a.id=?`).get(req.params.id);
   if (!a || (a.company_id !== comp?.id && !comp?.can_view_all_applicants)) return res.status(404).json({ error: 'Applicant not found.' });
+  const wasScored = a.ai_score != null;
   const scores = req.body?.scores || {};
   const upd = db.prepare('UPDATE ai_answers SET company_score=? WHERE id=? AND application_id=?');
   for (const [ansId, s] of Object.entries(scores)) {
@@ -531,6 +533,10 @@ app.post('/api/company/applicants/:id/ai-scores', requireAuth('company'), (req, 
   const scored = db.prepare('SELECT company_score FROM ai_answers WHERE application_id=? AND company_score IS NOT NULL').all(a.id).map(r => r.company_score);
   const overall = scored.length ? Math.round((scored.reduce((x, y) => x + y, 0) / scored.length) * 10) : null;
   db.prepare('UPDATE applications SET ai_score=? WHERE id=?').run(overall, a.id);
+  // First time it becomes scored while at the company_test stage: tell the student the test is unlocked.
+  if (!wasScored && overall != null && a.stage === 'company_test') {
+    notify(a.student_id, aiInterviewReviewed({ studentName: a.student_name, roleTitle: a.role_title, companyName: a.company_name }));
+  }
   res.json({ ai_score: overall });
 });
 

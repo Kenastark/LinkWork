@@ -111,4 +111,21 @@ The company will be in touch with next steps. Well done!
   };
 }
 
-module.exports = { notify, interviewProposed, slotPicked, applicationRejected, applicationAdvanced, applicationHired };
+// Sent to the student when the company has scored their AI interview, unlocking the company test.
+function aiInterviewReviewed({ studentName, roleTitle, companyName }) {
+  return {
+    kind: 'ai_interview_reviewed',
+    subject: `Your AI interview for ${roleTitle} has been reviewed`,
+    body:
+`Hi ${studentName},
+
+${companyName} has reviewed your AI interview for the ${roleTitle} role. The next step — the company test — is now unlocked.
+
+Open your application to take the company test.
+
+— The LinkWork team`,
+    link: '/my-applications',
+  };
+}
+
+module.exports = { notify, interviewProposed, slotPicked, applicationRejected, applicationAdvanced, applicationHired, aiInterviewReviewed };

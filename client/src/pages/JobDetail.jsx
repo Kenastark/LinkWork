@@ -12,9 +12,8 @@ function CompanyTest({ applicationId, onDone }) {
   const [answers, setAnswers] = useState({});
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    api.get(`/api/applications/${applicationId}/company-test`).then(setData).catch(e => setError(e.message));
-  }, [applicationId]);
+  const reload = () => api.get(`/api/applications/${applicationId}/company-test`).then(setData).catch(e => setError(e.message));
+  useEffect(() => { reload(); }, [applicationId]);
 
   if (error) return <div className="alert error" style={{ marginTop: 8 }}>{error}</div>;
   if (!data) return null;
@@ -30,7 +29,8 @@ function CompanyTest({ applicationId, onDone }) {
   if (data.locked) {
     return (
       <div className="alert info" style={{ marginTop: 8 }}>
-        🔒 Your AI interview is being reviewed by the company. Once they've scored it, the company test will unlock here — check back soon.
+        🔒 Your AI interview is being reviewed by the company. Once they've scored it, the company test unlocks here.
+        <button className="btn sm secondary" style={{ marginTop: 10 }} onClick={reload}>Check again</button>
       </div>
     );
   }
