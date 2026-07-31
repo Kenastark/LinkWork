@@ -16,48 +16,52 @@ export function formatSlot(startAt, durationMin) {
   return `${d.toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · ${durationMin} min`;
 }
 
-// Company-side: propose slots, manage participants, and see the chosen time + join link.
-function InterviewScheduler({ applicant, interviews, onChange }) {
+const STAGE_ORDER = ['applied', 'skill_test', 'ai_interview', 'company_test', 'hr_interview', 'tech_interview', 'hired'];
+const reached = (stage, target) => STAGE_ORDER.indexOf(stage) >= STAGE_ORDER.indexOf(target);
+
+// One interview stage (HR or technical): propose slots, manage participants,
+// see the chosen time + join link. Proposing is only enabled when the candidate
+// is currently at this stage.
+function InterviewTab({ applicant, interviews, kind, onChange }) {
   const [proposed, setProposed] = useState([]);
   const [picker, setPicker] = useState(false);
-  const [emailInputs, setEmailInputs] = useState({});
+  const [email, setEmail] = useState('');
   const [err, setErr] = useState('');
 
-  const stage = applicant.stage;
-  const kindForStage = stage === 'hr_interview' || stage === 'tech_interview' ? stage : null;
-  const existingForStage = interviews.find(iv => iv.kind === kindForStage);
+  const iv = interviews.find(x => x.kind === kind);
+  const atThisStage = applicant.stage === kind;
 
   const send = async () => {
     setErr('');
-    try {
-      await api.post('/api/company/interviews', { application_id: applicant.id, slots: proposed });
-      setProposed([]); setPicker(false); onChange();
-    } catch (e) { setErr(e.message); }
-  };
-  const addParticipant = async (ivId) => {
-    const email = (emailInputs[ivId] || '').trim();
-    if (!email) return;
-    setErr('');
-    try { await api.post(`/api/company/interviews/${ivId}/participants`, { email }); setEmailInputs(s => ({ ...s, [ivId]: '' })); onChange(); }
+    try { await api.post('/api/company/interviews', { application_id: applicant.id, slots: proposed }); setProposed([]); setPicker(false); onChange(); }
     catch (e) { setErr(e.message); }
   };
-  const removeParticipant = async (ivId, pid) => {
-    try { await api.delete(`/api/company/interviews/${ivId}/participants/${pid}`); onChange(); } catch (e) { setErr(e.message); }
+  const addParticipant = async () => {
+    if (!email.trim()) return;
+    setErr('');
+    try { await api.post(`/api/company/interviews/${iv.id}/participants`, { email: email.trim() }); setEmail(''); onChange(); }
+    catch (e) { setErr(e.message); }
+  };
+  const removeParticipant = async (pid) => {
+    try { await api.delete(`/api/company/interviews/${iv.id}/participants/${pid}`); onChange(); } catch (e) { setErr(e.message); }
   };
 
   return (
-    <div style={{ marginTop: 20, borderTop: '1px solid var(--line)', paddingTop: 16 }}>
-      <h3 style={{ fontSize: 17 }}>Interviews</h3>
+    <div>
+      <h3 style={{ fontSize: 17 }}>{KIND_LABEL[kind]}</h3>
       {err && <div className="alert error" style={{ marginTop: 10 }}>{err}</div>}
 
-      {interviews.length === 0 && !kindForStage && (
-        <p className="muted" style={{ marginTop: 8 }}>Once this candidate reaches the HR or technical interview stage, you can propose interview times here.</p>
+      {!iv && !atThisStage && (
+        <p className="muted" style={{ marginTop: 8 }}>
+          {reached(applicant.stage, kind)
+            ? 'This interview stage has passed.'
+            : `This step becomes available when the candidate reaches the ${KIND_LABEL[kind].toLowerCase()} stage.`}
+        </p>
       )}
 
-      {interviews.map(iv => (
-        <div className="card" key={iv.id} style={{ marginTop: 12, boxShadow: 'none' }}>
+      {iv && (
+        <div className="card" style={{ marginTop: 12, boxShadow: 'none' }}>
           <div className="job-row">
-            <b>{KIND_LABEL[iv.kind]}</b>
             <span className={'badge ' + (iv.status === 'scheduled' ? 'verified' : 'pending')}>
               {iv.status === 'scheduled' ? 'Scheduled' : 'Awaiting candidate'}
             </span>
@@ -73,29 +77,28 @@ function InterviewScheduler({ applicant, interviews, onChange }) {
               <p className="muted" style={{ fontSize: 13 }}>Proposed — waiting for the candidate to pick one.</p>
             </div>
           )}
-
           <div style={{ marginTop: 12 }}>
-            <p className="filter-label">Participants {iv.kind === 'tech_interview' ? '(add technical team members)' : '(add colleagues)'}</p>
+            <p className="filter-label">Participants {kind === 'tech_interview' ? '(add technical team members)' : '(add colleagues)'}</p>
             <div className="participant-chips">
               {iv.participants.length === 0 && <span className="muted" style={{ fontSize: 13 }}>Just you so far.</span>}
               {iv.participants.map(p => (
-                <span className="participant-chip" key={p.id}>{p.email}<button onClick={() => removeParticipant(iv.id, p.id)} aria-label={`Remove ${p.email}`}>✕</button></span>
+                <span className="participant-chip" key={p.id}>{p.email}<button onClick={() => removeParticipant(p.id)} aria-label={`Remove ${p.email}`}>✕</button></span>
               ))}
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-              <input type="email" placeholder="colleague@company.com" value={emailInputs[iv.id] || ''}
-                onChange={e => setEmailInputs(s => ({ ...s, [iv.id]: e.target.value }))}
-                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addParticipant(iv.id); } }} />
-              <button className="btn sm secondary" onClick={() => addParticipant(iv.id)}>Add</button>
+              <input type="email" placeholder="colleague@company.com" value={email}
+                onChange={e => setEmail(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addParticipant(); } }} />
+              <button className="btn sm secondary" onClick={addParticipant}>Add</button>
             </div>
           </div>
         </div>
-      ))}
+      )}
 
-      {kindForStage && !existingForStage && (
+      {!iv && atThisStage && (
         <div style={{ marginTop: 14 }}>
           {!picker && proposed.length === 0 && (
-            <button className="btn sm" onClick={() => setPicker(true)}>Propose {KIND_LABEL[kindForStage]} times</button>
+            <button className="btn sm" onClick={() => setPicker(true)}>Propose {KIND_LABEL[kind].toLowerCase()} times</button>
           )}
           {(picker || proposed.length > 0) && (
             <>
@@ -123,8 +126,136 @@ function InterviewScheduler({ applicant, interviews, onChange }) {
   );
 }
 
+// AI interview tab: recorded answers grouped by round, each with a 0-10 score input;
+// overall section score = average scaled to 0-100. (Live AI-graded video is later.)
+function AiInterviewTab({ applicant, aiAnswers, onChange }) {
+  const [scores, setScores] = useState(() => Object.fromEntries(aiAnswers.map(a => [a.id, a.company_score ?? ''])));
+  const [saved, setSaved] = useState('');
+  const [err, setErr] = useState('');
+
+  const save = async () => {
+    setErr(''); setSaved('');
+    try {
+      const r = await api.post(`/api/company/applicants/${applicant.id}/ai-scores`, { scores });
+      setSaved(r.ai_score != null ? `Saved. Section score: ${r.ai_score}/100.` : 'Saved.');
+      onChange();
+    } catch (e) { setErr(e.message); }
+  };
+
+  if (aiAnswers.length === 0) return <><h3 style={{ fontSize: 17 }}>AI interview</h3><p className="muted" style={{ marginTop: 8 }}>The candidate hasn't completed the AI interview yet.</p></>;
+
+  return (
+    <div>
+      <div className="job-row">
+        <h3 style={{ fontSize: 17 }}>AI interview — score the answers</h3>
+        {applicant.ai_score != null && <span className="badge verified">Section score: {applicant.ai_score}/100</span>}
+      </div>
+      <p className="muted" style={{ fontSize: 13, margin: '6px 0 4px' }}>Placeholder recorded answers — the live AI-graded video interview ships later. Rate each answer 0–10.</p>
+      {err && <div className="alert error">{err}</div>}
+      {saved && <div className="alert ok">{saved}</div>}
+
+      {[1, 2].filter(round => aiAnswers.some(qa => qa.attempt === round)).map(round => (
+        <div key={round}>
+          {aiAnswers.some(qa => qa.attempt === 2) && <p className="id-tag" style={{ marginTop: 16 }}>ROUND {round}</p>}
+          {aiAnswers.filter(qa => qa.attempt === round).map(qa => (
+            <div key={qa.id} style={{ marginTop: 12, borderBottom: '1px solid var(--line)', paddingBottom: 12 }}>
+              <p style={{ fontWeight: 600, fontSize: 14 }}>{qa.question}</p>
+              <p className="muted" style={{ marginTop: 4 }}>{qa.answer}</p>
+              <label className="score-input">Score
+                <input type="number" min="0" max="10" value={scores[qa.id]}
+                  onChange={e => setScores(s => ({ ...s, [qa.id]: e.target.value }))} />
+                <span className="muted">/ 10</span>
+              </label>
+            </div>
+          ))}
+        </div>
+      ))}
+      <button className="btn" style={{ marginTop: 14 }} onClick={save}>Save scores</button>
+    </div>
+  );
+}
+
+// Company test tab: view the student's MCQ answers (right/wrong), essay responses, and score.
+function CompanyTestTab({ companyTest }) {
+  const { questions, answers, score } = companyTest;
+  const answerFor = (qid) => answers.find(a => a.question_id === qid);
+  const taken = score != null;
+
+  return (
+    <div>
+      <div className="job-row">
+        <h3 style={{ fontSize: 17 }}>Company test</h3>
+        {taken ? <span className="badge verified">MCQ score: {score}%</span> : <span className="badge pending">Not taken yet</span>}
+      </div>
+      <p className="muted" style={{ fontSize: 13, margin: '6px 0 10px' }}>Sample test (you'll be able to upload your own MCQ/essay questions later). MCQs are auto-scored; written answers are shown for your review.</p>
+      {!taken && <p className="muted">The candidate hasn't submitted the company test yet.</p>}
+      {taken && questions.map((q, i) => {
+        const ans = answerFor(q.id);
+        return (
+          <div key={q.id} style={{ marginTop: 12, borderBottom: '1px solid var(--line)', paddingBottom: 12 }}>
+            <p style={{ fontWeight: 600, fontSize: 14 }}>{i + 1}. {q.question}</p>
+            {q.type === 'mcq' ? (
+              <div style={{ marginTop: 6 }}>
+                {q.options.map((opt, oi) => {
+                  const chosen = ans && ans.answer_idx === oi;
+                  const correct = q.answer_idx === oi;
+                  return (
+                    <p key={oi} style={{ fontSize: 13.5, color: correct ? 'var(--verify)' : chosen ? 'var(--danger)' : 'var(--ink-soft)', fontWeight: chosen || correct ? 600 : 400 }}>
+                      {correct ? '✓' : chosen ? '✕' : '•'} {opt}{chosen ? ' (their answer)' : ''}
+                    </p>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="muted" style={{ marginTop: 4 }}>{ans?.answer_text || '—'}</p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+const ADVANCE_GATE = {
+  company_test: 'Complete: the candidate must submit the company test first.',
+  hr_interview: 'Complete: schedule (and hold) the HR interview first.',
+  tech_interview: 'Complete: schedule (and hold) the technical interview first.',
+};
+
+const DETAIL_TABS = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'ai', label: 'AI interview' },
+  { key: 'company_test', label: 'Company test' },
+  { key: 'hr', label: 'HR interview' },
+  { key: 'tech', label: 'Technical' },
+];
+function defaultTabForStage(stage) {
+  return { ai_interview: 'ai', company_test: 'company_test', hr_interview: 'hr', tech_interview: 'tech' }[stage] || 'overview';
+}
+
+// At-a-glance scores across the whole pipeline.
+function OverviewTab({ applicant }) {
+  const rows = [
+    ['Current stage', STAGE_LABEL[applicant.stage]],
+    ['Skill test', applicant.skill_score != null ? `${applicant.skill_score}%` : '—'],
+    ['AI interview', applicant.ai_score != null ? `${applicant.ai_score}/100` : 'Not scored'],
+    ['Company test', applicant.company_test_score != null ? `${applicant.company_test_score}%` : 'Not taken'],
+  ];
+  return (
+    <div>
+      <h3 style={{ fontSize: 17, marginBottom: 10 }}>Overview</h3>
+      <table className="ledger">
+        <tbody>
+          {rows.map(([k, v]) => <tr key={k}><td style={{ fontWeight: 600, width: 200 }}>{k}</td><td>{v}</td></tr>)}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function CompanyDashboard() {
   const [tab, setTab] = useState('jobs');
+  const [detailTab, setDetailTab] = useState('overview');
   const [jobs, setJobs] = useState([]);
   const [applicants, setApplicants] = useState([]);
   const [meta, setMeta] = useState(null);
@@ -152,11 +283,19 @@ export default function CompanyDashboard() {
     } catch (err) { setError(err.message); }
   };
 
+  // Opening (Review, or after an advance) jumps to the current stage's tab.
   const openDetail = async (id) => {
-    try { setDetail(await api.get(`/api/company/applicants/${id}`)); }
+    try {
+      const d = await api.get(`/api/company/applicants/${id}`);
+      setDetail(d); setDetailTab(defaultTabForStage(d.applicant.stage));
+    } catch (e) { setError(e.message); }
+  };
+  // Refreshing after an in-tab action keeps the current tab.
+  const refreshDetail = async () => {
+    if (!detail) return;
+    try { setDetail(await api.get(`/api/company/applicants/${detail.applicant.id}`)); }
     catch (e) { setError(e.message); }
   };
-  const refreshDetail = () => { if (detail) openDetail(detail.applicant.id); };
 
   const act = async (id, action) => {
     setError(''); setOk('');
@@ -224,7 +363,9 @@ export default function CompanyDashboard() {
                         <button className="btn sm ghost" onClick={() => openDetail(a.id)}>Review</button>
                         {['company_test', 'hr_interview', 'tech_interview'].includes(a.stage) && (
                           <>
-                            <button className="btn sm" style={{ margin: '0 6px' }} onClick={() => act(a.id, 'advance')}>
+                            <button className="btn sm" style={{ margin: '0 6px' }} onClick={() => act(a.id, 'advance')}
+                              disabled={!a.can_advance}
+                              title={a.can_advance ? '' : ADVANCE_GATE[a.stage]}>
                               {a.stage === 'tech_interview' ? 'Hire ✓' : 'Advance →'}
                             </button>
                             <button className="btn sm danger" onClick={() => act(a.id, 'reject')}>Reject</button>
@@ -241,28 +382,26 @@ export default function CompanyDashboard() {
       {detail && (
         <div className="card" style={{ borderColor: 'var(--verify)' }}>
           <div className="job-row">
-            <h3>{detail.applicant.student_name} — {detail.applicant.title}</h3>
+            <div>
+              <h3>{detail.applicant.student_name} — {detail.applicant.title}</h3>
+              <p className="muted">{detail.applicant.student_email} · {detail.applicant.major} · <span className="badge pending">{STAGE_LABEL[detail.applicant.stage]}</span></p>
+            </div>
             <button className="btn sm ghost" onClick={() => setDetail(null)}>Close</button>
           </div>
-          <p className="muted">{detail.applicant.student_email} · {detail.applicant.major} · Skill test: {detail.applicant.skill_score ?? '—'}%</p>
-          <h3 style={{ marginTop: 16, fontSize: 17 }}>AI interview answers</h3>
-          {detail.aiAnswers.length === 0
-            ? <p className="muted">Not completed yet.</p>
-            : [1, 2].filter(round => detail.aiAnswers.some(qa => qa.attempt === round)).map(round => (
-              <div key={round}>
-                {detail.aiAnswers.some(qa => qa.attempt === 2) && (
-                  <p className="id-tag" style={{ marginTop: 16 }}>ROUND {round}</p>
-                )}
-                {detail.aiAnswers.filter(qa => qa.attempt === round).map((qa, i) => (
-                  <div key={i} style={{ marginTop: 12 }}>
-                    <p style={{ fontWeight: 600, fontSize: 14 }}>{qa.question}</p>
-                    <p className="muted">{qa.answer}</p>
-                  </div>
-                ))}
-              </div>
-            ))}
 
-          <InterviewScheduler applicant={detail.applicant} interviews={detail.interviews || []} onChange={refreshDetail} />
+          <div className="tabs" style={{ marginTop: 16 }}>
+            {DETAIL_TABS.map(dt => (
+              <button key={dt.key} className={detailTab === dt.key ? 'active' : ''} onClick={() => setDetailTab(dt.key)}>{dt.label}</button>
+            ))}
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            {detailTab === 'overview' && <OverviewTab applicant={detail.applicant} />}
+            {detailTab === 'ai' && <AiInterviewTab applicant={detail.applicant} aiAnswers={detail.aiAnswers} onChange={refreshDetail} />}
+            {detailTab === 'company_test' && <CompanyTestTab companyTest={detail.companyTest} />}
+            {detailTab === 'hr' && <InterviewTab applicant={detail.applicant} interviews={detail.interviews || []} kind="hr_interview" onChange={refreshDetail} />}
+            {detailTab === 'tech' && <InterviewTab applicant={detail.applicant} interviews={detail.interviews || []} kind="tech_interview" onChange={refreshDetail} />}
+          </div>
         </div>
       )}
 

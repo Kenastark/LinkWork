@@ -152,6 +152,26 @@ CREATE TABLE IF NOT EXISTS notifications (
   emailed_at TEXT,
   created_at TEXT DEFAULT (datetime('now'))
 );
+-- Company test: the company's own MCQ/essay test that the student takes at the
+-- company_test stage. Companies will upload their own later; for now a shared
+-- sample bank (company_id NULL) is seeded and used for every company test.
+CREATE TABLE IF NOT EXISTS company_test_questions (
+  id INTEGER PRIMARY KEY,
+  company_id INTEGER REFERENCES companies(id),   -- NULL = shared sample bank
+  type TEXT NOT NULL CHECK (type IN ('mcq','essay')),
+  question TEXT NOT NULL,
+  options TEXT,          -- JSON array for mcq
+  answer_idx INTEGER,    -- correct option index for mcq
+  position INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS company_test_answers (
+  id INTEGER PRIMARY KEY,
+  application_id INTEGER NOT NULL REFERENCES applications(id),
+  question_id INTEGER NOT NULL REFERENCES company_test_questions(id),
+  answer_idx INTEGER,    -- chosen option for mcq
+  answer_text TEXT,      -- essay response
+  UNIQUE(application_id, question_id)
+);
 `);
 db.exec('DROP TABLE IF EXISTS job_alerts');
 
@@ -177,6 +197,9 @@ addColumnIfMissing('jobs', 'salary_huf', 'salary_huf INTEGER'); // gross HUF/mon
 // applications to its own postings. In production no company has this flag — each
 // company sees only applications to its own jobs (enforced in server/index.js).
 addColumnIfMissing('companies', 'can_view_all_applicants', 'can_view_all_applicants INTEGER NOT NULL DEFAULT 0');
+addColumnIfMissing('ai_answers', 'company_score', 'company_score INTEGER');       // company's 0-10 score per AI interview answer
+addColumnIfMissing('applications', 'company_test_score', 'company_test_score INTEGER'); // MCQ % on the company test, NULL until taken
+addColumnIfMissing('applications', 'ai_score', 'ai_score INTEGER');               // overall AI interview section score (avg of company_score), 0-100
 
 // ---------- Idempotent test viewer account (runs on every boot, not just first seed) ----------
 // A dedicated company login for testing the applicant-review flow across ALL companies'
@@ -197,6 +220,28 @@ addColumnIfMissing('companies', 'can_view_all_applicants', 'can_view_all_applica
   } else {
     db.prepare('UPDATE companies SET can_view_all_applicants=1 WHERE id=?').run(comp.id);
   }
+})();
+
+// ---------- Idempotent shared sample company test bank (runs on every boot) ----------
+// Placeholder until companies upload their own tests. A mix of MCQ (auto-scored)
+// and essay (stored for the company to read/score).
+(function ensureSampleCompanyTest() {
+  const existing = db.prepare('SELECT COUNT(*) c FROM company_test_questions WHERE company_id IS NULL').get().c;
+  if (existing > 0) return;
+  const ins = db.prepare('INSERT INTO company_test_questions (company_id, type, question, options, answer_idx, position) VALUES (NULL,?,?,?,?,?)');
+  const mcq = [
+    ['Which best describes a REST API?', ['A styling framework', 'An architectural style for networked applications', 'A database engine', 'A version control system'], 1],
+    ['In a team, you disagree with a decision that has already been made. What is the most professional first step?', ['Ignore it and do your own thing', 'Raise your concern respectfully with reasoning, then commit to the team decision', 'Complain to other teammates', 'Do nothing and hope it works out'], 1],
+    ['What does "version control" (e.g. Git) primarily help teams do?', ['Design logos', 'Track and merge changes to code over time', 'Host live meetings', 'Write documentation only'], 1],
+    ['A stakeholder gives you an ambiguous task. What is the best approach?', ['Guess and start building immediately', 'Ask clarifying questions to align on the goal before starting', 'Wait until someone else clarifies', 'Decline the task'], 1],
+  ];
+  const essay = [
+    'Describe a project you worked on and one specific problem you solved. What was your approach and the outcome?',
+    'Why do you want to work at this company, and what would you hope to contribute in your first three months?',
+  ];
+  let pos = 0;
+  mcq.forEach(([q, opts, idx]) => ins.run('mcq', q, JSON.stringify(opts), idx, pos++));
+  essay.forEach(q => ins.run('essay', q, null, null, pos++));
 })();
 
 // ---------- Seed ----------

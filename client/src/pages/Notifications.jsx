@@ -15,13 +15,21 @@ function timeAgo(iso) {
 export default function Notifications() {
   const [tab, setTab] = useState('notifications');
   const [items, setItems] = useState([]);
+  const [openId, setOpenId] = useState(null); // which notification is expanded
 
   const load = () => api.get('/api/notifications').then(d => setItems(d.notifications)).catch(() => {});
   useEffect(() => { load(); }, []);
 
   const markAll = async () => { await api.post('/api/notifications/read-all'); load(); };
-  const open = async (n) => {
-    if (!n.read_at) { await api.post(`/api/notifications/${n.id}/read`); load(); }
+
+  // Opening (expanding) a notification marks it as read.
+  const toggle = async (n) => {
+    const opening = openId !== n.id;
+    setOpenId(opening ? n.id : null);
+    if (opening && !n.read_at) {
+      setItems(list => list.map(x => x.id === n.id ? { ...x, read_at: new Date().toISOString() } : x));
+      try { await api.post(`/api/notifications/${n.id}/read`); } catch { /* non-blocking */ }
+    }
   };
 
   const unread = items.filter(n => !n.read_at).length;
@@ -49,12 +57,15 @@ export default function Notifications() {
           {items.length === 0 ? (
             <div className="card"><p className="muted">Nothing yet. Updates about your interviews and application progress will appear here.</p></div>
           ) : items.map(n => (
-            <div key={n.id} className={`notif-item${n.read_at ? '' : ' unread'}`} onClick={() => open(n)}>
-              <div className="notif-subject">{n.subject}</div>
-              <div className="notif-body">{n.body}</div>
+            <div key={n.id} className={`notif-item${n.read_at ? '' : ' unread'}`} onClick={() => toggle(n)} role="button" tabIndex={0}>
+              <div className="notif-subject">
+                {!n.read_at && <span className="notif-unread-dot" aria-label="Unread" />}
+                {n.subject}
+              </div>
+              {openId === n.id && <div className="notif-body">{n.body}</div>}
               <div className="notif-time">
                 {timeAgo(n.created_at)}
-                {n.link && <> · <Link to={n.link} onClick={e => e.stopPropagation()}>Open</Link></>}
+                {openId === n.id && n.link && <> · <Link to={n.link} onClick={e => e.stopPropagation()}>Open</Link></>}
               </div>
             </div>
           ))}

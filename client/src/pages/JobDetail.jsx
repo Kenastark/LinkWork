@@ -5,6 +5,67 @@ import { useAuth } from '../App.jsx';
 import { useTranslatedTexts } from '../useTranslatedTexts.js';
 import Chain from '../components/Chain.jsx';
 
+// The company's own MCQ/essay test, taken by the student at the company_test stage.
+// MCQs are auto-scored on submit; written answers are stored for the company to read.
+function CompanyTest({ applicationId, onDone }) {
+  const [data, setData] = useState(null);
+  const [answers, setAnswers] = useState({});
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    api.get(`/api/applications/${applicationId}/company-test`).then(setData).catch(e => setError(e.message));
+  }, [applicationId]);
+
+  if (error) return <div className="alert error" style={{ marginTop: 8 }}>{error}</div>;
+  if (!data) return null;
+
+  if (data.submitted) {
+    return (
+      <div className="alert ok" style={{ marginTop: 8 }}>
+        Company test submitted — your multiple-choice score is <b>{data.score}%</b>. The company reviews your written answers and decides on next steps; progress updates here.
+      </div>
+    );
+  }
+
+  const setMcq = (qid, idx) => setAnswers(a => ({ ...a, [qid]: { answer_idx: idx } }));
+  const setEssay = (qid, text) => setAnswers(a => ({ ...a, [qid]: { answer_text: text } }));
+  const complete = data.questions.every(q => {
+    const ans = answers[q.id];
+    return q.type === 'mcq' ? ans && ans.answer_idx != null : ans && (ans.answer_text || '').trim().length >= 30;
+  });
+
+  const submit = async () => {
+    setError('');
+    try {
+      const r = await api.post(`/api/applications/${applicationId}/company-test`, { answers });
+      setData(d => ({ ...d, submitted: true, score: r.score }));
+      onDone();
+    } catch (e) { setError(e.message); }
+  };
+
+  return (
+    <div style={{ marginTop: 10 }}>
+      <p className="muted" style={{ marginBottom: 14 }}>The company has set a short test. Multiple-choice answers are scored automatically; written answers go to the hiring team.</p>
+      {data.questions.map((q, qi) => (
+        <div key={q.id} style={{ marginBottom: 18 }}>
+          <p style={{ fontWeight: 600 }}>{qi + 1}. {q.question}</p>
+          {q.type === 'mcq' ? q.options.map((opt, oi) => (
+            <label key={oi} style={{ display: 'flex', gap: 8, alignItems: 'center', margin: '6px 0', fontWeight: 400 }}>
+              <input type="radio" style={{ width: 'auto', margin: 0 }} name={`ct${q.id}`}
+                checked={answers[q.id]?.answer_idx === oi} onChange={() => setMcq(q.id, oi)} />
+              {opt}
+            </label>
+          )) : (
+            <textarea maxLength={1500} placeholder="Write your answer…" value={answers[q.id]?.answer_text || ''}
+              onChange={e => setEssay(q.id, e.target.value)} />
+          )}
+        </div>
+      ))}
+      <button className="btn" onClick={submit} disabled={!complete}>Submit company test</button>
+    </div>
+  );
+}
+
 export default function JobDetail() {
   const { id } = useParams();
   const { user } = useAuth();
@@ -234,8 +295,9 @@ export default function JobDetail() {
                 </div>
               )}
 
-              {['company_test', 'hr_interview', 'tech_interview'].includes(application.stage) && (
-                <p className="muted">You've cleared platform verification. The company runs the next steps — they'll contact you at your university email, and your progress updates here.</p>
+              {application.stage === 'company_test' && <CompanyTest applicationId={application.id} onDone={load} />}
+              {['hr_interview', 'tech_interview'].includes(application.stage) && (
+                <p className="muted">You've cleared platform verification and the company test. Interview scheduling appears on your <Link to="/my-applications">My applications</Link> page — pick a time there and join the live meeting.</p>
               )}
               {application.stage === 'hired' && (
                 <div className="alert ok" style={{ marginTop: 8 }}>

@@ -530,9 +530,15 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 .meeting-stage .badge { font-size: 13px; }
 
 /* notifications */
-.notif-item { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 10px; background: #fff; }
+.notif-item { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 10px; background: #fff; cursor: pointer; transition: background .12s var(--ease); }
+.notif-item:hover { background: #fafbfa; }
 .notif-item.unread { border-left: 3px solid var(--verify); background: var(--verify-tint); }
-.notif-subject { font-weight: 700; font-size: 14.5px; }
+.notif-item.unread:hover { background: #dcefe5; }
+.notif-subject { font-weight: 700; font-size: 14.5px; display: flex; align-items: center; gap: 8px; }
+.notif-unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--verify); flex: none; }
+
+.score-input { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; font-weight: 600; font-size: 13.5px; }
+.score-input input { width: 70px; margin-top: 0; text-align: center; }
 .notif-body { color: var(--ink-soft); font-size: 13.5px; margin-top: 6px; white-space: pre-wrap; }
 .notif-time { font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
 .nav-bell { position: relative; color: #cfd6e4; display: inline-flex; align-items: center; }

@@ -450,6 +450,7 @@ app.get('/api/company/applicants', requireAuth('company'), (req, res) => {
   const rows = comp?.can_view_all_applicants
     ? db.prepare(`${base} ORDER BY a.updated_at DESC`).all()
     : db.prepare(`${base} WHERE j.company_id=? ORDER BY a.updated_at DESC`).all(comp?.id || -1);
+  rows.forEach(r => { r.can_advance = stageComplete(r) ? 1 : 0; });
   res.json({ applicants: rows });
 });
 
@@ -458,10 +459,33 @@ app.get('/api/company/applicants/:id', requireAuth('company'), (req, res) => {
   const a = db.prepare(`SELECT a.*, u.name AS student_name, u.email AS student_email, u.major, j.title, j.company_id
     FROM applications a JOIN users u ON u.id=a.student_id JOIN jobs j ON j.id=a.job_id WHERE a.id=?`).get(req.params.id);
   if (!a || (a.company_id !== comp?.id && !comp?.can_view_all_applicants)) return res.status(404).json({ error: 'Applicant not found.' });
-  const aiAnswers = db.prepare('SELECT question, answer, attempt FROM ai_answers WHERE application_id=? ORDER BY attempt, id').all(a.id);
+  const aiAnswers = db.prepare('SELECT id, question, answer, attempt, company_score FROM ai_answers WHERE application_id=? ORDER BY attempt, id').all(a.id);
   const interviews = db.prepare('SELECT * FROM interviews WHERE application_id=? ORDER BY created_at').all(a.id).map(iv => serializeInterview(iv));
-  res.json({ applicant: a, aiAnswers, interviews });
+  const ctQuestions = companyTestQuestions().map(q => ({ id: q.id, type: q.type, question: q.question, options: q.options ? JSON.parse(q.options) : null, answer_idx: q.answer_idx }));
+  const ctAnswers = db.prepare('SELECT question_id, answer_idx, answer_text FROM company_test_answers WHERE application_id=?').all(a.id);
+  res.json({
+    applicant: a, aiAnswers, interviews,
+    companyTest: { questions: ctQuestions, answers: ctAnswers, score: a.company_test_score },
+    can_advance: stageComplete(a),
+  });
 });
+
+// Whether the current company-controlled stage's requirement is met, so the
+// company may advance — guards against advancing before the step (test taken,
+// interview scheduled) is actually done.
+function stageComplete(a) {
+  if (a.stage === 'company_test') return a.company_test_score != null;
+  if (a.stage === 'hr_interview' || a.stage === 'tech_interview') {
+    return !!db.prepare(`SELECT 1 FROM interviews WHERE application_id=? AND kind=? AND status='scheduled'`).get(a.id, a.stage);
+  }
+  return false;
+}
+function stageGateMessage(stage) {
+  if (stage === 'company_test') return 'The candidate must complete the company test before you can advance them.';
+  if (stage === 'hr_interview') return 'Schedule (and hold) the HR interview before advancing.';
+  if (stage === 'tech_interview') return 'Schedule (and hold) the technical interview before hiring.';
+  return 'This stage is not ready to advance.';
+}
 
 app.post('/api/company/applicants/:id/advance', requireAuth('company'), (req, res) => {
   const comp = db.prepare('SELECT * FROM companies WHERE owner_user_id=?').get(req.session.user.id);
@@ -469,6 +493,7 @@ app.post('/api/company/applicants/:id/advance', requireAuth('company'), (req, re
   if (!a || (a.company_id !== comp?.id && !comp?.can_view_all_applicants)) return res.status(404).json({ error: 'Applicant not found.' });
   if (['hired', 'rejected'].includes(a.stage)) return res.status(400).json({ error: 'This application is already final.' });
   if (['applied', 'skill_test', 'ai_interview'].includes(a.stage)) return res.status(400).json({ error: 'The candidate must finish platform verification steps first.' });
+  if (!stageComplete(a)) return res.status(400).json({ error: stageGateMessage(a.stage) });
 
   const to = nextStage(a.stage);
   if (to === 'hired') return hire(a, res);
@@ -483,6 +508,73 @@ app.post('/api/company/applicants/:id/reject', requireAuth('company'), (req, res
   if (a.stage === 'hired') return res.status(400).json({ error: 'A hired candidate cannot be rejected. Contact the admin.' });
   db.prepare(`UPDATE applications SET stage='rejected', updated_at=datetime('now') WHERE id=?`).run(a.id);
   res.json({ stage: 'rejected' });
+});
+
+// Company scores the AI interview answers (0-10 each); overall section score is
+// the average scaled to 0-100. (The live AI-graded video interview is a later phase;
+// for now the company grades the recorded answers.)
+app.post('/api/company/applicants/:id/ai-scores', requireAuth('company'), (req, res) => {
+  const comp = db.prepare('SELECT * FROM companies WHERE owner_user_id=?').get(req.session.user.id);
+  const a = db.prepare(`SELECT a.*, j.company_id FROM applications a JOIN jobs j ON j.id=a.job_id WHERE a.id=?`).get(req.params.id);
+  if (!a || (a.company_id !== comp?.id && !comp?.can_view_all_applicants)) return res.status(404).json({ error: 'Applicant not found.' });
+  const scores = req.body?.scores || {};
+  const upd = db.prepare('UPDATE ai_answers SET company_score=? WHERE id=? AND application_id=?');
+  for (const [ansId, s] of Object.entries(scores)) {
+    if (s === '' || s == null) continue;
+    upd.run(Math.max(0, Math.min(10, Math.round(+s))), ansId, a.id);
+  }
+  const scored = db.prepare('SELECT company_score FROM ai_answers WHERE application_id=? AND company_score IS NOT NULL').all(a.id).map(r => r.company_score);
+  const overall = scored.length ? Math.round((scored.reduce((x, y) => x + y, 0) / scored.length) * 10) : null;
+  db.prepare('UPDATE applications SET ai_score=? WHERE id=?').run(overall, a.id);
+  res.json({ ai_score: overall });
+});
+
+// ---------- company test (student takes the company's own MCQ/essay test) ----------
+function companyTestQuestions() {
+  return db.prepare(`SELECT id, type, question, options, answer_idx, position FROM company_test_questions WHERE company_id IS NULL ORDER BY position, id`).all();
+}
+
+app.get('/api/applications/:id/company-test', requireAuth('student'), (req, res) => {
+  const a = db.prepare('SELECT * FROM applications WHERE id=? AND student_id=?').get(req.params.id, req.session.user.id);
+  if (!a) return res.status(404).json({ error: 'Application not found.' });
+  const questions = companyTestQuestions().map(q => ({ id: q.id, type: q.type, question: q.question, options: q.options ? JSON.parse(q.options) : null }));
+  const answers = db.prepare('SELECT question_id, answer_idx, answer_text FROM company_test_answers WHERE application_id=?').all(a.id);
+  res.json({ questions, answers, score: a.company_test_score, submitted: a.company_test_score != null });
+});
+
+app.post('/api/applications/:id/company-test', requireAuth('student'), (req, res) => {
+  const a = db.prepare('SELECT * FROM applications WHERE id=? AND student_id=?').get(req.params.id, req.session.user.id);
+  if (!a || a.stage !== 'company_test') return res.status(400).json({ error: 'The company test is not the current step.' });
+  if (a.company_test_score != null) return res.status(400).json({ error: 'You have already submitted the company test.' });
+  const answers = req.body?.answers || {};
+  const questions = companyTestQuestions();
+  for (const q of questions) {
+    const ans = answers[q.id];
+    if (q.type === 'mcq') {
+      if (!ans || ans.answer_idx == null || ans.answer_idx === '') return res.status(400).json({ error: 'Answer every multiple-choice question.' });
+    } else if (!ans || !ans.answer_text || ans.answer_text.trim().length < 30) {
+      return res.status(400).json({ error: 'Answer every written question with at least a short paragraph (30+ characters).' });
+    }
+  }
+  const ins = db.prepare(`INSERT INTO company_test_answers (application_id, question_id, answer_idx, answer_text) VALUES (?,?,?,?)
+    ON CONFLICT(application_id, question_id) DO UPDATE SET answer_idx=excluded.answer_idx, answer_text=excluded.answer_text`);
+  let mcqTotal = 0, mcqCorrect = 0;
+  const score = db.transaction(() => {
+    for (const q of questions) {
+      const ans = answers[q.id];
+      if (q.type === 'mcq') {
+        const idx = +ans.answer_idx;
+        ins.run(a.id, q.id, idx, null);
+        mcqTotal++; if (idx === q.answer_idx) mcqCorrect++;
+      } else {
+        ins.run(a.id, q.id, null, String(ans.answer_text));
+      }
+    }
+    const s = mcqTotal ? Math.round((mcqCorrect / mcqTotal) * 100) : 0;
+    db.prepare('UPDATE applications SET company_test_score=? WHERE id=?').run(s, a.id);
+    return s;
+  })();
+  res.json({ score });
 });
 
 // ---------- interviews (scheduling; live video is a later phase) ----------
