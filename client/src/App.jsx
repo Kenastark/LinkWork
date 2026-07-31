@@ -18,7 +18,6 @@ import Companies from './pages/Companies.jsx';
 import CompanyProfile from './pages/CompanyProfile.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Resources from './pages/Resources.jsx';
-import Inbox from './pages/Inbox.jsx';
 import ComingSoon from './pages/ComingSoon.jsx';
 import Meeting from './pages/Meeting.jsx';
 import Notifications from './pages/Notifications.jsx';
@@ -192,7 +191,6 @@ function AppShell({ user, setUser, logout }) {
 
             {user?.role === 'student' && <>
               <NavLink className="navlink" to="/my-applications">{t('nav.applications')}</NavLink>
-              <NavLink className="navlink" to="/inbox">{t('nav.inbox')}</NavLink>
             </>}
             {user && <NavBell />}
             <LanguageSwitcher />
@@ -224,7 +222,7 @@ function AppShell({ user, setUser, logout }) {
           <Route path="/companies/:id" element={user ? <CompanyProfile /> : <Navigate to="/auth" />} />
           <Route path="/dashboard" element={user?.role === 'student' ? <Dashboard /> : <Navigate to="/auth" />} />
           <Route path="/resources" element={user ? <Resources /> : <Navigate to="/auth" />} />
-          <Route path="/inbox" element={user?.role === 'student' ? <Inbox /> : <Navigate to="/auth" />} />
+          <Route path="/inbox" element={<Navigate to="/notifications" replace />} />
           <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/auth" />} />
           <Route path="/meeting/:id" element={user ? <Meeting /> : <Navigate to="/auth" />} />
           <Route path="/coming-soon" element={<ComingSoon />} />

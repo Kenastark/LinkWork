@@ -163,7 +163,10 @@ export default function CompanyDashboard() {
     try {
       const r = await api.post(`/api/company/applicants/${id}/${action}`);
       if (r.stage === 'hired') setOk(`Candidate hired. The match is recorded on the ledger${r.job_closed ? ' and the posting has been closed' : ''}.`);
-      setDetail(null); load();
+      load();
+      // Keep the review panel open on the new stage so the next step (e.g. proposing
+      // HR/technical interview times) is visible immediately instead of closing.
+      openDetail(id);
     } catch (e) { setError(e.message); }
   };
 
