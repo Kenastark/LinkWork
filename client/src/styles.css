@@ -254,7 +254,44 @@ textarea { min-height: 110px; resize: vertical; }
 .match-pitch-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center; }
 @media (max-width: 860px) { .match-pitch-grid { grid-template-columns: 1fr; } }
 .match-pitch h2 { font-size: 36px; margin-top: 10px; }
-.match-pitch-art { max-width: 380px; margin: 0 auto; }
+.match-pitch-art { max-width: 420px; margin: 0 auto; }
+
+/* Decorative job-card mockup in the "Looking for the right role?" section */
+.match-mock { position: relative; padding: 22px 14px; }
+.match-mock-panel {
+  position: relative; background: linear-gradient(155deg, #d8efe0, var(--verify-tint));
+  border-radius: 24px; padding: 30px 24px;
+}
+/* peeking card behind the main one */
+.match-mock-panel::before {
+  content: ""; position: absolute; inset: 22px 18px auto; height: 120px; top: 26px;
+  background: #fff; border-radius: 18px; transform: rotate(-3deg); box-shadow: var(--shadow-sm); opacity: .7;
+}
+.match-mock-card {
+  position: relative; background: #fff; border-radius: 18px; padding: 20px;
+  box-shadow: 0 18px 42px rgba(22,35,63,.16);
+}
+.match-mock-badge {
+  position: absolute; top: -14px; right: -8px; transform: rotate(4deg);
+  background: var(--gold); color: #3a2c00; font-weight: 700; font-size: 12.5px;
+  padding: 7px 12px; border-radius: 10px; box-shadow: 0 8px 20px rgba(217,154,6,.4); white-space: nowrap;
+}
+.match-mock-badge b { background: #16233f; color: #fff; border-radius: 6px; padding: 1px 7px; margin-left: 4px; }
+.match-mock-head { display: flex; align-items: center; gap: 12px; }
+.match-mock-logo {
+  width: 42px; height: 42px; border-radius: 12px; flex: none; display: grid; place-items: center;
+  background: var(--gold-tint); color: #7c5a00; font-family: var(--font-display); font-weight: 900; font-size: 18px;
+}
+.match-mock-head h4 { font-size: 17px; letter-spacing: -0.01em; }
+.match-mock-head p { font-size: 13.5px; color: var(--ink-soft); }
+.match-mock-chips { display: flex; flex-wrap: wrap; gap: 7px; margin: 16px 0 18px; }
+.mm-chip { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); background: #eef0f5; border-radius: 999px; padding: 5px 11px; }
+.mm-chip.green { background: var(--verify-tint); color: var(--verify); }
+.mm-chip.gold { background: var(--gold-tint); color: #7c5a00; }
+.match-mock-actions { display: flex; gap: 10px; }
+.mm-btn { flex: 1; text-align: center; font-weight: 700; font-size: 14px; padding: 11px 0; border-radius: 10px; }
+.mm-btn.primary { background: var(--verify); color: #fff; }
+.mm-btn.ghost { border: 1.5px solid var(--line); color: var(--ink); }
 
 .how { padding: 96px 0 88px; }
 .how .eyebrow {

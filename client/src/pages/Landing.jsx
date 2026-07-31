@@ -27,37 +27,35 @@ function Icon({ d }) {
 }
 
 function MatchIllustration() {
+  // Decorative job-card mockup (not interactive) — styled after the reference,
+  // in the LinkWork green/gold theme, with real LinkWork content.
   return (
-    <svg viewBox="0 0 380 340" width="100%" style={{ display: 'block' }} role="img" aria-label="Illustration of matched job cards">
-      <defs>
-        <linearGradient id="blob1" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="var(--verify-tint)" />
-          <stop offset="100%" stopColor="var(--gold-tint)" />
-        </linearGradient>
-        <linearGradient id="cardGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="var(--verify-bright)" />
-          <stop offset="100%" stopColor="var(--verify)" />
-        </linearGradient>
-      </defs>
-      <ellipse cx="190" cy="175" rx="175" ry="150" fill="url(#blob1)" />
-      <g transform="translate(60,190) rotate(-8)">
-        <rect width="220" height="110" rx="18" fill="#fff" stroke="var(--line)" strokeWidth="1.5" />
-        <rect x="20" y="20" width="90" height="12" rx="6" fill="var(--line)" />
-        <rect x="20" y="42" width="140" height="9" rx="4.5" fill="var(--line)" />
-        <rect x="20" y="60" width="110" height="9" rx="4.5" fill="var(--line)" />
-        <rect x="20" y="82" width="64" height="16" rx="8" fill="var(--gold-tint)" />
-      </g>
-      <g transform="translate(90,60) rotate(6)">
-        <rect width="220" height="120" rx="18" fill="url(#cardGrad)" />
-        <rect x="20" y="22" width="110" height="13" rx="6.5" fill="rgba(255,255,255,.85)" />
-        <rect x="20" y="46" width="150" height="9" rx="4.5" fill="rgba(255,255,255,.5)" />
-        <rect x="20" y="64" width="70" height="18" rx="9" fill="rgba(255,255,255,.28)" />
-        <rect x="98" y="64" width="60" height="18" rx="9" fill="rgba(255,255,255,.28)" />
-        <rect x="20" y="90" width="80" height="18" rx="9" fill="#fff" />
-      </g>
-      <circle cx="300" cy="240" r="26" fill="var(--gold)" opacity="0.9" />
-      <circle cx="300" cy="240" r="26" fill="none" stroke="#fff" strokeWidth="2" />
-    </svg>
+    <div className="match-mock" role="img" aria-label="Example job posting card">
+      <div className="match-mock-panel">
+        <div className="match-mock-card">
+          <span className="match-mock-badge">New roles <b>6</b></span>
+          <div className="match-mock-head">
+            <span className="match-mock-logo">D</span>
+            <div>
+              <h4>Software Engineering Intern</h4>
+              <p>DataTech Hungary</p>
+            </div>
+          </div>
+          <div className="match-mock-chips">
+            <span className="mm-chip green">💶 280K HUF/mo</span>
+            <span className="mm-chip green">📈 Internship</span>
+            <span className="mm-chip green">📍 Debrecen</span>
+            <span className="mm-chip">🏠 Hybrid</span>
+            <span className="mm-chip">🏷 Informatics</span>
+            <span className="mm-chip gold">★ Faculty-verified</span>
+          </div>
+          <div className="match-mock-actions">
+            <span className="mm-btn primary">View &amp; apply</span>
+            <span className="mm-btn ghost">→ Skip</span>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
