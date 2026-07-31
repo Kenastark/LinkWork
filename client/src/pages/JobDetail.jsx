@@ -21,7 +21,7 @@ function CompanyTest({ applicationId, onDone }) {
   if (data.submitted) {
     return (
       <div className="alert ok" style={{ marginTop: 8 }}>
-        Company test submitted — your score is <b>{data.score}%</b>. The company reviews results and decides on next steps; progress updates here.
+        Company test submitted. The company reviews results and decides on next steps; progress updates here.
       </div>
     );
   }
@@ -45,8 +45,8 @@ function CompanyTest({ applicationId, onDone }) {
   const submit = async () => {
     setError('');
     try {
-      const r = await api.post(`/api/applications/${applicationId}/company-test`, { answers });
-      setData(d => ({ ...d, submitted: true, score: r.score }));
+      await api.post(`/api/applications/${applicationId}/company-test`, { answers });
+      setData(d => ({ ...d, submitted: true }));
       onDone();
     } catch (e) { setError(e.message); }
   };

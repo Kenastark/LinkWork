@@ -552,7 +552,8 @@ app.get('/api/applications/:id/company-test', requireAuth('student'), (req, res)
   const locked = a.ai_score == null;
   const questions = companyTestQuestions().map(q => ({ id: q.id, type: q.type, question: q.question, options: q.options ? JSON.parse(q.options) : null }));
   const answers = db.prepare('SELECT question_id, answer_idx, answer_text FROM company_test_answers WHERE application_id=?').all(a.id);
-  res.json({ questions, answers, score: a.company_test_score, submitted: a.company_test_score != null, locked });
+  // Score is intentionally hidden from the student; only `submitted` is exposed.
+  res.json({ questions, answers, submitted: a.company_test_score != null, locked });
 });
 
 app.post('/api/applications/:id/company-test', requireAuth('student'), (req, res) => {
@@ -588,7 +589,8 @@ app.post('/api/applications/:id/company-test', requireAuth('student'), (req, res
     db.prepare('UPDATE applications SET company_test_score=? WHERE id=?').run(s, a.id);
     return s;
   })();
-  res.json({ score });
+  // Score is stored for the company's review but hidden from the student.
+  res.json({ submitted: true });
 });
 
 // ---------- interviews (scheduling; live video is a later phase) ----------
