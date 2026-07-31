@@ -70,10 +70,12 @@ export default function MyApplications() {
           <h3>{a.title}</h3>
           <p className="muted">{a.company_name}{a.skill_score != null ? ` · Skill test: ${a.skill_score}%` : ''}</p>
           <Chain stage={a.stage} />
-          {!['hired', 'rejected'].includes(a.stage) && ['skill_test', 'ai_interview'].includes(a.stage) && (
-            <Link to={`/jobs/${a.job_id}`} className="btn sm">Continue → {a.stage === 'skill_test' ? 'Take the skill test' : 'AI interview'}</Link>
+          {['skill_test', 'ai_interview', 'company_test'].includes(a.stage) && (
+            <Link to={`/jobs/${a.job_id}`} className="btn sm">
+              Continue → {a.stage === 'skill_test' ? 'Take the skill test' : a.stage === 'ai_interview' ? 'AI interview' : 'Company test'}
+            </Link>
           )}
-          {['company_test', 'hr_interview', 'tech_interview', 'hired'].includes(a.stage) && <InterviewBlock applicationId={a.id} />}
+          {['hr_interview', 'tech_interview', 'hired'].includes(a.stage) && <InterviewBlock applicationId={a.id} />}
           {a.stage === 'hired' && <span className="badge verified" style={{ marginTop: 12 }}>✓ Hired — congratulations! Match recorded: JOB-{String(a.job_id).padStart(4, '0')} ⟷ STU-{String(user.id).padStart(4, '0')}</span>}
         </div>
       ))}
