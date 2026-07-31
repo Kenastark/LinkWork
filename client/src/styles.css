@@ -542,6 +542,22 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 
 .modal-backdrop { position: fixed; inset: 0; background: rgba(22,35,63,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
 .modal { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 26px; width: min(460px, 100%); animation: menu-in .14s var(--ease) both; }
+
+/* recruitment-steps reminder strip (company dashboard) */
+.rec-steps { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 22px; box-shadow: var(--shadow-sm); }
+.rec-steps-label { font-family: var(--font-mono); font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); }
+.rec-steps-flow { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 2px; margin-top: 10px; }
+.rec-step { display: inline-flex; align-items: center; gap: 8px; }
+.rec-step:not(:last-child)::after { content: "→"; color: var(--line); margin: 0 10px; font-size: 14px; }
+.rec-step-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--verify-tint); color: var(--verify); font-weight: 700; font-size: 12.5px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.rec-step-name { font-size: 13.5px; font-weight: 600; color: var(--ink); white-space: nowrap; }
+@media (max-width: 720px) { .rec-step-name { display: none; } .rec-step:not(:last-child)::after { margin: 0 4px; } }
+
+/* applicants tab search + sort */
+.applicant-controls { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+.applicant-controls > input { flex: 1; min-width: 220px; margin-top: 0; }
+.applicant-sort { font-weight: 600; font-size: 13px; white-space: nowrap; }
+.applicant-sort select { margin-top: 4px; width: auto; min-width: 160px; }
 .notif-body { color: var(--ink-soft); font-size: 13.5px; margin-top: 6px; white-space: pre-wrap; }
 .notif-time { font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
 .nav-bell { position: relative; color: #cfd6e4; display: inline-flex; align-items: center; }

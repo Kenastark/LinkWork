@@ -454,6 +454,19 @@ app.get('/api/company/applicants', requireAuth('company'), (req, res) => {
   res.json({ applicants: rows });
 });
 
+// Closed/filled postings with the candidate(s) selected — the public hire ledger.
+app.get('/api/company/closed-positions', requireAuth('company'), (req, res) => {
+  const comp = db.prepare('SELECT * FROM companies WHERE owner_user_id=?').get(req.session.user.id);
+  const base = `SELECT j.id, j.title, j.positions, j.filled, co.name AS company_name
+    FROM jobs j JOIN companies co ON co.id=j.company_id WHERE j.status='closed'`;
+  const jobs = comp?.can_view_all_applicants
+    ? db.prepare(`${base} ORDER BY j.id DESC`).all()
+    : db.prepare(`${base} AND j.company_id=? ORDER BY j.id DESC`).all(comp?.id || -1);
+  const hiresStmt = db.prepare(`SELECT m.student_id, m.hired_at, u.name AS student_name, u.major
+    FROM matches m JOIN users u ON u.id=m.student_id WHERE m.job_id=? ORDER BY m.hired_at`);
+  res.json({ positions: jobs.map(j => ({ ...j, hires: hiresStmt.all(j.id) })) });
+});
+
 app.get('/api/company/applicants/:id', requireAuth('company'), (req, res) => {
   const comp = db.prepare('SELECT * FROM companies WHERE owner_user_id=?').get(req.session.user.id);
   const a = db.prepare(`SELECT a.*, u.name AS student_name, u.email AS student_email, u.major, j.title, j.company_id
