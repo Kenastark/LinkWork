@@ -76,4 +76,39 @@ Please don't be discouraged — new verified roles are posted regularly, and you
   };
 }
 
-module.exports = { notify, interviewProposed, slotPicked, applicationRejected };
+// Sent to the student when a company advances them to the next stage.
+function applicationAdvanced({ studentName, roleTitle, companyName, toStage }) {
+  const label = ({ company_test: 'company test', hr_interview: 'HR interview', tech_interview: 'technical interview' })[toStage] || 'next stage';
+  return {
+    kind: 'application_advanced',
+    subject: `Good news — you've moved to the ${label} for ${roleTitle}`,
+    body:
+`Hi ${studentName},
+
+Good news! ${companyName} has moved your application for the ${roleTitle} role forward to the ${label} stage.
+
+Open your application to see what's next.
+
+— The LinkWork team`,
+    link: '/my-applications',
+  };
+}
+
+// Sent to the student when they are hired.
+function applicationHired({ studentName, roleTitle, companyName }) {
+  return {
+    kind: 'application_hired',
+    subject: `Congratulations — you've been hired for ${roleTitle}!`,
+    body:
+`Hi ${studentName},
+
+Congratulations! ${companyName} has selected you for the ${roleTitle} role. The match has been recorded on the LinkWork ledger.
+
+The company will be in touch with next steps. Well done!
+
+— The LinkWork team`,
+    link: '/my-applications',
+  };
+}
+
+module.exports = { notify, interviewProposed, slotPicked, applicationRejected, applicationAdvanced, applicationHired };

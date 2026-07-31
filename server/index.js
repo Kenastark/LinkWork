@@ -6,7 +6,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const multer = require('multer');
 const db = require('./db');
-const { notify, interviewProposed, slotPicked, applicationRejected } = require('./notify');
+const { notify, interviewProposed, slotPicked, applicationRejected, applicationAdvanced, applicationHired } = require('./notify');
 
 const app = express();
 app.use(express.json());
@@ -489,7 +489,8 @@ function stageGateMessage(stage) {
 
 app.post('/api/company/applicants/:id/advance', requireAuth('company'), (req, res) => {
   const comp = db.prepare('SELECT * FROM companies WHERE owner_user_id=?').get(req.session.user.id);
-  const a = db.prepare(`SELECT a.*, j.company_id, j.id AS jid FROM applications a JOIN jobs j ON j.id=a.job_id WHERE a.id=?`).get(req.params.id);
+  const a = db.prepare(`SELECT a.*, j.company_id, j.id AS jid, j.title AS role_title, u.name AS student_name, co.name AS company_name
+    FROM applications a JOIN jobs j ON j.id=a.job_id JOIN users u ON u.id=a.student_id JOIN companies co ON co.id=j.company_id WHERE a.id=?`).get(req.params.id);
   if (!a || (a.company_id !== comp?.id && !comp?.can_view_all_applicants)) return res.status(404).json({ error: 'Applicant not found.' });
   if (['hired', 'rejected'].includes(a.stage)) return res.status(400).json({ error: 'This application is already final.' });
   if (['applied', 'skill_test', 'ai_interview'].includes(a.stage)) return res.status(400).json({ error: 'The candidate must finish platform verification steps first.' });
@@ -498,6 +499,7 @@ app.post('/api/company/applicants/:id/advance', requireAuth('company'), (req, re
   const to = nextStage(a.stage);
   if (to === 'hired') return hire(a, res);
   db.prepare(`UPDATE applications SET stage=?, updated_at=datetime('now') WHERE id=?`).run(to, a.id);
+  notify(a.student_id, applicationAdvanced({ studentName: a.student_name, roleTitle: a.role_title, companyName: a.company_name, toStage: to }));
   res.json({ stage: to });
 });
 
@@ -540,14 +542,17 @@ function companyTestQuestions() {
 app.get('/api/applications/:id/company-test', requireAuth('student'), (req, res) => {
   const a = db.prepare('SELECT * FROM applications WHERE id=? AND student_id=?').get(req.params.id, req.session.user.id);
   if (!a) return res.status(404).json({ error: 'Application not found.' });
+  // Locked until the company has scored the AI interview.
+  const locked = a.ai_score == null;
   const questions = companyTestQuestions().map(q => ({ id: q.id, type: q.type, question: q.question, options: q.options ? JSON.parse(q.options) : null }));
   const answers = db.prepare('SELECT question_id, answer_idx, answer_text FROM company_test_answers WHERE application_id=?').all(a.id);
-  res.json({ questions, answers, score: a.company_test_score, submitted: a.company_test_score != null });
+  res.json({ questions, answers, score: a.company_test_score, submitted: a.company_test_score != null, locked });
 });
 
 app.post('/api/applications/:id/company-test', requireAuth('student'), (req, res) => {
   const a = db.prepare('SELECT * FROM applications WHERE id=? AND student_id=?').get(req.params.id, req.session.user.id);
   if (!a || a.stage !== 'company_test') return res.status(400).json({ error: 'The company test is not the current step.' });
+  if (a.ai_score == null) return res.status(400).json({ error: 'Your AI interview must be reviewed and scored by the company before you can take the company test.' });
   if (a.company_test_score != null) return res.status(400).json({ error: 'You have already submitted the company test.' });
   const answers = req.body?.answers || {};
   const questions = companyTestQuestions();
@@ -602,7 +607,7 @@ function serializeInterview(iv) {
   return {
     id: iv.id, application_id: iv.application_id, kind: iv.kind, status: iv.status,
     room_id: iv.room_id, chosen_slot_id: iv.chosen_slot_id, chosen_slot: chosen,
-    slots, participants,
+    slots, participants, score: iv.score, feedback: iv.feedback,
   };
 }
 
@@ -671,6 +676,21 @@ app.delete('/api/company/interviews/:id/participants/:pid', requireAuth('company
   const iv = interviewContext(req.params.id);
   if (!iv || (iv.company_id !== comp?.id && !comp?.can_view_all_applicants)) return res.status(404).json({ error: 'Interview not found.' });
   db.prepare('DELETE FROM interview_participants WHERE id=? AND interview_id=?').run(req.params.pid, iv.id);
+  res.json({ interview: serializeInterview(interviewContext(iv.id)) });
+});
+
+// Interviewer scores the candidate (0-10) and leaves written feedback after the interview.
+app.post('/api/company/interviews/:id/feedback', requireAuth('company'), (req, res) => {
+  const comp = db.prepare('SELECT * FROM companies WHERE owner_user_id=?').get(req.session.user.id);
+  const iv = interviewContext(req.params.id);
+  if (!iv || (iv.company_id !== comp?.id && !comp?.can_view_all_applicants)) return res.status(404).json({ error: 'Interview not found.' });
+  const { score, feedback } = req.body || {};
+  let s = null;
+  if (score !== '' && score != null) {
+    s = Math.round(+score);
+    if (!(s >= 0 && s <= 10)) return res.status(400).json({ error: 'Score must be between 0 and 10.' });
+  }
+  db.prepare('UPDATE interviews SET score=?, feedback=? WHERE id=?').run(s, (feedback || '').trim() || null, iv.id);
   res.json({ interview: serializeInterview(interviewContext(iv.id)) });
 });
 
@@ -754,6 +774,7 @@ function hire(a, res) {
   });
   try {
     const { closed } = tx();
+    if (a.student_name) notify(a.student_id, applicationHired({ studentName: a.student_name, roleTitle: a.role_title, companyName: a.company_name }));
     res.json({ stage: 'hired', job_closed: closed });
   } catch (e) {
     res.status(400).json({ error: e.message });

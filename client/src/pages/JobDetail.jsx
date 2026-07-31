@@ -27,6 +27,14 @@ function CompanyTest({ applicationId, onDone }) {
     );
   }
 
+  if (data.locked) {
+    return (
+      <div className="alert info" style={{ marginTop: 8 }}>
+        🔒 Your AI interview is being reviewed by the company. Once they've scored it, the company test will unlock here — check back soon.
+      </div>
+    );
+  }
+
   const setMcq = (qid, idx) => setAnswers(a => ({ ...a, [qid]: { answer_idx: idx } }));
   const setEssay = (qid, text) => setAnswers(a => ({ ...a, [qid]: { answer_text: text } }));
   const complete = data.questions.every(q => {

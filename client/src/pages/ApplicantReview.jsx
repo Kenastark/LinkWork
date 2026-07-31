@@ -118,6 +118,37 @@ function CompanyTestTab({ companyTest }) {
   );
 }
 
+// Score + written feedback the interviewer records after the interview.
+function InterviewFeedback({ iv, onChange }) {
+  const [score, setScore] = useState(iv.score ?? '');
+  const [feedback, setFeedback] = useState(iv.feedback ?? '');
+  const [saved, setSaved] = useState(false);
+  const [err, setErr] = useState('');
+
+  const save = async () => {
+    setErr(''); setSaved(false);
+    try { await api.post(`/api/company/interviews/${iv.id}/feedback`, { score, feedback }); setSaved(true); onChange(); }
+    catch (e) { setErr(e.message); }
+  };
+
+  return (
+    <div style={{ marginTop: 14, borderTop: '1px solid var(--line)', paddingTop: 14 }}>
+      <p className="filter-label">Interviewer assessment</p>
+      <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>Score the candidate and note how they performed. You can save now and come back to advance or reject later.</p>
+      {err && <div className="alert error">{err}</div>}
+      {saved && <div className="alert ok">Assessment saved.</div>}
+      <label className="score-input">Score
+        <input type="number" min="0" max="10" value={score} onChange={e => setScore(e.target.value)} />
+        <span className="muted">/ 10</span>
+      </label>
+      <label className="field" style={{ marginTop: 10 }}>Comments on performance
+        <textarea value={feedback} onChange={e => setFeedback(e.target.value)} placeholder="Strengths, concerns, overall impression…" />
+      </label>
+      <button className="btn sm" onClick={save}>Save assessment</button>
+    </div>
+  );
+}
+
 function InterviewTab({ applicant, interviews, kind, onChange }) {
   const [proposed, setProposed] = useState([]);
   const [picker, setPicker] = useState(false);
@@ -179,6 +210,7 @@ function InterviewTab({ applicant, interviews, kind, onChange }) {
               <button className="btn sm secondary" onClick={addParticipant}>Add</button>
             </div>
           </div>
+          <InterviewFeedback iv={iv} onChange={onChange} />
         </div>
       )}
       {!iv && atThisStage && (

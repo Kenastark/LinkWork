@@ -200,6 +200,8 @@ addColumnIfMissing('companies', 'can_view_all_applicants', 'can_view_all_applica
 addColumnIfMissing('ai_answers', 'company_score', 'company_score INTEGER');       // company's 0-10 score per AI interview answer
 addColumnIfMissing('applications', 'company_test_score', 'company_test_score INTEGER'); // MCQ % on the company test, NULL until taken
 addColumnIfMissing('applications', 'ai_score', 'ai_score INTEGER');               // overall AI interview section score (avg of company_score), 0-100
+addColumnIfMissing('interviews', 'score', 'score INTEGER');                        // HR/tech interviewer's 0-10 score, NULL until rated
+addColumnIfMissing('interviews', 'feedback', 'feedback TEXT');                     // interviewer's written comments
 
 // ---------- Idempotent test viewer account (runs on every boot, not just first seed) ----------
 // A dedicated company login for testing the applicant-review flow across ALL companies'
