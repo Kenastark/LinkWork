@@ -61,6 +61,13 @@ function useCloseOnOutsideOrRoute(open, setOpen) {
   return ref;
 }
 
+function Avatar({ user, size = 34 }) {
+  const initial = (user.name || user.email || '?').trim().charAt(0).toUpperCase();
+  return user.photo_path
+    ? <img className="avatar" src={user.photo_path} alt="" style={{ width: size, height: size }} />
+    : <span className="avatar avatar-initials" style={{ width: size, height: size, fontSize: Math.round(size * 0.42) }}>{initial}</span>;
+}
+
 function AccountMenu({ user, onSignOut }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
@@ -71,16 +78,27 @@ function AccountMenu({ user, onSignOut }) {
   return (
     <div className="account-menu-wrap" ref={ref}>
       <button
-        className="btn sm secondary my-space-trigger"
+        className="account-trigger"
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen(o => !o)}
+        title={t('nav.mySpace')}
       >
-        {t('nav.mySpace')} ▾
+        <Avatar user={user} size={34} />
+        <span className="account-trigger-name">{user.name || t('nav.mySpace')}</span>
+        <span className="account-chevron">▾</span>
       </button>
       {open && (
         <div className="account-menu" role="menu">
-          <div className="account-menu-email">{user.email}</div>
+          <div className="account-menu-head">
+            <Avatar user={user} size={46} />
+            <div className="account-menu-id">
+              <div className="account-menu-name">{user.name}</div>
+              <div className="account-menu-email">{user.email}</div>
+              <div className="account-menu-space">{t('nav.mySpace')}</div>
+            </div>
+          </div>
+          <div className="account-menu-divider" />
           {items.map(i => (
             <NavLink key={i.path} to={i.path} className="account-menu-item" role="menuitem">
               {i.label}
