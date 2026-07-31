@@ -1,11 +1,127 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../api.js';
+import DateTimePicker from '../components/DateTimePicker.jsx';
 
 const STAGE_LABEL = {
   applied: 'Applied', skill_test: 'Skill test', ai_interview: 'AI interview',
   company_test: 'Company test', hr_interview: 'HR interview', tech_interview: 'Technical interview',
   hired: 'Hired', rejected: 'Not selected',
 };
+
+const KIND_LABEL = { hr_interview: 'HR interview', tech_interview: 'Technical interview' };
+
+export function formatSlot(startAt, durationMin) {
+  const d = new Date(startAt);
+  return `${d.toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · ${durationMin} min`;
+}
+
+// Company-side: propose slots, manage participants, and see the chosen time + join link.
+function InterviewScheduler({ applicant, interviews, onChange }) {
+  const [proposed, setProposed] = useState([]);
+  const [picker, setPicker] = useState(false);
+  const [emailInputs, setEmailInputs] = useState({});
+  const [err, setErr] = useState('');
+
+  const stage = applicant.stage;
+  const kindForStage = stage === 'hr_interview' || stage === 'tech_interview' ? stage : null;
+  const existingForStage = interviews.find(iv => iv.kind === kindForStage);
+
+  const send = async () => {
+    setErr('');
+    try {
+      await api.post('/api/company/interviews', { application_id: applicant.id, slots: proposed });
+      setProposed([]); setPicker(false); onChange();
+    } catch (e) { setErr(e.message); }
+  };
+  const addParticipant = async (ivId) => {
+    const email = (emailInputs[ivId] || '').trim();
+    if (!email) return;
+    setErr('');
+    try { await api.post(`/api/company/interviews/${ivId}/participants`, { email }); setEmailInputs(s => ({ ...s, [ivId]: '' })); onChange(); }
+    catch (e) { setErr(e.message); }
+  };
+  const removeParticipant = async (ivId, pid) => {
+    try { await api.delete(`/api/company/interviews/${ivId}/participants/${pid}`); onChange(); } catch (e) { setErr(e.message); }
+  };
+
+  return (
+    <div style={{ marginTop: 20, borderTop: '1px solid var(--line)', paddingTop: 16 }}>
+      <h3 style={{ fontSize: 17 }}>Interviews</h3>
+      {err && <div className="alert error" style={{ marginTop: 10 }}>{err}</div>}
+
+      {interviews.length === 0 && !kindForStage && (
+        <p className="muted" style={{ marginTop: 8 }}>Once this candidate reaches the HR or technical interview stage, you can propose interview times here.</p>
+      )}
+
+      {interviews.map(iv => (
+        <div className="card" key={iv.id} style={{ marginTop: 12, boxShadow: 'none' }}>
+          <div className="job-row">
+            <b>{KIND_LABEL[iv.kind]}</b>
+            <span className={'badge ' + (iv.status === 'scheduled' ? 'verified' : 'pending')}>
+              {iv.status === 'scheduled' ? 'Scheduled' : 'Awaiting candidate'}
+            </span>
+          </div>
+          {iv.status === 'scheduled' && iv.chosen_slot ? (
+            <>
+              <p style={{ marginTop: 8, fontWeight: 600 }}>{formatSlot(iv.chosen_slot.start_at, iv.chosen_slot.duration_min)}</p>
+              <Link to={`/meeting/${iv.id}`} className="btn sm" style={{ marginTop: 10 }}>Join meeting</Link>
+            </>
+          ) : (
+            <div className="slot-list">
+              {iv.slots.map(s => <div className="slot-row" key={s.id}><span className="slot-when">{formatSlot(s.start_at, s.duration_min)}</span></div>)}
+              <p className="muted" style={{ fontSize: 13 }}>Proposed — waiting for the candidate to pick one.</p>
+            </div>
+          )}
+
+          <div style={{ marginTop: 12 }}>
+            <p className="filter-label">Participants {iv.kind === 'tech_interview' ? '(add technical team members)' : '(add colleagues)'}</p>
+            <div className="participant-chips">
+              {iv.participants.length === 0 && <span className="muted" style={{ fontSize: 13 }}>Just you so far.</span>}
+              {iv.participants.map(p => (
+                <span className="participant-chip" key={p.id}>{p.email}<button onClick={() => removeParticipant(iv.id, p.id)} aria-label={`Remove ${p.email}`}>✕</button></span>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+              <input type="email" placeholder="colleague@company.com" value={emailInputs[iv.id] || ''}
+                onChange={e => setEmailInputs(s => ({ ...s, [iv.id]: e.target.value }))}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addParticipant(iv.id); } }} />
+              <button className="btn sm secondary" onClick={() => addParticipant(iv.id)}>Add</button>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {kindForStage && !existingForStage && (
+        <div style={{ marginTop: 14 }}>
+          {!picker && proposed.length === 0 && (
+            <button className="btn sm" onClick={() => setPicker(true)}>Propose {KIND_LABEL[kindForStage]} times</button>
+          )}
+          {(picker || proposed.length > 0) && (
+            <>
+              {proposed.length > 0 && (
+                <div className="slot-list">
+                  {proposed.map((s, i) => (
+                    <div className="slot-row" key={i}>
+                      <span className="slot-when">{formatSlot(s.start_at, s.duration_min)}</span>
+                      <button className="btn sm ghost" onClick={() => setProposed(p => p.filter((_, x) => x !== i))}>Remove</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {picker
+                ? <DateTimePicker onAdd={(slot) => { setProposed(p => [...p, slot]); setPicker(false); }} />
+                : <button className="btn sm secondary" onClick={() => setPicker(true)}>+ Add another time</button>}
+              {proposed.length > 0 && !picker && (
+                <button className="btn" style={{ marginTop: 12 }} onClick={send}>Send {proposed.length} time{proposed.length > 1 ? 's' : ''} to candidate</button>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CompanyDashboard() {
   const [tab, setTab] = useState('jobs');
@@ -40,6 +156,7 @@ export default function CompanyDashboard() {
     try { setDetail(await api.get(`/api/company/applicants/${id}`)); }
     catch (e) { setError(e.message); }
   };
+  const refreshDetail = () => { if (detail) openDetail(detail.applicant.id); };
 
   const act = async (id, action) => {
     setError(''); setOk('');
@@ -141,6 +258,8 @@ export default function CompanyDashboard() {
                 ))}
               </div>
             ))}
+
+          <InterviewScheduler applicant={detail.applicant} interviews={detail.interviews || []} onChange={refreshDetail} />
         </div>
       )}
 

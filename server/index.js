@@ -3,8 +3,10 @@ const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const multer = require('multer');
 const db = require('./db');
+const { notify, interviewProposed, slotPicked } = require('./notify');
 
 const app = express();
 app.use(express.json());
@@ -457,7 +459,8 @@ app.get('/api/company/applicants/:id', requireAuth('company'), (req, res) => {
     FROM applications a JOIN users u ON u.id=a.student_id JOIN jobs j ON j.id=a.job_id WHERE a.id=?`).get(req.params.id);
   if (!a || (a.company_id !== comp?.id && !comp?.can_view_all_applicants)) return res.status(404).json({ error: 'Applicant not found.' });
   const aiAnswers = db.prepare('SELECT question, answer, attempt FROM ai_answers WHERE application_id=? ORDER BY attempt, id').all(a.id);
-  res.json({ applicant: a, aiAnswers });
+  const interviews = db.prepare('SELECT * FROM interviews WHERE application_id=? ORDER BY created_at').all(a.id).map(iv => serializeInterview(iv));
+  res.json({ applicant: a, aiAnswers, interviews });
 });
 
 app.post('/api/company/applicants/:id/advance', requireAuth('company'), (req, res) => {
@@ -480,6 +483,161 @@ app.post('/api/company/applicants/:id/reject', requireAuth('company'), (req, res
   if (a.stage === 'hired') return res.status(400).json({ error: 'A hired candidate cannot be rejected. Contact the admin.' });
   db.prepare(`UPDATE applications SET stage='rejected', updated_at=datetime('now') WHERE id=?`).run(a.id);
   res.json({ stage: 'rejected' });
+});
+
+// ---------- interviews (scheduling; live video is a later phase) ----------
+const INTERVIEW_STAGES = ['hr_interview', 'tech_interview'];
+
+// Fetch an interview joined to its application/job/company/student, or null.
+function interviewContext(interviewId) {
+  return db.prepare(`SELECT iv.*, a.student_id, a.job_id, j.company_id, j.title AS role_title,
+      u.name AS student_name, u.email AS student_email, co.name AS company_name, co.owner_user_id AS company_user_id
+    FROM interviews iv
+    JOIN applications a ON a.id = iv.application_id
+    JOIN jobs j ON j.id = a.job_id
+    JOIN companies co ON co.id = j.company_id
+    JOIN users u ON u.id = a.student_id
+    WHERE iv.id = ?`).get(interviewId);
+}
+
+function serializeInterview(iv) {
+  const slots = db.prepare('SELECT * FROM interview_slots WHERE interview_id=? ORDER BY start_at').all(iv.id);
+  const participants = db.prepare('SELECT id, email FROM interview_participants WHERE interview_id=? ORDER BY id').all(iv.id);
+  const chosen = iv.chosen_slot_id ? slots.find(s => s.id === iv.chosen_slot_id) : null;
+  return {
+    id: iv.id, application_id: iv.application_id, kind: iv.kind, status: iv.status,
+    room_id: iv.room_id, chosen_slot_id: iv.chosen_slot_id, chosen_slot: chosen,
+    slots, participants,
+  };
+}
+
+function whenText(startAt, durationMin) {
+  const d = new Date(startAt);
+  const date = d.toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return `${date} (${durationMin} min)`;
+}
+
+// HR proposes interview slots for an applicant at an interview stage.
+app.post('/api/company/interviews', requireAuth('company'), (req, res) => {
+  const comp = db.prepare('SELECT * FROM companies WHERE owner_user_id=?').get(req.session.user.id);
+  const { application_id, slots } = req.body || {};
+  const a = db.prepare(`SELECT a.*, j.company_id, j.title AS role_title, u.name AS student_name
+    FROM applications a JOIN jobs j ON j.id=a.job_id JOIN users u ON u.id=a.student_id WHERE a.id=?`).get(application_id);
+  if (!a || (a.company_id !== comp?.id && !comp?.can_view_all_applicants)) return res.status(404).json({ error: 'Applicant not found.' });
+  if (!INTERVIEW_STAGES.includes(a.stage)) return res.status(400).json({ error: 'This candidate is not at an interview stage yet.' });
+  if (!Array.isArray(slots) || slots.length < 1 || slots.length > 6) return res.status(400).json({ error: 'Propose between 1 and 6 time slots.' });
+  for (const s of slots) {
+    if (!s.start_at || isNaN(Date.parse(s.start_at))) return res.status(400).json({ error: 'Each slot needs a valid date and time.' });
+    const dur = +s.duration_min;
+    if (!(dur >= 15 && dur <= 180)) return res.status(400).json({ error: 'Duration must be between 15 and 180 minutes.' });
+  }
+  const roomId = crypto.randomUUID();
+  const tx = db.transaction(() => {
+    const r = db.prepare('INSERT INTO interviews (application_id, kind, room_id) VALUES (?,?,?)').run(a.id, a.stage, roomId);
+    const ins = db.prepare('INSERT INTO interview_slots (interview_id, start_at, duration_min) VALUES (?,?,?)');
+    slots.forEach(s => ins.run(r.lastInsertRowid, new Date(s.start_at).toISOString(), Math.round(+s.duration_min)));
+    return r.lastInsertRowid;
+  });
+  const interviewId = tx();
+  const msg = interviewProposed({
+    studentName: a.student_name, companyName: comp?.name || 'the company',
+    roleTitle: a.role_title, kind: a.stage, link: '/my-applications',
+  });
+  notify(a.student_id, msg);
+  res.json({ interview: serializeInterview(interviewContext(interviewId)) });
+});
+
+// Add a participant (e.g. a technical team member) to an interview by email.
+app.post('/api/company/interviews/:id/participants', requireAuth('company'), (req, res) => {
+  const comp = db.prepare('SELECT * FROM companies WHERE owner_user_id=?').get(req.session.user.id);
+  const iv = interviewContext(req.params.id);
+  if (!iv || (iv.company_id !== comp?.id && !comp?.can_view_all_applicants)) return res.status(404).json({ error: 'Interview not found.' });
+  const email = (req.body?.email || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
+  try {
+    db.prepare('INSERT INTO interview_participants (interview_id, email) VALUES (?,?)').run(iv.id, email);
+  } catch { return res.status(400).json({ error: 'That person is already invited.' }); }
+  // Notify the invitee only if they have a LinkWork account (in-app); otherwise the
+  // scaffolded email would reach them once real delivery is wired up.
+  const invitee = db.prepare('SELECT id FROM users WHERE email=?').get(email);
+  if (invitee) {
+    notify(invitee.id, {
+      kind: `${iv.kind}_invite`,
+      subject: `You've been added to an interview on LinkWork`,
+      body: `You've been added as a participant to a ${iv.kind === 'hr_interview' ? 'HR' : 'technical'} interview for the ${iv.role_title} role. You'll be able to join the live meeting at the scheduled time.`,
+      link: '/notifications',
+    });
+  }
+  res.json({ interview: serializeInterview(interviewContext(iv.id)) });
+});
+
+app.delete('/api/company/interviews/:id/participants/:pid', requireAuth('company'), (req, res) => {
+  const comp = db.prepare('SELECT * FROM companies WHERE owner_user_id=?').get(req.session.user.id);
+  const iv = interviewContext(req.params.id);
+  if (!iv || (iv.company_id !== comp?.id && !comp?.can_view_all_applicants)) return res.status(404).json({ error: 'Interview not found.' });
+  db.prepare('DELETE FROM interview_participants WHERE id=? AND interview_id=?').run(req.params.pid, iv.id);
+  res.json({ interview: serializeInterview(interviewContext(iv.id)) });
+});
+
+// Student: list interviews for one of their applications.
+app.get('/api/applications/:id/interviews', requireAuth('student'), (req, res) => {
+  const a = db.prepare('SELECT * FROM applications WHERE id=? AND student_id=?').get(req.params.id, req.session.user.id);
+  if (!a) return res.status(404).json({ error: 'Application not found.' });
+  const ivs = db.prepare('SELECT * FROM interviews WHERE application_id=? ORDER BY created_at').all(a.id);
+  res.json({ interviews: ivs.map(iv => serializeInterview(iv)) });
+});
+
+// Student: pick a preferred slot.
+app.post('/api/interviews/:id/pick-slot', requireAuth('student'), (req, res) => {
+  const iv = interviewContext(req.params.id);
+  if (!iv || iv.student_id !== req.session.user.id) return res.status(404).json({ error: 'Interview not found.' });
+  if (iv.status !== 'awaiting_pick') return res.status(400).json({ error: 'This interview is already scheduled.' });
+  const slot = db.prepare('SELECT * FROM interview_slots WHERE id=? AND interview_id=?').get(req.body?.slot_id, iv.id);
+  if (!slot) return res.status(400).json({ error: 'Pick one of the proposed slots.' });
+  db.prepare(`UPDATE interviews SET chosen_slot_id=?, status='scheduled' WHERE id=?`).run(slot.id, iv.id);
+  const msg = slotPicked({
+    studentName: iv.student_name, roleTitle: iv.role_title, kind: iv.kind,
+    whenText: whenText(slot.start_at, slot.duration_min), link: '/company',
+  });
+  notify(iv.company_user_id, msg);
+  res.json({ interview: serializeInterview(interviewContext(iv.id)) });
+});
+
+// Meeting room (placeholder until live video ships). Accessible to the student,
+// the company owner, and invited participants.
+app.get('/api/interviews/:id/room', requireAuth(), (req, res) => {
+  const iv = interviewContext(req.params.id);
+  if (!iv) return res.status(404).json({ error: 'Interview not found.' });
+  const u = req.session.user;
+  const comp = u.role === 'company' ? db.prepare('SELECT * FROM companies WHERE owner_user_id=?').get(u.id) : null;
+  const isParticipant = !!db.prepare('SELECT 1 FROM interview_participants WHERE interview_id=? AND email=?').get(iv.id, u.email);
+  const allowed = iv.student_id === u.id
+    || (comp && (iv.company_id === comp.id || comp.can_view_all_applicants))
+    || isParticipant;
+  if (!allowed) return res.status(403).json({ error: 'You are not part of this interview.' });
+  const full = serializeInterview(iv);
+  res.json({
+    interview: full,
+    role_title: iv.role_title, company_name: iv.company_name, student_name: iv.student_name,
+    when: full.chosen_slot ? whenText(full.chosen_slot.start_at, full.chosen_slot.duration_min) : null,
+  });
+});
+
+// ---------- notifications (in-app; scaffold for future email) ----------
+app.get('/api/notifications', requireAuth(), (req, res) => {
+  const rows = db.prepare('SELECT * FROM notifications WHERE user_id=? ORDER BY created_at DESC LIMIT 50').all(req.session.user.id);
+  const unread = db.prepare('SELECT COUNT(*) c FROM notifications WHERE user_id=? AND read_at IS NULL').get(req.session.user.id).c;
+  res.json({ notifications: rows, unread });
+});
+
+app.post('/api/notifications/:id/read', requireAuth(), (req, res) => {
+  db.prepare(`UPDATE notifications SET read_at=datetime('now') WHERE id=? AND user_id=? AND read_at IS NULL`).run(req.params.id, req.session.user.id);
+  res.json({ ok: true });
+});
+
+app.post('/api/notifications/read-all', requireAuth(), (req, res) => {
+  db.prepare(`UPDATE notifications SET read_at=datetime('now') WHERE user_id=? AND read_at IS NULL`).run(req.session.user.id);
+  res.json({ ok: true });
 });
 
 // Hiring: create the job-ID ⟷ candidate-ID match, close job when filled

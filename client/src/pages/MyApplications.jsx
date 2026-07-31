@@ -3,6 +3,56 @@ import { Link } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
 import Chain from '../components/Chain.jsx';
+import { formatSlot } from './CompanyDashboard.jsx';
+
+const KIND_LABEL = { hr_interview: 'HR interview', tech_interview: 'Technical interview' };
+
+// Student-side interview block: shows proposed slots to pick from, or the
+// scheduled time + a Join button once a slot has been chosen.
+function InterviewBlock({ applicationId }) {
+  const [interviews, setInterviews] = useState([]);
+  const [err, setErr] = useState('');
+
+  const load = () => api.get(`/api/applications/${applicationId}/interviews`).then(d => setInterviews(d.interviews)).catch(() => {});
+  useEffect(() => { load(); }, [applicationId]);
+
+  const pick = async (ivId, slotId) => {
+    setErr('');
+    try { await api.post(`/api/interviews/${ivId}/pick-slot`, { slot_id: slotId }); load(); }
+    catch (e) { setErr(e.message); }
+  };
+
+  if (interviews.length === 0) return null;
+
+  return (
+    <div style={{ marginTop: 14, borderTop: '1px solid var(--line)', paddingTop: 14 }}>
+      {err && <div className="alert error">{err}</div>}
+      {interviews.map(iv => (
+        <div key={iv.id} style={{ marginBottom: 12 }}>
+          <p style={{ fontWeight: 700, fontSize: 14.5 }}>{KIND_LABEL[iv.kind]}</p>
+          {iv.status === 'scheduled' && iv.chosen_slot ? (
+            <>
+              <p className="muted" style={{ margin: '6px 0' }}>Scheduled for <b style={{ color: 'var(--ink)' }}>{formatSlot(iv.chosen_slot.start_at, iv.chosen_slot.duration_min)}</b></p>
+              <Link to={`/meeting/${iv.id}`} className="btn sm">Join meeting</Link>
+            </>
+          ) : (
+            <>
+              <p className="muted" style={{ margin: '6px 0' }}>Pick your preferred time for the interview:</p>
+              <div className="slot-list">
+                {iv.slots.map(s => (
+                  <div className="slot-row pickable" key={s.id} onClick={() => pick(iv.id, s.id)}>
+                    <span className="slot-when">{formatSlot(s.start_at, s.duration_min)}</span>
+                    <span className="btn sm">Choose</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function MyApplications() {
   const { user } = useAuth();
@@ -25,7 +75,8 @@ export default function MyApplications() {
           {!['hired', 'rejected'].includes(a.stage) && ['skill_test', 'ai_interview'].includes(a.stage) && (
             <Link to={`/jobs/${a.job_id}`} className="btn sm">Continue → {a.stage === 'skill_test' ? 'Take the skill test' : 'AI interview'}</Link>
           )}
-          {a.stage === 'hired' && <span className="badge verified">✓ Hired — congratulations! Match recorded: JOB-{String(a.job_id).padStart(4, '0')} ⟷ STU-{String(user.id).padStart(4, '0')}</span>}
+          {['company_test', 'hr_interview', 'tech_interview', 'hired'].includes(a.stage) && <InterviewBlock applicationId={a.id} />}
+          {a.stage === 'hired' && <span className="badge verified" style={{ marginTop: 12 }}>✓ Hired — congratulations! Match recorded: JOB-{String(a.job_id).padStart(4, '0')} ⟷ STU-{String(user.id).padStart(4, '0')}</span>}
         </div>
       ))}
     </main>

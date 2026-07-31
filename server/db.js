@@ -116,6 +116,42 @@ CREATE TABLE IF NOT EXISTS translation_cache (
   created_at TEXT DEFAULT (datetime('now')),
   UNIQUE(text_hash, target_lang)
 );
+CREATE TABLE IF NOT EXISTS interviews (
+  id INTEGER PRIMARY KEY,
+  application_id INTEGER NOT NULL REFERENCES applications(id),
+  kind TEXT NOT NULL CHECK (kind IN ('hr_interview','tech_interview')),
+  status TEXT NOT NULL DEFAULT 'awaiting_pick' CHECK (status IN ('awaiting_pick','scheduled','completed','cancelled')),
+  chosen_slot_id INTEGER,
+  room_id TEXT NOT NULL,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS interview_slots (
+  id INTEGER PRIMARY KEY,
+  interview_id INTEGER NOT NULL REFERENCES interviews(id),
+  start_at TEXT NOT NULL,       -- ISO 8601 UTC
+  duration_min INTEGER NOT NULL DEFAULT 45
+);
+CREATE TABLE IF NOT EXISTS interview_participants (
+  id INTEGER PRIMARY KEY,
+  interview_id INTEGER NOT NULL REFERENCES interviews(id),
+  email TEXT NOT NULL,
+  added_at TEXT DEFAULT (datetime('now')),
+  UNIQUE(interview_id, email)
+);
+-- In-app notification log. Doubles as the scaffold for future email delivery:
+-- each row is a message we WOULD email (subject/body written now); 'emailed_at'
+-- stays NULL until real sending is wired up.
+CREATE TABLE IF NOT EXISTS notifications (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  kind TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  body TEXT NOT NULL,
+  link TEXT,
+  read_at TEXT,
+  emailed_at TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
 `);
 db.exec('DROP TABLE IF EXISTS job_alerts');
 

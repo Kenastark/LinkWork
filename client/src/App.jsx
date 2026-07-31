@@ -20,6 +20,8 @@ import Dashboard from './pages/Dashboard.jsx';
 import Resources from './pages/Resources.jsx';
 import Inbox from './pages/Inbox.jsx';
 import ComingSoon from './pages/ComingSoon.jsx';
+import Meeting from './pages/Meeting.jsx';
+import Notifications from './pages/Notifications.jsx';
 import { ACCOUNT_MENU } from './menuConfig.js';
 import { I18nProvider, useI18n, LANGUAGES } from './i18n.jsx';
 
@@ -89,6 +91,22 @@ function AccountMenu({ user, onSignOut }) {
         </div>
       )}
     </div>
+  );
+}
+
+function NavBell() {
+  const [unread, setUnread] = useState(0);
+  const location = useLocation();
+  useEffect(() => {
+    api.get('/api/notifications').then(d => setUnread(d.unread)).catch(() => {});
+  }, [location.pathname]);
+  return (
+    <NavLink to="/notifications" className="nav-bell" aria-label="Notifications" title="Notifications">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" />
+      </svg>
+      {unread > 0 && <span className="dot">{unread > 9 ? '9+' : unread}</span>}
+    </NavLink>
   );
 }
 
@@ -176,6 +194,7 @@ function AppShell({ user, setUser, logout }) {
               <NavLink className="navlink" to="/my-applications">{t('nav.applications')}</NavLink>
               <NavLink className="navlink" to="/inbox">{t('nav.inbox')}</NavLink>
             </>}
+            {user && <NavBell />}
             <LanguageSwitcher />
             {user ? (
               <AccountMenu user={user} onSignOut={logout} />
@@ -206,6 +225,8 @@ function AppShell({ user, setUser, logout }) {
           <Route path="/dashboard" element={user?.role === 'student' ? <Dashboard /> : <Navigate to="/auth" />} />
           <Route path="/resources" element={user ? <Resources /> : <Navigate to="/auth" />} />
           <Route path="/inbox" element={user?.role === 'student' ? <Inbox /> : <Navigate to="/auth" />} />
+          <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/auth" />} />
+          <Route path="/meeting/:id" element={user ? <Meeting /> : <Navigate to="/auth" />} />
           <Route path="/coming-soon" element={<ComingSoon />} />
         </Routes>
 
