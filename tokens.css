@@ -1,0 +1,392 @@
+/* ============================================================================
+   LinkWork Design Tokens
+   Drop-in replacement for the token block at the top of client/src/styles.css
+   Everything below :root is additive. The LEGACY ALIASES block at the end keeps
+   every existing rule in styles.css compiling while you migrate component by
+   component.
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* --- Brand: University of Debrecen blue ------------------------------- */
+  --blue-50:  #eff5fc;
+  --blue-100: #d8e7f7;
+  --blue-200: #b0cdef;
+  --blue-300: #7fade3;
+  --blue-400: #4f8ef7;  /* accent, interactive highlight, dark-mode primary */
+  --blue-500: #1f6bc4;
+  --blue-600: #00539f;
+  --blue-700: #003b7a;  /* PRIMARY */
+  --blue-800: #002855;  /* primary dark */
+  --blue-900: #001b3a;
+
+  /* --- Seal: University gold. Verification only. Never decorative. ------- */
+  --gold-100: #f7edd6;
+  --gold-300: #efd9a6;
+  --gold-500: #c89b3c;  /* THE gold */
+  --gold-700: #8a651f;
+
+  /* --- Neutrals --------------------------------------------------------- */
+  --n-0:   #ffffff;
+  --n-25:  #fbfcfe;
+  --n-50:  #f7f9fc;
+  --n-100: #eef2f8;
+  --n-200: #e1e8f0;
+  --n-300: #cbd5e1;
+  --n-400: #94a3b8;
+  --n-500: #64748b;
+  --n-600: #475569;
+  --n-700: #334155;
+  --n-800: #1e293b;
+  --n-900: #0f172a;
+  --n-950: #070d1a;
+
+  /* --- Status ----------------------------------------------------------- */
+  --success-50:  #e7f7f0;
+  --success-500: #17a673;
+  --success-700: #0e7150;
+  --warning-50:  #fdf3e2;
+  --warning-500: #f2a93b;
+  --warning-700: #a86f14;
+  --danger-50:   #fbeceb;
+  --danger-500:  #d9534f;
+  --danger-700:  #9b312e;
+
+  /* --- Semantic surfaces ------------------------------------------------ */
+  --bg-canvas:    var(--n-50);
+  --bg-sunken:    var(--n-100);
+  --surface:      var(--n-0);
+  --surface-alt:  var(--n-25);
+  --surface-inverse: var(--blue-800);
+  --border:       var(--n-200);
+  --border-strong:var(--n-300);
+  --border-hair:  rgba(0, 59, 122, 0.08);
+
+  /* --- Semantic text ---------------------------------------------------- */
+  --text-1: var(--n-900);   /* headings, primary copy */
+  --text-2: var(--n-600);   /* secondary copy */
+  --text-3: var(--n-500);   /* muted, captions, meta */
+  --text-on-brand: #ffffff;
+  --text-link: var(--blue-700);
+  --text-link-hover: var(--blue-500);
+
+  /* --- Semantic brand roles --------------------------------------------- */
+  --brand:            var(--blue-700);
+  --brand-hover:      var(--blue-600);
+  --brand-active:     var(--blue-800);
+  --brand-subtle-bg:  var(--blue-50);
+  --brand-subtle-fg:  var(--blue-700);
+  --accent:           var(--blue-400);
+  --seal:             var(--gold-500);
+  --seal-subtle-bg:   var(--gold-100);
+
+  /* --- Glass ------------------------------------------------------------ */
+  --glass-bg:     rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-blur:   saturate(180%) blur(16px);
+
+  /* --- Elevation. Blue-tinted, never neutral black. --------------------- */
+  --shadow-0: none;
+  --shadow-1: 0 1px 2px rgba(0, 40, 85, 0.05),
+              0 1px 3px rgba(0, 40, 85, 0.04);
+  --shadow-2: 0 2px 4px rgba(0, 40, 85, 0.05),
+              0 6px 16px -4px rgba(0, 40, 85, 0.08);
+  --shadow-3: 0 4px 8px rgba(0, 40, 85, 0.06),
+              0 16px 32px -8px rgba(0, 40, 85, 0.12);
+  --shadow-4: 0 8px 16px rgba(0, 40, 85, 0.08),
+              0 32px 64px -16px rgba(0, 40, 85, 0.18);
+  --shadow-brand: 0 6px 20px -6px rgba(0, 59, 122, 0.45);
+  --shadow-seal:  0 4px 14px -4px rgba(200, 155, 60, 0.4);
+
+  /* --- Radius ----------------------------------------------------------- */
+  --r-xs:  6px;
+  --r-sm:  10px;
+  --r-md:  14px;
+  --r-lg:  20px;
+  --r-xl:  28px;
+  --r-2xl: 36px;
+  --r-pill: 999px;
+
+  /* --- Spacing. 4px base. ----------------------------------------------- */
+  --s-0:  0;
+  --s-1:  4px;
+  --s-2:  8px;
+  --s-3:  12px;
+  --s-4:  16px;
+  --s-5:  20px;
+  --s-6:  24px;
+  --s-8:  32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+  --s-20: 80px;
+  --s-24: 96px;
+  --s-32: 128px;
+  --section-y: clamp(64px, 9vw, 128px);
+  --gutter:    clamp(20px, 5vw, 48px);
+  --measure:   68ch;
+  --container: 1200px;
+  --container-narrow: 760px;
+
+  /* --- Typography ------------------------------------------------------- */
+  --font-display: "Plus Jakarta Sans", "Work Sans", system-ui, sans-serif;
+  --font-body:    "Inter", "Work Sans", system-ui, sans-serif;
+  --font-mono:    "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --fs-micro: 0.6875rem;                        /* 11px, mono eyebrows */
+  --fs-xs:    0.75rem;                          /* 12px */
+  --fs-sm:    0.875rem;                         /* 14px */
+  --fs-base:  1rem;                             /* 16px */
+  --fs-md:    1.0625rem;                        /* 17px, long-form body */
+  --fs-lg:    clamp(1.125rem, 0.4vw + 1.05rem, 1.25rem);
+  --fs-xl:    clamp(1.375rem, 0.8vw + 1.2rem, 1.625rem);
+  --fs-2xl:   clamp(1.75rem, 1.4vw + 1.4rem, 2.25rem);
+  --fs-3xl:   clamp(2.25rem, 2.4vw + 1.6rem, 3rem);
+  --fs-4xl:   clamp(2.75rem, 4vw + 1.6rem, 4.25rem);
+  --fs-5xl:   clamp(3.25rem, 6vw + 1.4rem, 5.5rem);
+
+  --lh-tight:   1.06;
+  --lh-snug:    1.22;
+  --lh-normal:  1.5;
+  --lh-relaxed: 1.65;
+
+  --ls-tightest: -0.035em;   /* display 4xl / 5xl */
+  --ls-tight:    -0.02em;    /* headings */
+  --ls-normal:   -0.011em;   /* body, Inter optical correction */
+  --ls-wide:     0.08em;     /* mono eyebrows, uppercase labels */
+  --ls-widest:   0.16em;
+
+  --fw-regular: 400;
+  --fw-medium:  500;
+  --fw-semibold:600;
+  --fw-bold:    700;
+  --fw-extra:   800;
+
+  /* --- Motion ----------------------------------------------------------- */
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --d-instant: 120ms;
+  --d-fast:    200ms;
+  --d-base:    320ms;
+  --d-slow:    560ms;
+  --d-ambient: 1200ms;
+
+  /* --- Focus ------------------------------------------------------------ */
+  --focus-ring: 0 0 0 2px var(--surface), 0 0 0 4px var(--blue-400);
+
+  /* --- Layering --------------------------------------------------------- */
+  --z-base: 0;
+  --z-sticky: 100;
+  --z-nav: 200;
+  --z-dropdown: 300;
+  --z-overlay: 400;
+  --z-modal: 500;
+  --z-toast: 600;
+}
+
+/* ============================================================================
+   DARK MODE
+   Applied via [data-theme="dark"] on <html>. The media query only sets the
+   default for users who have not chosen; the attribute always wins.
+   ========================================================================== */
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg-canvas:   var(--n-950);
+  --bg-sunken:   #04080f;
+  --surface:     #0f1a2e;
+  --surface-alt: #16243d;
+  --surface-inverse: var(--n-0);
+  --border:      rgba(148, 163, 184, 0.16);
+  --border-strong: rgba(148, 163, 184, 0.28);
+  --border-hair: rgba(148, 163, 184, 0.1);
+
+  --text-1: #e8eef7;
+  --text-2: #b6c4d6;
+  --text-3: var(--n-400);
+  --text-on-brand: #04080f;
+  --text-link: var(--blue-300);
+  --text-link-hover: #a8ccf5;
+
+  /* #003b7a is unreadable on a dark canvas, so the accent carries the brand */
+  --brand:           var(--blue-400);
+  --brand-hover:     #6ba1f9;
+  --brand-active:    var(--blue-500);
+  --brand-subtle-bg: rgba(79, 142, 247, 0.12);
+  --brand-subtle-fg: var(--blue-300);
+  --seal:            var(--gold-300);
+  --seal-subtle-bg:  rgba(200, 155, 60, 0.14);
+
+  --glass-bg:     rgba(15, 26, 46, 0.68);
+  --glass-border: rgba(148, 163, 184, 0.14);
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 2px 4px rgba(0, 0, 0, 0.4), 0 6px 16px -4px rgba(0, 0, 0, 0.5);
+  --shadow-3: 0 4px 8px rgba(0, 0, 0, 0.45), 0 16px 32px -8px rgba(0, 0, 0, 0.55);
+  --shadow-4: 0 8px 16px rgba(0, 0, 0, 0.5), 0 32px 64px -16px rgba(0, 0, 0, 0.65);
+  --shadow-brand: 0 6px 24px -6px rgba(79, 142, 247, 0.5);
+
+  --focus-ring: 0 0 0 2px var(--bg-canvas), 0 0 0 4px var(--blue-300);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg-canvas:   #070d1a;
+    --bg-sunken:   #04080f;
+    --surface:     #0f1a2e;
+    --surface-alt: #16243d;
+    --surface-inverse: #ffffff;
+    --border:      rgba(148, 163, 184, 0.16);
+    --border-strong: rgba(148, 163, 184, 0.28);
+    --border-hair: rgba(148, 163, 184, 0.1);
+    --text-1: #e8eef7;
+    --text-2: #b6c4d6;
+    --text-3: #94a3b8;
+    --text-on-brand: #04080f;
+    --text-link: #7fade3;
+    --text-link-hover: #a8ccf5;
+    --brand:           #4f8ef7;
+    --brand-hover:     #6ba1f9;
+    --brand-active:    #1f6bc4;
+    --brand-subtle-bg: rgba(79, 142, 247, 0.12);
+    --brand-subtle-fg: #7fade3;
+    --seal:            #efd9a6;
+    --seal-subtle-bg:  rgba(200, 155, 60, 0.14);
+    --glass-bg:     rgba(15, 26, 46, 0.68);
+    --glass-border: rgba(148, 163, 184, 0.14);
+  }
+}
+
+/* ============================================================================
+   LEGACY ALIASES
+   Keeps every existing selector in styles.css working during migration.
+   NOTE: --verify now resolves to BLUE, not green. That is intended. Blue is the
+   primary action colour; the old green survives as --success-500 and is used
+   only for pass/verified status, not for buttons and links.
+   Delete this block once no rule references these names.
+   ========================================================================== */
+
+:root {
+  --ink:    var(--text-1);
+  --verify: var(--brand);
+  --gold:   var(--seal);
+  --paper:  var(--bg-canvas);
+}
+
+/* ============================================================================
+   PRIMITIVES
+   ========================================================================== */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg-canvas);
+  color: var(--text-1);
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
+  line-height: var(--lh-normal);
+  letter-spacing: var(--ls-normal);
+  font-feature-settings: "cv05" 1, "ss03" 1;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color var(--d-base) var(--ease-out),
+              color var(--d-base) var(--ease-out);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  color: var(--text-1);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--ls-tight);
+  text-wrap: balance;
+  margin: 0;
+}
+
+h1 { font-size: var(--fs-4xl); font-weight: var(--fw-extra);    letter-spacing: var(--ls-tightest); line-height: var(--lh-tight); }
+h2 { font-size: var(--fs-3xl); font-weight: var(--fw-bold); }
+h3 { font-size: var(--fs-xl);  font-weight: var(--fw-semibold); }
+h4 { font-size: var(--fs-lg);  font-weight: var(--fw-semibold); }
+
+p { margin: 0; max-width: var(--measure); text-wrap: pretty; }
+
+a { color: var(--text-link); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--text-link-hover); }
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--r-xs);
+}
+
+::selection { background: var(--blue-100); color: var(--blue-800); }
+[data-theme="dark"] ::selection { background: rgba(79, 142, 247, 0.3); color: #e8eef7; }
+
+/* --- Signature: the ledger record ---------------------------------------- */
+/* Every ID in the product renders in mono, tabular, slightly tracked out.    */
+.id-tag {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--ls-wide);
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-widest);
+  text-transform: uppercase;
+  color: var(--brand-subtle-fg);
+}
+
+/* --- Utilities ------------------------------------------------------------ */
+.glass {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+}
+
+/* Ambient brand mesh. Hero and CTA only. Never behind body copy. */
+.mesh {
+  background-image:
+    radial-gradient(60% 55% at 15% 0%,   rgba(79, 142, 247, 0.22), transparent 60%),
+    radial-gradient(50% 50% at 85% 10%,  rgba(0, 59, 122, 0.18),  transparent 60%),
+    radial-gradient(40% 40% at 50% 100%, rgba(200, 155, 60, 0.1), transparent 60%);
+}
+
+/* Ruled-register texture. Ledger sections only. */
+.ruled {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--border-hair) 0 1px,
+    transparent 1px 40px
+  );
+}
+
+.container { width: 100%; max-width: var(--container); margin-inline: auto; padding-inline: var(--gutter); }
+.container-narrow { max-width: var(--container-narrow); }
+.section { padding-block: var(--section-y); }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
