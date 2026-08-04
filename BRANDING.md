@@ -1,215 +1,220 @@
 # LinkWork Branding and Design System
 
-**Implementation brief. Written to be handed to Claude Code and executed against the existing repo.**
+**Implementation brief. Written to be handed to Claude Code and executed against this repo.**
 
-Companion file: `tokens.css` (paste-ready token layer).
+Companion file: `tokens.css`.
 
----
+**Revision 2.** Rewritten after reading the actual source at commit `214dcc9`. Revision 1 was written from `PROJECT.md` alone and got several things wrong. Section 1 lists what changed and why, because the corrections are the most useful part of this document.
 
-## 0. How to use this document
-
-This is not a redesign from scratch. LinkWork already works: Express + SQLite, React 18 + Vite 6, one hand-written `client/src/styles.css` with design tokens, 21 route components, EN/HU/FR i18n. The stack stays exactly as it is. What changes is the visual layer.
-
-Give Claude Code this document plus `tokens.css` and work through §11 in order. Each task names the files it touches and how to tell when it is done.
-
-**Constraints that must hold. State these to Claude Code up front.**
-
-- Do not introduce Next.js, Tailwind, shadcn/ui, or any CSS-in-JS. The single stylesheet plus tokens is the system.
-- Do not touch `server/`. This is a client-side change only.
-- Do not add a component library. The eight existing components in `client/src/components/` get restyled, not replaced.
-- Every new user-facing string on the homepage goes through `t()` in `client/src/i18n.jsx` with `en`, `hu`, and `fr` entries. The homepage is currently fully translated and a rebuild that hard-codes English silently breaks two languages.
-- Ship each task in its own commit so a regression is bisectable.
+**Before starting anything, read the branch and rollback strategy at the head of section 11.** All ten tasks run on a `rebrand` branch, never on `main`.
 
 ---
 
-## 1. Brand strategy
+## 1. What revision 1 got wrong
 
-### The one-line positioning
+Read this first. Two of these would have broken the build.
+
+**1. The compatibility layer covered 4 tokens out of 28.** `styles.css` defines 28 custom properties and references them 297 times across 598 rules. Revision 1's `tokens.css` aliased only `--ink`, `--verify`, `--gold` and `--paper`. Swapping it in would have left `--line`, `--card`, `--radius`, `--space-1` through `--space-6`, `--shadow-sm/md/lg`, `--ease`, `--ink-soft`, `--verify-tint`, `--verify-bright`, `--danger`, `--danger-tint` and `--gold-tint` undefined, which silently destroys every border, shadow, radius and transition in the app. Fixed. Revision 2 covers all 28 and is verified: `npm run build` succeeds and a merged scan reports zero undefined variables.
+
+**2. `--ink` is two things, and that blocks dark mode.** It is the heading and body text colour, and it is also the fill for `.nav`, `footer.site`, `.hero`, `.meeting-stage` and `.btn.dark`. One token cannot invert for text and stay dark for surfaces. So `--ink` now maps to `--surface-dark`, a fixed navy in both themes, and text that reads `var(--ink)` has to migrate to `var(--text-1)` before dark mode can be switched on. Dark mode moved from Task 1 to Task 9 as a result.
+
+**3. The landing page is not a stub.** `Landing.jsx` is 438 lines across eight built sections: hero with a three-node verification chain, an overlapping stats band, a "match pitch" with a hand-built job-card mockup, three alternating feature rows with CSS art, How it works, a four-card "Prepare to land your job" grid, a testimonial with a real photo, and a monochrome logo strip with six custom-drawn company marks. All of it runs through `t()`, and `i18n.jsx` carries 327 translated strings across `en`, `hu` and `fr`. Revision 1 proposed replacing this with eleven new sections. That would throw away real work and roughly 100 translated strings per locale. Section 8 is now an evolution plan, not a rebuild.
+
+**4. The hero ledger needs a server route that does not exist.** `/api/stats` returns four fields: `open_jobs`, `hires`, `approved_companies`, and six company names. It returns no hire records, so the signature hero cannot be built from it. Revision 1 also said "never touch `server/`". Section 8 now carves out one scoped, ten-line addition.
+
+**5. Component variant names were invented.** There is no `.btn.primary`. The base `.btn` is the primary button, and the variants that exist are `.secondary`, `.danger`, `.ghost`, `.dark` and the `.sm` size. Section 7 uses the real names.
+
+**6. The Task 2 acceptance criterion was unachievable.** "No hex outside the token block" cannot pass: 44 of the 79 hex occurrences are `#fff` painted on dark navy plates, which is correct and should stay. Rewritten to something real.
+
+**7. Existing bug found.** `styles.css` lines 383 and 393 reference `var(--brand-fg)`, which is never defined anywhere. The `.logo-lockup:hover` colour and its descriptor currently resolve to nothing and inherit. `tokens.css` now defines `--brand-fg`, which fixes it as a side effect.
+
+**8. `.id-tag` and scoped `.eyebrow` already exist.** Revision 1's `tokens.css` redefined `.id-tag` (line 191) and added `.container`, `body`, `h1`-`h4`, `p`, `a` and `:focus-visible` rules that would have been overridden by the existing rules further down the file. Dead code that looks live is worse than no code. All of it is stripped. `tokens.css` is now tokens plus four verified-absent utility classes.
+
+---
+
+## 2. Brand strategy
+
+### Positioning
 
 > LinkWork is the hiring platform where every posting is a commitment, and every hire is on the record.
 
-### What the brand is actually about
+### What the brand is about
 
-Most job platforms sell *volume*: more listings, more matches, more reach. LinkWork sells the opposite. It sells **scarcity that can be verified**. There are fewer postings here, and that is the product.
+Most job platforms sell volume: more listings, more matches, more reach. LinkWork sells the opposite. It sells **scarcity that can be verified**. There are fewer postings here, and that is the product.
 
-The competitor is not Indeed or LinkedIn. The competitor is the void students apply into. Everything in the visual system should reinforce one idea: this is a **register**, not a feed. Records are checked before they go in, and they come out when they are fulfilled.
+The competitor is not Indeed. The competitor is the void students apply into. Everything in the visual system reinforces one idea: this is a **register**, not a feed. Records are checked before they go in, and they come out when they are fulfilled.
 
 ### Personality, ranked
 
 Ranking matters more than the list, because when two traits conflict the higher one wins.
 
 1. **Verifiable.** Every claim on screen should look like it could be audited.
-2. **Precise.** Tight spacing, tabular numbers, exact language. No rounding, no hedging.
-3. **Institutional.** University-backed and unembarrassed about it. Credibility is the asset.
-4. **Modern.** Reads like Linear or Stripe, not like a student portal from 2011.
+2. **Precise.** Tight spacing, tabular numbers, exact language.
+3. **Institutional.** University-backed and unembarrassed about it.
+4. **Modern.** Reads like Linear or Stripe, not a student portal from 2011.
 5. **Human.** Students are anxious and companies are busy. Warmth in copy, never in chrome.
 
-Where the brief says "should feel more like an AI company than a university portal", the resolution is: **AI-company execution, institution-grade content.** The polish, motion, and restraint come from Linear and Stripe. The substance stays academic. It should not feel like a startup pretending to have a university behind it. It has one.
+Where the brief asks for something that feels "more like an AI company than a university portal", the resolution is **AI-company execution, institution-grade content**. It should not look like a startup pretending to have a university behind it. It has one.
 
 ### Voice
 
-- Sentence case everywhere, including buttons and headings. Title Case reads corporate.
+- Sentence case everywhere, including buttons and headings.
 - Active voice. "Verify your student ID", not "Student ID verification".
 - Name things by what the person controls. "Take the skill test", not "Assessment module".
-- Numbers over adjectives. "Six partner companies, 41 open roles, 12 hires recorded" beats "a growing community".
-- Never claim what the product does not do yet. The existing `/coming-soon?feature=X` pattern is a brand asset. Keep it and be proud of it: honesty is the whole thesis.
-
-### The three things a visitor must understand in eight seconds
-
-1. Every posting here is real, and there is a mechanism behind that claim.
-2. It is run with the University of Debrecen, not adjacent to it.
-3. It is for students of that university, and it is free to them.
+- Numbers over adjectives.
+- Never claim what the product does not do yet. The existing `/coming-soon?feature=X` pattern is a brand asset. Keep it.
 
 ---
 
-## 2. The signature: the ledger record
-
-Every strong identity has one element it is remembered by. For LinkWork it is already in the product, just under-used.
+## 3. The signature: the ledger record
 
 ```
 JOB-0042  ⟷  STU-0007        hired · 14 May 2026
 ```
 
-The match ledger row. It is the proof the job was real, it is unique to this product, and it already has a typeface (IBM Plex Mono) and a shape. Promote it from a detail on the applications page to **the structural motif of the whole brand**.
+The match ledger row is already in the product, already in IBM Plex Mono, and no competitor can copy it because no competitor has the ledger. Promote it from a detail on `/my-applications` to the structural motif of the brand.
 
-Where it appears:
+| Surface | Treatment | Status in repo |
+|---|---|---|
+| Hero | Recent hires writing themselves in, one at a time | New. Needs the route in §8. |
+| Job cards | `JOB-0042` mono corner tag | `.id-tag` exists, used 18 times in JSX |
+| Student dashboard | `STU-0007` as identity | Exists |
+| Pipeline | Seven linked stages | `Chain.jsx` exists |
+| Section eyebrows | Mono, uppercase, wide-tracked | `.hero .eyebrow` and `.how .eyebrow` exist, base class added |
+| Admin ledger | `table.ledger` with `.match-ids` | Exists |
+| Empty states | Empty ruled register with a caption | New |
+| 404 | `JOB-????  ⟷  ---` | New |
 
-| Surface | Treatment |
-|---|---|
-| Hero | A live ledger of recent hires, records writing themselves in one at a time. This is the hero, in place of a stock illustration. |
-| Job cards | `JOB-0042` as a mono corner tag on every card, always visible. |
-| Student dashboard | `STU-0007` as identity, shown at the top like a matriculation number. |
-| Pipeline | The seven stages as a chain of linked nodes, the `Chain` component. |
-| Section eyebrows | Mono, uppercase, wide-tracked, the same family as the IDs. Ties the whole page to the ledger. |
-| Empty states | An empty ruled register with a caption, not a shrugging illustration. |
-| Favicon | The link glyph. |
+**Rule: mono is reserved for things that are on the record.** IDs, counts, dates, scores, stage names, eyebrows. Never body copy, never buttons. That reservation is what makes it read as data rather than decoration.
 
-**Rule: mono is reserved for things that are on the record.** IDs, counts, dates, scores, stage names, eyebrows. Never for body copy, never for buttons. That reservation is what makes it read as data rather than as decoration.
-
-**The one aesthetic risk, and the justification.** Ledger sections carry a faint ruled-register texture (`.ruled` in `tokens.css`, a 40px repeating hairline). It is a paper-record cue sitting underneath an otherwise glassy modern interface. That tension, register underneath, software on top, is exactly what the product is. Use it on the ledger and stats sections only. If it appears on more than two sections it stops being a signature and becomes wallpaper.
+**The one aesthetic risk.** Ledger sections carry a faint ruled-register texture (`.ruled`, a 40px repeating hairline). A paper-record cue underneath an otherwise glassy interface. That tension is what the product is. Two sections per page maximum, or it becomes wallpaper.
 
 ---
 
-## 3. Logo
+## 4. Logo
 
 ### Concept
 
-A **link with a verification notch**. Two rounded chain links interlocking, where the overlap of the two forms a checkmark negative space.
+A **link with a verification notch**. Two rounded chain links interlocking, where the overlap forms a checkmark. The link is checked. The two links also map onto the `JOB ⟷ STU` pairing, so the mark and the ledger row are the same idea at two scales.
 
-The meaning is direct: LinkWork is the link between a company and a student, and the link is checked. The two links also map onto the `JOB ⟷ STU` pairing, so the mark and the ledger row are the same idea at two scales.
+### What exists now
 
-### Construction
+`LinkMark.jsx` renders a broken-chain glyph inside a `.brand-mark` wrapper: a circular plate with a green gradient and inset highlights, defaulting to `size={42}`. `App.jsx` calls it twice, at default size in the nav and at `size={28}` in the footer. `public/favicon.svg` repeats the same glyph on the same green gradient.
 
-- 24 unit grid, 2 unit safe area on all sides.
-- Stroke weight 3 units at 24, scaling linearly. Rounded caps and joins.
-- The two links overlap by 4 units. The notch is cut from the overlap, never drawn on top, so it survives monochrome and single-colour printing.
-- Optical balance: the right link sits 0.5 units lower than the left. Do not centre them mechanically.
+Keep the circular plate. It works, it is already load-bearing in the nav, and it gives the mark a container that survives on the dark nav. Change the glyph and recolour the plate.
 
 ### Source
 
-Replace `client/src/components/LinkMark.jsx` with this. It inherits `currentColor` so it works on any surface, and takes an optional `sealed` prop that turns the notch gold for faculty-verified contexts only.
-
 ```jsx
-export default function LinkMark({ size = 24, sealed = false, title = "LinkWork" }) {
+// The LinkWork mark: two links, checked. The notch is cut from the overlap,
+// so the glyph survives in monochrome and at favicon scale.
+export default function LinkMark({ size = 42, sealed = false }) {
   return (
-    <svg
-      width={size} height={size} viewBox="0 0 24 24"
-      role="img" aria-label={title}
-      fill="none" xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M9.5 7.25H7a4.75 4.75 0 0 0 0 9.5h2.5"
-        stroke="currentColor" strokeWidth="3"
-        strokeLinecap="round" strokeLinejoin="round"
-      />
-      <path
-        d="M14.5 7.75H17a4.75 4.75 0 0 1 0 9.5h-2.5"
-        stroke="currentColor" strokeWidth="3"
-        strokeLinecap="round" strokeLinejoin="round"
-      />
-      <path
-        d="M9.75 12.4 11.4 14.2 14.6 10.3"
-        stroke={sealed ? "var(--seal)" : "currentColor"}
-        strokeWidth="2.4"
-        strokeLinecap="round" strokeLinejoin="round"
-      />
-    </svg>
+    <span className="brand-mark" style={{ width: size, height: size }}>
+      <svg
+        width={size * 0.58} height={size * 0.58} viewBox="0 0 24 24"
+        fill="none" aria-hidden="true"
+      >
+        <path
+          d="M9.5 7.25H7a4.75 4.75 0 0 0 0 9.5h2.5"
+          stroke="#fff" strokeWidth="2.6"
+          strokeLinecap="round" strokeLinejoin="round"
+        />
+        <path
+          d="M14.5 7.75H17a4.75 4.75 0 0 1 0 9.5h-2.5"
+          stroke="#fff" strokeWidth="2.6"
+          strokeLinecap="round" strokeLinejoin="round"
+        />
+        <path
+          d="M9.6 12.35 11.35 14.3 14.75 10.1"
+          stroke={sealed ? 'var(--seal)' : '#fff'}
+          strokeWidth="2.2"
+          strokeLinecap="round" strokeLinejoin="round"
+        />
+      </svg>
+    </span>
   );
 }
 ```
 
+The `.brand-mark` gradient in `styles.css` line 70 currently runs `--verify-bright → --verify → #0f5a41`. Change it to `--blue-400 → --blue-700 → --blue-900` and update the `#0f5a41` literal. `public/favicon.svg` carries the same three stops hard-coded (`#1ca878`, `#147d5b`, `#0f5a41`); update those to `#4f8ef7`, `#003b7a`, `#001b3a` and replace the glyph paths to match.
+
+`.avatar-initials` (line 85) uses the same green gradient. Update it too, or avatars stay green while everything else turns blue.
+
+### Construction
+
+24 unit grid, 2 unit safe area. Stroke 2.6 at 24, scaling linearly. Rounded caps and joins. The links overlap by 4 units and the notch is cut from the overlap. Optical balance: the right link sits 0.5 units lower than the left. Do not centre them mechanically.
+
 ### Lockups
 
-- **Full:** mark, 10px gap, "LinkWork" in Plus Jakarta Sans 700, `--ls-tight`. Mark height equals cap height, not line height.
-- **Stacked:** for the video end card and the A4 submission. Mark above, wordmark below, gap equal to half the mark height.
-- **Icon:** mark alone in a `--r-lg` squircle filled `--blue-700`, mark in white, mark at 62% of tile width.
-- **Favicon:** mark alone, stroke bumped to 3.4 for 16px legibility. Ship 16, 32, 180 (apple-touch) and an SVG.
-- **Dark mode:** mark in `--n-0`, wordmark in `--n-0`. Never in `--blue-700` on dark.
+- **Full:** plate, 12px gap, "LinkWork" in Plus Jakarta Sans 800. This is the existing `.brand` rule.
+- **Stacked:** for the video end card and the A4 submission.
+- **Icon:** the plate alone.
+- **Favicon:** glyph alone, stroke bumped to 3.0 for 16px legibility. Ship 16, 32, 180 and the SVG.
 
 ### Animation
 
-One use only, on first page load: the two links draw in from their outer ends over 560ms with `--ease-out`, then the notch strokes in over 200ms. Total under 800ms. Uses `stroke-dasharray`. Disabled entirely under `prefers-reduced-motion`. Do not loop it, do not repeat it on route changes.
+One use, on first load: the two links draw in from their outer ends over 560ms, then the notch strokes in over 200ms. Total under 800ms, via `stroke-dasharray`. Disabled under `prefers-reduced-motion`. Do not loop, do not repeat on route change.
 
 ### Misuse
 
-Do not rotate it, do not fill the links, do not put the mark inside a circle, do not recolour the notch gold outside faculty-verified contexts, do not place the full lockup on a photo without a solid or glass plate behind it.
+Do not rotate it, do not fill the links, do not recolour the notch gold outside faculty-verified contexts, do not place the lockup on a photo without a plate behind it.
 
 ---
 
-## 4. Colour
+## 5. Colour
 
-Full values in `tokens.css`. This section is the usage law.
+Values in `tokens.css`. This is the usage law.
 
-### The roles
+### Roles
 
 | Role | Token | Value | Used for |
 |---|---|---|---|
-| Primary | `--brand` | `#003b7a` | Primary buttons, links, active nav, focus emphasis, chart series 1 |
-| Primary dark | `--blue-800` | `#002855` | Pressed states, dark section fills, footer |
-| Accent | `--accent` | `#4f8ef7` | Focus rings, hover glow, gradient mesh, dark-mode primary |
-| Seal | `--seal` | `#c89b3c` | Faculty-verified badge, partnership marks, awards. Nothing else. |
+| Primary | `--brand` | `#003b7a` | Primary buttons, links, active nav, chart series 1 |
+| Primary dark | `--blue-800` | `#002855` | Pressed states, dark fills |
+| Accent | `--accent` | `#4f8ef7` | Focus rings, hover glow, mesh, dark-mode primary |
+| Seal | `--seal` | `#c89b3c` | Faculty-verified only |
 | Success | `--success-500` | `#17a673` | Passed, verified, hired |
-| Warning | `--warning-500` | `#f2a93b` | Pending review, action needed |
-| Danger | `--danger-500` | `#d9534f` | Rejected, destructive actions |
+| Warning | `--warning-500` | `#f2a93b` | Pending review |
+| Danger | `--danger-500` | `#d9534f` | Rejected, destructive |
+| Dark plate | `--surface-dark` | `#0d1b31` | Nav, footer, hero, meeting stage |
 | Canvas | `--bg-canvas` | `#f7f9fc` | Page background |
-| Surface | `--surface` | `#ffffff` | Cards, panels, nav |
+| Surface | `--surface` | `#ffffff` | Cards, panels |
 | Text | `--text-1` | `#0f172a` | Headings and body |
 | Muted | `--text-3` | `#64748b` | Meta, captions, mono IDs |
 
 ### Rules
 
-1. **Blue dominates.** Roughly 70% of the coloured surface area in any view should be blue or neutral. If a screenshot looks multicoloured, something is miscoded.
-2. **Gold is a seal, not a colour.** It appears as a badge, a hairline rule under a partnership block, or the logo notch on verified surfaces. It is never a button fill, never a heading colour, never a background. On a typical page it should account for well under 1% of pixels. This scarcity is what makes the gold star mean something.
-3. **Green is status, not brand.** This is the migration's biggest behavioural change. In the current build `--verify` green is the primary action colour. After this change, primary actions are blue and green means only "this passed" or "this is verified". `tokens.css` aliases `--verify` to blue so nothing breaks, but audit every green surface: if it is a button or a link, it is meant to be blue now.
-4. **Warning and danger never appear together in one component.** Pick the more urgent one.
-5. **Never use colour alone to carry meaning.** Every status colour ships with an icon or a text label. Faculty-verified is a gold star *and* the words "Faculty verified".
+1. **Blue dominates.** Roughly 70% of coloured surface area is blue or neutral. If a screenshot looks multicoloured, something is miscoded.
+2. **Gold is a seal, not a colour.** A badge, a hairline rule under a partnership block, or the logo notch on verified surfaces. Never a button fill, never a heading, never a background. Well under 1% of pixels. That scarcity is what makes the gold star mean something.
+3. **Green is status, not brand.** The biggest behavioural change here. `--verify` currently paints every primary button and link. After the swap it resolves to blue, and green survives as `--success-500` for "this passed" and "this is verified" only.
+4. **`#fff` on dark plates is correct.** The 44 occurrences on `.nav`, `.hero` and `footer.site` are intentional. Do not tokenise them into `--surface`, which would invert them in dark mode.
+5. **Never use colour alone to carry meaning.** Every status colour ships with an icon or a label. Faculty-verified is a gold star *and* the words "Faculty verified".
 
 ### Contrast floor
 
-All of these must pass, verified with a checker, not by eye:
+Verify with a checker, not by eye.
 
 - `--text-1` on `--surface`: 16.1:1
-- `--text-3` on `--surface`: 4.76:1, so muted text never goes below 14px
+- `--text-3` on `--surface`: 4.76:1, so muted text never drops below 14px
 - `--text-on-brand` on `--brand`: 11.4:1
-- `--seal-700` on `--seal-subtle-bg` for badge text. Never `--seal-500` on white for text, it fails at 2.6:1. Gold is for the glyph and the border, text next to it uses `--gold-700`.
+- Gold: `--gold-500` on white is 2.6:1 and **fails**. Badge text uses `--gold-700` on `--gold-100`. Gold is for the glyph and the border. This applies to the existing `.badge.faculty` (already correct at `#7c5a00`) and to `.alert.info`, `.mm-chip.gold` and `.match-mock-logo`, which reuse the same pairing.
 
 ---
 
-## 5. Typography
+## 6. Typography
 
-### The pairing and why
+### The pairing
 
-Three families, three jobs. Each earns its place.
+**Plus Jakarta Sans, display.** Headings and the wordmark. Geometric with a humanist warmth, genuinely distinctive at large sizes where Inter goes generic. 700 and 800 only, never below 17px.
 
-**Plus Jakarta Sans, display.** Headings and the wordmark. Geometric with a slightly humanist warmth and genuinely distinctive at large sizes, where Inter goes generic. It is confident without being severe, which matches an institution that wants to look modern rather than austere. Used at 700 and 800 only, and never below 17px.
+**Inter, body and UI.** Body copy, buttons, fields, tables, nav. Built to be read at 13 to 17px in dense interfaces, with real tabular figures. The workhorse, and it should be invisible.
 
-**Inter, body and UI.** Everything functional: body copy, buttons, form fields, tables, nav. Inter exists to be read at 13 to 17px in dense interfaces, has real tabular figures, and carries optical sizing. This is the workhorse and it should be invisible.
+**IBM Plex Mono, data.** Already in the build. IDs, stage names, counts, dates, scores, eyebrows. The ledger voice. Keeping it means the 18 existing `.id-tag` uses need no rework.
 
-**IBM Plex Mono, data.** Retained from the current build, and promoted. IDs, stage names, counts, dates, scores, eyebrows. It is the ledger voice. Keeping it also means the existing `JOB-0042` tags need no rework, only more prominence.
+Replaces Work Sans, which currently serves as both display and body. Load variable weights with `display=swap` and preconnect. If three families becomes a performance problem, drop Plus Jakarta and set headings in Inter 800 with `--ls-tightest`. Never drop the mono.
 
-Why not one family: a single face means the ledger records look like copy, and the entire signature collapses. Why not four: three is already at the loading budget.
-
-Replaces Work Sans. Load variable weights, `display=swap`, preconnect to `fonts.gstatic.com`. If the third family becomes a performance problem, drop **Plus Jakarta Sans** and set headings in Inter at 800 with `--ls-tightest`. Never drop the mono.
+Note `styles.css` uses weight 900 in nine places (`.hero h1`, `.land-card.stat b`, `.logo-word b`, `.note-stat b`, `.overlap-band .stat b`, `.match-mock-logo`, `.avatar-initials`, `.account-menu-name`, `.brand`). Plus Jakarta Sans tops out at 800. Map all 900s to 800 in Task 2 or they will silently synthesise.
 
 ### Scale
 
@@ -220,270 +225,218 @@ Replaces Work Sans. Load variable weights, `display=swap`, preconnect to `fonts.
 | `--fs-3xl` | 36 to 48 | 700 | 1.22 | -0.02em | Section h2 |
 | `--fs-2xl` | 28 to 36 | 700 | 1.22 | -0.02em | Card cluster headings |
 | `--fs-xl` | 22 to 26 | 600 | 1.22 | -0.02em | h3 |
-| `--fs-lg` | 18 to 20 | 500 | 1.5 | -0.011em | Lead paragraph, subheads |
+| `--fs-lg` | 18 to 20 | 500 | 1.5 | -0.011em | Lead paragraph |
 | `--fs-md` | 17 | 400 | 1.65 | -0.011em | Long-form body |
 | `--fs-base` | 16 | 400 | 1.5 | -0.011em | UI body |
 | `--fs-sm` | 14 | 400 to 500 | 1.5 | -0.011em | Secondary, table cells |
-| `--fs-xs` | 12 | 500 | 1.5 | 0.08em (mono) | ID tags, meta |
-| `--fs-micro` | 11 | 500 | 1.5 | 0.16em | Mono eyebrows, uppercase |
+| `--fs-xs` | 12 | 500 | 1.5 | 0.08em | ID tags, meta |
+| `--fs-micro` | 11 | 500 | 1.5 | 0.16em | Mono eyebrows |
 
-Sizes above `--fs-lg` use `clamp()` and scale fluidly. Nothing below 12px ships. Body copy caps at `--measure` (68ch).
+Nothing below 12px ships. `styles.css` currently has `11px`, `11.5px` and `12px` in eleven places; the 11s are mono uppercase labels where tracking carries legibility, so they may stay, but check each at 200% zoom.
 
 ### Detail rules
 
-- All figures in tables, stats, and scores set `font-variant-numeric: tabular-nums`. Numbers that jitter while a counter animates look broken.
-- Headings get `text-wrap: balance`, paragraphs get `text-wrap: pretty`.
-- Never letterspace lowercase body text. Only mono uppercase gets tracking.
-- Hungarian runs roughly 15 to 20% longer than English and German-style compounds are common. Buttons and nav items must not be fixed-width, and headings need to survive a 25% length increase without reflowing into four lines. Test the `hu` locale on every layout before calling a task done.
-
----
-
-## 6. Space, shape, depth, motion
-
-### Spacing
-
-4px base. Use the `--s-*` tokens, never raw pixels. Section rhythm is `--section-y`, which is `clamp(64px, 9vw, 128px)`. Gutters are `--gutter`.
-
-Vertical rhythm inside a section: heading, 12px, lead paragraph, 40px, content. Cards in a grid use a 24px gap at desktop and 16px at mobile.
-
-### Radius
-
-`--r-sm` 10 for inputs and small badges, `--r-md` 14 for buttons, `--r-lg` 20 for cards, `--r-xl` 28 for feature panels and modals, `--r-2xl` 36 for hero surfaces, `--r-pill` for filter chips and status pills.
-
-The rule for nested corners: inner radius equals outer radius minus the padding. A 20px card with 12px padding holds a 8px inner element. Concentric corners are one of the things that separates considered UI from assembled UI.
-
-### Elevation
-
-Five levels, and shadows are **blue-tinted** (`rgba(0, 40, 85, ...)`), never neutral black. Grey shadows on a cool canvas read as dirt.
-
-| Level | Token | Applied to |
-|---|---|---|
-| 0 | `--shadow-0` | Flat sections, table rows |
-| 1 | `--shadow-1` | Resting cards, inputs |
-| 2 | `--shadow-2` | Hovered cards, dropdowns, sticky nav once scrolled |
-| 3 | `--shadow-3` | Modals, popovers |
-| 4 | `--shadow-4` | Hero feature panel, the one element allowed to float |
-
-### Glass
-
-`.glass` in `tokens.css`. Three places only: the sticky top nav after scroll, the hero ledger panel, and modal backdrops. Glass on everything is the single fastest way to make a 2026 interface look dated in 2027. Always ship a solid fallback via `@supports not (backdrop-filter: blur(1px))`.
-
-### Motion
-
-Durations: `--d-instant` 120ms for colour and background, `--d-fast` 200ms for hovers and small transforms, `--d-base` 320ms for panels and dropdowns, `--d-slow` 560ms for entrance sequences.
-
-Easing: `--ease-out` for anything entering or responding to a user action. `--ease-in-out` for anything moving between two states. `--ease-spring` on exactly one thing, the verification check when a badge is awarded.
-
-Principles:
-
-1. **One orchestrated moment per page.** On the homepage it is the hero ledger writing itself. Everything else is a 200ms hover.
-2. **Motion follows causality.** A dropdown opens from its trigger, not from the centre of the screen.
-3. **Never animate more than transform and opacity.** Layout-affecting animation on a page with a live stats fetch will jank.
-4. **Scroll reveals are 16px of travel and 320ms.** Anything more looks like a template.
-5. `prefers-reduced-motion` kills all of it, already handled in `tokens.css`. Verify it actually works by toggling the OS setting, not by reading the media query.
+- Figures in tables, stats and scores get `font-variant-numeric: tabular-nums`. The `.tabular` utility is in `tokens.css`.
+- Headings get `text-wrap: balance`, paragraphs `text-wrap: pretty`.
+- Never letterspace lowercase body text.
+- **Hungarian runs 15 to 20% longer than English.** Buttons and nav items must not be fixed-width, and headings must survive a 25% length increase. `i18n.jsx` already carries full `hu` and `fr`, so this is testable today: switch locale and look.
 
 ---
 
 ## 7. Components
 
-Restyle the eight existing components in `client/src/components/`. Do not add a dependency.
+Eight components exist in `client/src/components/`. All are thin wrappers over CSS classes, which is why almost all of this work happens in `styles.css`.
 
 ### Button
 
-| Variant | Fill | Text | Border | Use |
-|---|---|---|---|---|
-| Primary | `--brand` | `--text-on-brand` | none | One per view. The main action. |
-| Secondary | `--surface` | `--brand` | 1px `--border-strong` | Alternative actions |
-| Ghost | transparent | `--text-2` | none | Tertiary, nav, cancel |
-| Danger | `--danger-500` | white | none | Reject, delete. Always behind a confirm. |
-| Seal | `--seal-subtle-bg` | `--gold-700` | 1px `--seal` | Faculty-verified filter only |
+`Button.jsx` emits `className="btn {variant} {size}"`. The base `.btn` **is** the primary button. Real variants:
 
-Heights 36 / 44 / 52. Radius `--r-md`. Padding `0 var(--s-5)`. Weight 600, size `--fs-sm` at 36, `--fs-base` above.
+| Class | Current | Becomes |
+|---|---|---|
+| `.btn` | `--verify` green fill | `--brand` blue fill, `--text-on-brand` |
+| `.btn.secondary` | transparent, `--ink` border | transparent, `--brand` text, `--border-strong` border |
+| `.btn.ghost` | transparent, `--verify` text | transparent, `--text-2` text |
+| `.btn.danger` | `--danger` fill | unchanged, now `--danger-500` |
+| `.btn.dark` | `--ink` fill | `--surface-dark` fill |
+| `.btn.sm` | 7px 14px | unchanged |
+| `.btn.seal` | does not exist | new: `--seal-subtle-bg`, `--gold-700`, 1px `--seal`. Faculty-verified filter only. |
 
-States: hover lifts 1px and moves to `--brand-hover` over `--d-fast`; active returns to 0 and `--brand-active`; focus-visible shows `--focus-ring`; disabled is 45% opacity with `cursor: not-allowed` and **keeps its shape**, never turns grey.
+Heights 36 / 44 / 52 via padding. Radius stays `--radius-sm`. Hover lifts 1px, active returns to 0, focus-visible shows the ring, disabled is 45% opacity with `cursor: not-allowed` and **keeps its shape** rather than turning grey (line 146 currently sets `#a9b6ad`, which reads as broken).
 
-Loading: the label stays in place and a 14px spinner replaces the leading icon slot. Never let the button change width mid-action.
+Loading: the label stays and a 14px spinner takes the leading icon slot. Never let the button change width mid-action.
+
+Note `.lang-trigger.btn.ghost` (line 127) overrides ghost with white-on-dark for the nav. Keep that override.
 
 ### Card
 
-`--surface`, `--r-lg`, 1px `--border`, `--shadow-1`, padding `--s-6`. Hover, only if the card is a link: `--shadow-2` and `translateY(-2px)` over `--d-fast`. Cards that are not links do not move.
+Line 167. `--surface`, `--radius`, 1px `--border`, `--shadow-1`, `--space-5` padding. It already transitions shadow and transform but no hover rule ever fires. Add hover only when the card is a link: `--shadow-2` and `translateY(-2px)`. Cards that are not links do not move.
 
 ### Badge
 
-Pill, `--fs-xs`, weight 600, padding `2px var(--s-3)`, 6px glyph gap.
-
-| Badge | Background | Text | Glyph |
-|---|---|---|---|
-| Faculty verified | `--seal-subtle-bg` | `--gold-700` | Gold star |
-| Verified student | `--success-50` | `--success-700` | Check |
-| Pending | `--warning-50` | `--warning-700` | Clock |
-| Rejected | `--danger-50` | `--danger-700` | Cross |
-| Remote / Hybrid / On site | `--brand-subtle-bg` | `--brand-subtle-fg` | none |
+Line 180. Variants `.faculty`, `.verified`, `.pending`, `.danger`, `.mono`. Add `.warning`. Keep the pill shape and 6px glyph gap. `.verified` moves from `--verify-tint` to `--success-50` with `--success-700` text, because it is a status and not an action. `.pending` moves to `--warning-50` and `--warning-700`.
 
 ### Field
 
-Label `--fs-sm` 500 `--text-2`, 6px gap, input 44px, `--r-sm`, 1px `--border-strong`, `--surface`, 16px text so iOS does not zoom on focus.
+Line 154 plus `Field.jsx`. The component wraps everything in a `<label>`, which makes `aria-describedby` awkward because the error message would sit inside the label and get read as part of it.
 
-Focus: border to `--brand`, plus `--focus-ring`. Error: border `--danger-500`, message below in `--fs-sm` `--danger-700` with a 14px icon, wired via `aria-describedby`. Never rely on the red border alone. Helper text sits below the label, not below the input, so it is read before the field is filled.
+Restructure: keep the `<label>` for the label text and hint, move `children` outside it into a wrapping `<div className="field">`, and use `React.cloneElement` to inject `aria-invalid` and `aria-describedby` into the control when an `error` prop is present.
 
-### Chain (the pipeline)
+```jsx
+import { cloneElement, useId } from 'react';
 
-The most important component in the product. Seven stages, horizontal on desktop, vertical on mobile below 640px.
+export default function Field({ label, hint, error, children, ...props }) {
+  const id = useId();
+  const errId = `${id}-err`;
+  const control = error && children
+    ? cloneElement(children, { 'aria-invalid': true, 'aria-describedby': errId })
+    : children;
+  return (
+    <div className="field" {...props}>
+      <label htmlFor={children?.props?.id}>
+        {label} {hint && <span className="hint">{hint}</span>}
+      </label>
+      {control}
+      {error && <p className="field-error" id={errId}>{error}</p>}
+    </div>
+  );
+}
+```
 
-- Node: 28px circle. Complete is `--brand` filled with a white check. Current is `--surface` with a 2px `--brand` ring and a soft `--accent` glow. Upcoming is `--n-200` filled. Rejected turns the whole track `--danger-500` from that node onward.
-- Connector: 2px, `--brand` behind completed nodes, `--border` ahead of them. When a stage completes, the connector fills left to right over `--d-slow` with `--ease-out`. This is the second orchestrated moment in the product and it is worth doing well, because it is the moment a student learns they advanced.
-- Label: mono `--fs-micro` uppercase, `--text-3`, `--brand` on the current node.
-- Numbering: the stages are genuinely sequential, so number them 1 to 7. Do not number anything else in the product.
-- Accessibility: `role="list"`, `aria-current="step"` on the active node, and a visually hidden "Stage 3 of 7, AI interview, in progress".
+`label.field` in the CSS becomes `.field` and `.field > label`. Grep for `<Field` before changing this: it is used across `Auth.jsx`, `Profile.jsx`, `Settings.jsx`, `CompanyDashboard.jsx` and `JobDetail.jsx`.
 
-### Ledger record
+Focus: border to `--brand` plus the ring. Error: `--danger-500` border with a message below in `--fs-sm` `--danger-700` and a 14px icon. Never rely on the red border alone. Keep `font-size: 15px` on inputs or larger so iOS does not zoom on focus.
 
-New component, `components/LedgerRecord.jsx`.
+### Chain
+
+`Chain.jsx` plus line 201. This is the most important component in the product and it is in better shape than revision 1 assumed. It already numbers the stages, already uses `role="list"`, and already fills connectors behind completed nodes.
+
+What to add:
+
+- **Animate the connector fill.** Currently `.chain .connector.done` swaps background instantly. Fill left to right over `--d-slow` with `--ease-out`. This is the moment a student learns they advanced, and it is worth doing well.
+- **`aria-current="step"`** on the current node, plus a visually hidden "Stage 3 of 7, AI interview, in progress". Right now a screen reader gets seven list items with a number and a label and no indication of position.
+- **The rejected treatment.** `.chain .node.failed` is defined in CSS but `Chain.jsx` never applies it. Either wire it up or delete the rule. Currently rejection renders as a separate badge with the track left neutral. Turning the track `--danger-500` from the failure point onward is clearer.
+- **Vertical below 640px.** Seven nodes at `min-width: 86px` need 602px plus connectors. On a 375px screen this wraps into an unreadable tangle today.
+- **The `applied` stage never appears.** `server/index.js` creates applications at `skill_test`, so node 1 is permanently complete and never current. Either drop it from `ORDER` and show six stages, or label it so users understand it is automatic. Six is more honest.
+- **Duplicate label maps.** `Chain.jsx` has its own `LABELS` and `ORDER` that duplicate `STAGE_LABEL` and `STAGE_ORDER` in `stages.js`, with `tech_interview` spelled "Technical" in one and "Technical interview" in the other. Import from `stages.js` and delete the local copies.
+- **Nothing in `Chain.jsx` is translated.** Stage labels are hard-coded English while the rest of the chrome is trilingual.
+
+### LedgerRecord
+
+New. `.ledger-record` is styled in `tokens.css`.
 
 ```
-┌────────────────────────────────────────────────┐
-│  JOB-0042  ⟷  STU-0007          14 May 2026    │
-│  Junior Data Engineer · DataTech Kft.       ★  │
-└────────────────────────────────────────────────┘
+JOB-0042  ⟷  STU-0007     Junior Data Engineer · DataTech    14 May 2026  ★
 ```
 
-Mono for the IDs and date, Inter `--fs-sm` for the role line, gold star only if the job was faculty verified. Hairline `--border-hair` divider between consecutive records. Rows never hover or link on the public page. They are records, not controls.
+Mono for IDs and date, Inter `--fs-sm` for the role line, gold star only if faculty verified. Hairline divider between records. Rows do not hover or link on the public page. They are records, not controls.
 
 ### Job card
 
-Company logo 40px squircle, role title `--fs-lg` 600, company name `--fs-sm` `--text-2`, then a chip row (work mode, job type, location, salary if set). `JOB-0042` mono tag top right at `--text-3`. Faculty-verified card gets a 1px `--seal` top border, 2px inset, and the gold star badge. That top rule is the only place gold touches a card.
+`.job-row` (line 482) plus `Card`. Add the `JOB-0042` mono tag top right in `--text-3`. Faculty-verified cards get a 1px `--seal` top border, 2px inset, plus the existing `.badge.faculty`. That top rule is the only place gold touches a card.
 
 ### Stat
 
-Number in mono, `--fs-3xl`, 600, tabular. Label below in `--fs-sm` `--text-2`. Counters animate from 0 over 1200ms with `--ease-out`, once, when scrolled into view, and only if motion is allowed. If `/api/stats` fails, render the last known value or hide the block. Never render a spinning zero.
+`.overlap-band .stat` (line 336) and `.note-stat` (line 367). Both currently use `--font-display` at weight 900 in `--verify` green. Move to `--font-mono` at `--fs-3xl` weight 600 with `tabular-nums`, in `--brand`. Mono is the ledger voice and these numbers come from the ledger.
+
+Counters animate from 0 over 1200ms, once, on scroll into view, only when motion is allowed. `Landing.jsx` already fetches `/api/stats`; if it fails, render the last known value or hide the block. Never render a spinning zero.
 
 ### Nav
 
-Transparent over the hero, then on scroll past 24px it becomes `.glass` with `--shadow-2` and a `--border-hair` bottom edge, transitioning over `--d-base`. Height 68px desktop, 60px mobile. Active route gets `--brand` text plus a 2px underline that slides between items over `--d-fast`. Mobile is a full-height sheet sliding from the right, with focus trapped and Escape closing it.
+`.nav` (line 57) is a solid `--ink` sticky bar. Keep it dark, repaint to `--surface-dark`.
 
-Keep everything already built: role-aware items, notification bell with unread badge, EN/HU/FR switcher, account dropdown from `menuConfig.js`.
+Add: transparent over the hero on `/` only, becoming `.glass` with `--shadow-2` past 24px of scroll over `--d-base`. A sliding 2px underline on the active route. A mobile sheet below 860px with trapped focus and Escape to close.
+
+Keep everything already built: role-aware items, the notification bell with unread badge, the EN/HU/FR switcher, the account dropdown, and the wider `min(1400px, 98vw)` nav track.
 
 ### Empty, loading, error
 
-- **Empty:** an empty ruled register block, a heading naming what is missing, one sentence on how to fill it, and one primary action. "No applications yet. Find a role for your faculty and apply, and it will show up here." Never an illustration of a person shrugging.
-- **Loading:** skeletons matching the real layout's dimensions, `--n-100` with a 1.2s shimmer. No spinners except inside buttons.
-- **Error:** state what failed and what to do. "Could not load open roles. Check your connection and try again." Then a retry button. No apology, no exclamation mark. The existing `ErrorBoundary` gets the same treatment.
-- **404:** a ledger record with a null ID, `JOB-????  ⟷  ---`, and the line "That record does not exist." Then links home and to the job list. This is the one place to be a little clever, and it stays on-concept.
+- **Empty:** an empty ruled register block, a heading naming what is missing, one sentence on how to fill it, one primary action. "No applications yet. Find a role for your faculty and apply, and it will show up here." Never a shrugging illustration.
+- **Loading:** skeletons matching real layout dimensions, `--n-100` with a 1.2s shimmer. No spinners except inside buttons.
+- **Error:** state what failed and what to do, then a retry. "Could not load open roles. Check your connection and try again." No apology, no exclamation mark. `ErrorBoundary.jsx` currently says "Something went wrong" with an inline `borderColor: 'var(--danger)'`; keep the token reference, rewrite the copy.
+- **404:** a ledger record with a null ID, `JOB-????  ⟷  ---`, and "That record does not exist." Then links home and to the job list. Note there is currently **no 404 route**: `App.jsx` has no catch-all, so an unknown path renders the shell with an empty main. Add the route.
 
 ---
 
 ## 8. Landing page
 
-Rebuild `client/src/pages/Landing.jsx`. Keep the live `/api/stats` fetch, keep every string in `i18n.jsx`.
+**Evolve `Landing.jsx`, do not rebuild it.** Eight sections exist, all translated across three locales. Rewriting from scratch discards roughly 100 strings per locale and the six hand-drawn company logo marks.
 
-### Structure
+### What stays
 
-```
-┌──────────────────────────────────────────────────────────┐
-│  NAV (transparent over hero)                             │
-├──────────────────────────────────────────────────────────┤
-│  HERO                                                    │
-│  eyebrow: UNIVERSITY OF DEBRECEN · PILOT                 │
-│  h1: Every internship here is real.                      │
-│  lead + two CTAs        │  LEDGER PANEL (glass, floats)  │
-│                         │  records writing in, one by one│
-│  ambient mesh behind, gold hairline at section base      │
-├──────────────────────────────────────────────────────────┤
-│  THE PROBLEM      three cards, ghost job taxonomy        │
-├──────────────────────────────────────────────────────────┤
-│  THE TRUST CHAIN  faculty → company → posting → student  │
-├──────────────────────────────────────────────────────────┤
-│  HOW HIRING WORKS the 7-stage Chain, numbered            │
-├──────────────────────────────────────────────────────────┤
-│  TWO AUDIENCES    students left, companies right         │
-├──────────────────────────────────────────────────────────┤
-│  THE LEDGER       .ruled texture, real records, stats    │
-├──────────────────────────────────────────────────────────┤
-│  PARTNERS         monochrome logo strip, gold hairline   │
-├──────────────────────────────────────────────────────────┤
-│  TESTIMONIAL      one, with a real name and faculty      │
-├──────────────────────────────────────────────────────────┤
-│  FAQ              six items, accordion                   │
-├──────────────────────────────────────────────────────────┤
-│  CTA              --blue-800 fill, mesh, single action   │
-├──────────────────────────────────────────────────────────┤
-│  FOOTER                                                  │
-└──────────────────────────────────────────────────────────┘
+`MatchIllustration`, the three `FeatureRow` art panels (`TrackArt`, `OffersArt`, `TransparentArt`), `HowItWorks`, the testimonial, and the `.logo-strip`. These are genuinely good and they are already trilingual. They get repainted by the token swap and otherwise left alone.
+
+One thing to fix: `BRAND_PALETTE` in `Landing.jsx` lines 7 to 13 hard-codes six colour pairs including the old green `#147d5b` and gold `#7c5a00`. Those tint the company logo lockups. Replace the green pair with a blue pair from the new scale and keep the other five as deliberately varied company colours, since a logo strip where every company is the same blue looks fake.
+
+### What changes
+
+**1. Hero.** The brief asks the hero to communicate "every internship opportunity is real". The way to do that is not to assert it in bigger type. It is to show the receipts.
+
+`.hero-chain` currently shows three static nodes labelled Faculty, Company, You. Replace the right panel with a glass ledger card that writes in four recent hire records, one every 400ms, mono, each with its date and gold star where faculty verified. Under them one mono line: `12 hires recorded · 0 postings unaccounted for`.
+
+This is the product's own database used as the hero image.
+
+**This needs a route that does not exist.** Add exactly this to `server/index.js` next to `/api/stats`:
+
+```js
+app.get('/api/ledger/recent', (req, res) => {
+  res.json({
+    records: db.prepare(`
+      SELECT m.job_id, m.student_id, m.hired_at,
+             j.title, j.faculty_verified, c.name AS company
+      FROM matches m
+      JOIN jobs j ON j.id = m.job_id
+      JOIN companies c ON c.id = j.company_id
+      ORDER BY m.hired_at DESC LIMIT 6
+    `).all(),
+  });
+});
 ```
 
-### Hero
+This is the only sanctioned server change in this document, and `PROJECT.md` §10 already lists a public read-only ledger page as planned.
 
-The brief asks the hero to communicate "every internship opportunity is real". The way to do that is not to assert it in bigger type. It is to **show the receipts in the hero itself**.
+**Privacy check before you ship it.** The response exposes `STU-0007` alongside a job title and a company name. At pilot scale, with one demo student and ten jobs, that tuple identifies a real person to anyone who knows them. Decide deliberately: either the ledger is genuinely public and students consent to it at registration (which means a line in `Privacy.jsx` and `POLICY_VERSION` bumped), or the public route returns the job side and the company only, and the student ID appears solely to the student and the hiring company. The second is the safer default for a pilot.
 
-The right panel is a glass ledger card that writes in four recent hire records, one every 400ms, mono, each with its date and its gold star if faculty verified. Under them, a single mono line: `12 hires recorded · 0 postings unaccounted for`. It is the product's own database used as the hero image, and no competitor can copy it because no competitor has the ledger.
+Keep the existing `.overlap-band` stats. Move the numbers to mono per §7.
 
-Copy:
+**2. The problem.** New short section between the hero and the match pitch. Three cards: roles already filled internally, roles posted to look like the company is growing, roles kept open to farm CVs. One line each, then: "You cannot tell which is which from the outside. That is the whole problem."
 
-- Eyebrow: `UNIVERSITY OF DEBRECEN · PILOT`
-- h1: **Every internship here is real.**
-- Lead: "Companies commit to hiring before they can post. The university verifies who you are. When someone is hired, it goes on the record and the posting comes down."
-- Primary CTA: "Find a role" → `/auth`
-- Secondary CTA: "Post an opening" → `/auth`
-- Below CTAs, `--fs-sm` `--text-3`: "Free for students. Sign up with your unideb.hu email."
+This is the strongest argument the product has and the page does not currently make it.
 
-Fallback if stats fail: render four seeded example records with a small "example" label. Never an empty hero.
+**3. Trust chain.** Promote the hero's three nodes into their own section with four nodes, and say what is actually checked at each: the faculty coordinator negotiates the partnership directly, the company is reviewed by an admin before it can post, the posting exists because the company committed to hire, the student is verified once against an official university email.
 
-### The problem
+**4. Ledger section.** New, with `.ruled`. Two sentences on the mechanism, real `LedgerRecord` rows, then: "When a posting is filled, it comes down. That is why the list is short."
 
-Three cards, and the copy should be specific enough to sting: roles already filled internally, roles posted to look like the company is growing, roles kept open to farm CVs. One line each. Then a single closing line: "You cannot tell which is which from the outside. That is the whole problem."
+**5. FAQ.** New, before the footer. Six items: who can join, what verification involves, what the gold star means, what it costs, whether other universities are coming, what happens to your data. Accordion, one open at a time, `<button aria-expanded>` driving a `<div role="region">`. Two-sentence answers.
 
-### Trust chain
+**6. Closing CTA.** New. `--blue-800` fill with `.mesh` at low opacity, one heading, one white button.
 
-Four nodes. Under each, what is actually checked:
+### i18n
 
-1. **Faculty coordinator.** Negotiates the partnership with company leadership directly.
-2. **Company.** Reviewed by a platform admin before it can post anything.
-3. **Posting.** Exists only because the company committed to hire from it.
-4. **Student.** Verified once by the university against an official email.
-
-### How hiring works
-
-The seven stages, numbered, with the honest framing underneath: "Everyone goes through the same pipeline with the same bar. The skill test does not care who you know."
-
-### Two audiences
-
-Left, students: verified once, see only roles open to your university, take the test, track every stage, know where you stand. Right, companies: candidates verified before they reach you, structured scoring at every stage, no CV pile.
-
-### Ledger
-
-`.ruled` background. Explain the mechanism in two sentences, then show real `LedgerRecord` rows, then the three stats from `/api/stats`. Close with the line that makes the point: "When a posting is filled, it comes down. That is why the list is short."
-
-### FAQ
-
-Who can join, what verification involves, what the gold star means, what it costs, whether other universities are coming, what happens to your data. Accordion, one open at a time, `<button aria-expanded>` driving a `<div role="region">`. Answers are two sentences, not paragraphs.
-
-### CTA and footer
-
-`--blue-800` fill with the mesh at low opacity, one heading, one primary button in white with `--blue-800` text. Keep the existing three-column footer and the eight social glyphs pointing at `/coming-soon`.
+Every new string needs `en`, `hu` and `fr` entries in `i18n.jsx`. The file is organised as three flat key-value blocks at lines 12, 134 and 256. Add keys to all three in the same commit, or the homepage regresses from fully translated to partially translated, which is worse than not adding the section.
 
 ---
 
 ## 9. Accessibility
 
-Non-negotiable, and easy to verify.
-
-- WCAG 2.2 AA. 4.5:1 for text under 24px, 3:1 for large text and UI boundaries.
-- Every interactive element reachable by keyboard in a logical order, with a visible `--focus-ring`. Never `outline: none` without a replacement.
-- A "Skip to content" link, first in tab order, revealed on focus.
-- Targets 44x44 minimum on touch. Chips and icon buttons need padding to reach it even when the glyph is 20px.
-- One `<h1>` per page. Never skip a heading level for styling.
-- Every icon-only button carries an `aria-label`. Every decorative SVG carries `aria-hidden="true"`.
-- Live regions on the notification bell count and on stage changes, so a screen reader announces advancement.
-- Modals trap focus, close on Escape, and return focus to the trigger.
-- `prefers-reduced-motion` removes all transitions, the counter animation, and the hero sequence. The hero must still show all four records, immediately, with no motion.
-- Test at 200% browser zoom and at 320px width. No horizontal scroll at either.
-- Run axe DevTools on `/`, `/auth`, `/student`, `/jobs/:id`, `/my-applications`, `/company`. Zero criticals before a task is done.
+- WCAG 2.2 AA. 4.5:1 under 24px, 3:1 for large text and UI boundaries.
+- Every interactive element keyboard reachable with a visible focus ring. The existing `:focus-visible` (line 46) uses a green outline; retoken it to `--focus-ring-color`.
+- Add a skip link. `.skip-link` is in `tokens.css`; it needs an `id` on `main.container` in `App.jsx`.
+- Targets 44x44 on touch. `.dtp-nav` is 30x30 and `.dtp-arrow` is 52x26. Both fail.
+- One `<h1>` per page. Never skip a level for styling.
+- Icon-only buttons need `aria-label`. The nav bell has one. Decorative SVGs need `aria-hidden="true"`.
+- Live regions on the notification count and on stage changes.
+- Modals trap focus and close on Escape. `.modal` exists in the CSS with neither.
+- `prefers-reduced-motion` is handled at line 47 with `animation: none; transition: none`. That is correct and blunt. Verify it by toggling the OS setting, not by reading the media query. The hero ledger must still show all four records immediately.
+- Test at 200% zoom and 320px width. The `.chain` at seven nodes and the `.filter-layout` 300px sidebar are the likely failures.
+- Run axe DevTools on `/`, `/auth`, `/student`, `/jobs/:id`, `/my-applications`, `/company`. Zero criticals.
 
 ---
 
 ## 10. Dark mode
 
-`data-theme` on `<html>`, three states: `light`, `dark`, `system`. Persist the choice in `localStorage` under `linkwork-theme`. Read it in a small inline script in `client/index.html` **before** React mounts, otherwise the page flashes light on every load.
+Gated behind Task 2. Until text uses of `--ink` migrate to `--text-1`, headings stay navy on a navy canvas.
+
+`data-theme` on `<html>`, three states: `light`, `dark`, `system`. Persist under `linkwork-theme`. Read it in an inline script in `client/index.html` **before** React mounts, otherwise the page flashes light on every load.
 
 ```html
 <script>
@@ -498,127 +451,173 @@ Non-negotiable, and easy to verify.
 </script>
 ```
 
-Dark mode notes that matter:
+Notes that matter here:
 
-- `--blue-700` is unreadable on a dark canvas. In dark, `--brand` becomes `--blue-400`. `tokens.css` already handles this, but check any hard-coded blue in existing CSS.
+- `--blue-700` is unreadable on a dark canvas, so `--brand` becomes `--blue-400` in dark. Handled in `tokens.css`.
 - Gold moves to `--gold-300` so the seal does not vanish.
-- Shadows become neutral black in dark. Blue-tinted shadows are invisible there.
-- Surfaces get lighter as they get closer, never darker. `--bg-canvas` → `--surface` → `--surface-alt`.
-- Dial back `.mesh` opacity by roughly a third in dark or it blooms.
+- Shadows become neutral black. Blue-tinted shadows are invisible on dark.
+- Surfaces get lighter as they get closer: `--bg-canvas` → `--surface` → `--surface-alt`.
+- The 44 `#fff` literals are on dark plates and are correct in both themes. Leave them.
+- The nav, footer and hero stay dark in both themes. That is what `--surface-dark` is for.
+- `.mesh` opacity drops in dark, already handled.
 
-Put the toggle in the account dropdown from `menuConfig.js`, available signed out too.
+Toggle goes in `ACCOUNT_MENU` in `menuConfig.js`, available signed out too. Note `ACCOUNT_MENU` entries are all `{ label, path, roles }`; a toggle is an action, not a route, so the shape needs an optional `action` field and `App.jsx` needs to render those as buttons.
 
 ---
 
 ## 11. Implementation plan
 
-Work in order. Each task is one commit.
+### Branch and rollback
+
+None of this happens on `main`. `main` stays your known-good, demo-able state for the whole rebrand, which matters because the DEIK.AI deadlines are fixed and a half-finished repaint is worse than no repaint.
+
+Before Task 1:
+
+```bash
+git checkout main
+git pull
+git tag pre-rebrand          # a permanent marker for "before any of this"
+git push origin pre-rebrand
+git switch -c rebrand
+git push -u origin rebrand
+```
+
+Then one commit per task on `rebrand`, message format `rebrand: task N, <name>`. Ten tasks, ten commits, each one independently revertable.
+
+Four levels of undo, in increasing severity:
+
+| Situation | Command |
+|---|---|
+| Claude Code made a mess mid-task | `git restore . && git clean -fd client/` |
+| One completed task was wrong | `git revert <sha>` |
+| The whole rebrand is going badly | `git switch main` |
+| Start over from scratch | `git switch main && git branch -D rebrand` |
+
+`server/linkwork.db`, `client/dist` and `node_modules` are all gitignored, so switching branches never touches your seeded data or your build output. You can move between `main` and `rebrand` freely without re-seeding.
+
+When everything passes Task 10, open a PR from `rebrand` into `main`, or merge locally with `git merge --no-ff rebrand` so the whole rebrand stays one revertable merge commit in `main`'s history.
+
+Optional, and worth it for the three risky tasks only (1, 2 and 8): branch each off `rebrand` as `rebrand/01-tokens` and merge back with `--no-ff`. For the other seven the extra ceremony costs more than it saves.
 
 ### Task 1: Fonts and token layer
 
 **Files:** `client/index.html`, `client/src/styles.css`
 
-Replace the Work Sans link with preconnect plus Plus Jakarta Sans (700, 800), Inter (400, 500, 600), IBM Plex Mono (400, 500), all `display=swap`. Add the anti-flash theme script from §10. Replace the token block at the top of `styles.css` with the entire contents of `tokens.css`, keeping the legacy alias block.
+Replace the Work Sans link with preconnect plus Plus Jakarta Sans (700, 800), Inter (400, 500, 600) and IBM Plex Mono (400, 500), `display=swap`. Add the theme script from §10. Replace **lines 1 to 31 only** of `styles.css` with the full contents of `tokens.css`. Leave every rule from line 32 onward untouched.
 
-**Done when:** the app builds, every page still renders without layout breakage, and the only visible change is that greens have become blues and type has changed. Nothing should be unstyled.
+**Verified:** this exact swap has been tested. `npm run build` succeeds, and a merged scan of the resulting file reports zero undefined custom properties.
 
-### Task 2: Colour audit
+**Done when:** the build passes, every page renders fully styled, and the only visible changes are new typefaces and greens becoming blue.
 
-**Files:** `client/src/styles.css`
+### Task 2: Colour and weight audit
 
-Find every hard-coded hex in the stylesheet and replace it with a token. Then find every use of the old `--verify` green and decide, per use: primary action (blue) or status (green). Buttons and links go blue. Verified and passed states go `--success-500`.
+**Files:** `client/src/styles.css`, `client/src/pages/Landing.jsx`
 
-**Done when:** `grep -E '#[0-9a-fA-F]{3,6}' client/src/styles.css` returns only the token definitions.
+Three passes.
 
-### Task 3: Logo
+1. **The `--ink` split.** Every `var(--ink)` used as a text colour becomes `var(--text-1)`. Every `var(--ink)` used as a background or border stays. There are 31 uses; the background ones are `.nav`, `footer.site`, `.hero`, `.meeting-stage`, `.btn.dark`, `.btn.secondary:hover`, `.modal-backdrop` and `.btn.secondary`'s border. This unblocks dark mode.
+2. **The green split.** Every `--verify` use is either a primary action (stays, now blue) or a status (moves to `--success-500`). Statuses include `.badge.verified`, `.alert.ok`, `.mock-track li.done .dot`, and the `table.ledger .match-ids` colour. When unsure, list it and ask rather than guessing.
+3. **Weight 900 to 800**, all nine occurrences, since Plus Jakarta Sans has no 900.
 
-**Files:** `client/src/components/LinkMark.jsx`, `client/public/`
+Also fix `BRAND_PALETTE` in `Landing.jsx` per §8.
 
-Drop in the SVG from §3. Add the `sealed` prop. Generate favicon 16/32/180 plus SVG. Add the draw-in animation, gated on `prefers-reduced-motion`.
+**Done when:** no `var(--ink)` remains in a `color:` declaration; the nine 900s are gone; `npm run build` passes; and the landing page and `/my-applications` render correctly. Report the count of `--verify` uses moved to `--success-500`.
 
-**Done when:** the mark renders correctly at 16, 24, 40 and 96px, in light and dark, and the animation runs once on load and not on route changes.
+### Task 3: Logo and marks
 
-### Task 4: Core components
+**Files:** `client/src/components/LinkMark.jsx`, `client/public/favicon.svg`, `client/src/styles.css`
 
-**Files:** `components/Button.jsx`, `Card.jsx`, `Badge.jsx`, `Field.jsx`
+New glyph per §4. Recolour `.brand-mark` (line 68) and `.avatar-initials` (line 83). Update `favicon.svg` glyph and gradient. Generate 16, 32 and 180 PNGs. Add the draw-in animation gated on `prefers-reduced-motion`.
 
-Apply §7. Add the loading state to Button and the error state to Field.
+**Done when:** the mark renders correctly at 16, 28, 42 and 96px, the nav and footer lockups both look right, and no green gradient remains anywhere.
 
-**Done when:** every variant and state renders correctly in both themes, and keyboard focus is visible on all of them.
+### Task 4: Button, Card, Badge, Field
+
+**Files:** the four components plus `styles.css`
+
+Per §7. The `Field` restructure is the risky one: grep every `<Field` usage first and update call sites in the same commit.
+
+**Done when:** every variant renders in light mode, focus is visible on all of them, and the `Auth.jsx`, `Profile.jsx`, `Settings.jsx`, `CompanyDashboard.jsx` and `JobDetail.jsx` forms all still submit.
 
 ### Task 5: Chain
 
-**Files:** `components/Chain.jsx`, `stages.js`
+**Files:** `client/src/components/Chain.jsx`, `stages.js`, `styles.css`, `i18n.jsx`
 
-Apply §7. Add the connector fill animation, numbering, and the full ARIA treatment.
+All seven items in §7. Import labels from `stages.js`, translate them, decide on `applied`, wire or delete `.failed`, add the connector animation and the ARIA treatment, stack vertically below 640px.
 
-**Done when:** all seven stages render, the current stage is visually and programmatically identifiable, a rejected application turns the track red from the right node onward, and it stacks vertically below 640px.
+**Done when:** the chain is readable at 375px, the current stage is announced by a screen reader with its position, a rejected application is visually unambiguous, and stage labels change with the locale.
 
-### Task 6: LedgerRecord and Job card
+### Task 6: LedgerRecord and job card
 
-**Files:** new `components/LedgerRecord.jsx`, plus the job card markup wherever it currently lives
+**Files:** new `components/LedgerRecord.jsx`, `styles.css`, the job card markup
 
-Apply §7. The faculty-verified gold top rule goes on the job card here.
+Per §7. The faculty-verified gold top rule goes here.
 
-**Done when:** a verified and an unverified card sit side by side and the difference is obvious without reading the badge text.
+**Done when:** a verified and an unverified job card side by side differ obviously without reading the badge text.
 
-### Task 7: Nav, footer, theme toggle
+### Task 7: Nav, footer, 404
 
-**Files:** `client/src/App.jsx`, `menuConfig.js`, `styles.css`
+**Files:** `client/src/App.jsx`, `styles.css`
 
-Scroll-triggered glass nav, sliding active underline, mobile sheet with focus trap. Theme toggle in the account dropdown, wired to `localStorage`.
+Scroll-triggered glass nav on `/`, sliding active underline, mobile sheet with focus trap below 860px. Add the catch-all 404 route. Add the skip link and the `id` on `main`.
 
-**Done when:** the nav transitions cleanly on scroll, the mobile sheet traps focus and closes on Escape, and the theme survives a hard reload with no flash.
+**Done when:** the nav transitions cleanly, the mobile sheet traps focus and closes on Escape, an unknown URL renders the 404, and Tab from page load reveals the skip link first.
 
 ### Task 8: Landing page
 
-**Files:** `client/src/pages/Landing.jsx`, `client/src/i18n.jsx`, `styles.css`
+**Files:** `client/src/pages/Landing.jsx`, `i18n.jsx`, `styles.css`, `server/index.js`
 
-Rebuild per §8. Every string added to `i18n.jsx` with `en`, `hu`, `fr`. Keep the `/api/stats` fetch and add the failure fallback.
+Split into three commits.
 
-**Done when:** all eleven sections render, the hero ledger sequence runs once, stats animate on scroll into view, the page works with the API returning a 500, and `hu` and `fr` are fully translated with no layout break.
+- **8a:** the `/api/ledger/recent` route, plus the privacy decision from §8 written down in the commit message.
+- **8b:** the four new sections (problem, trust chain, ledger, FAQ, CTA) and the hero ledger panel, all strings in `en`, `hu` and `fr`. No animation yet.
+- **8c:** motion. Hero records writing in at 400ms intervals, stat counters over 1200ms on scroll into view, section reveals at 16px and 320ms. Transform and opacity only.
 
-### Task 9: States
+**Done when:** every section renders at 375, 768 and 1440; the page works with both endpoints returning 500; `hu` and `fr` are complete with no layout break; and with reduced motion on, all four hero records are visible immediately with final stat values.
 
-**Files:** `pages/`, `components/ErrorBoundary.jsx`, `pages/ComingSoon.jsx`
+### Task 9: Dark mode
 
-Empty, loading, error and 404 per §7.
+**Files:** `client/index.html`, `App.jsx`, `menuConfig.js`, `styles.css`
 
-**Done when:** every list view has a designed empty state, no spinner appears outside a button, and the 404 renders the null ledger record.
+Only after Task 2. Add the toggle, extend `ACCOUNT_MENU` to support actions, then walk every page in dark and fix what breaks. Expect the `.feature-panel` gradients, `.land-*` card fills, `.note-tint-*` and the `.mm-chip` colours to need dark variants; they are hard-coded pastels.
 
-### Task 10: Accessibility and QA pass
+**Done when:** every page is legible in dark, the theme survives a hard reload with no flash, and no element renders dark-on-dark or light-on-light.
 
-Work §9 top to bottom. Then:
+### Task 10: Accessibility and QA
 
-- [ ] Chrome, Firefox, Safari, plus iOS Safari and Android Chrome
+Work §9 top to bottom, then:
+
+- [ ] Chrome, Firefox, Safari, iOS Safari, Android Chrome
 - [ ] 320, 375, 768, 1024, 1440, 1920
 - [ ] Light and dark on every page
 - [ ] EN, HU, FR on every page
 - [ ] 200% zoom, no horizontal scroll
-- [ ] `prefers-reduced-motion` on, nothing moves, everything is still readable
-- [ ] Keyboard only, every flow completable including apply and the skill test
+- [ ] Reduced motion on, nothing moves, everything readable
+- [ ] Keyboard only, apply and skill test flows completable
 - [ ] axe DevTools clean on the six key routes
-- [ ] Lighthouse: performance 90+, accessibility 100
-- [ ] The four seeded demo accounts still sign in and reach their dashboards
+- [ ] Lighthouse performance 90+, accessibility 100
+- [ ] The four seeded demo accounts sign in and reach their dashboards
 
 ---
 
 ## 12. Do not
 
-- Do not add Tailwind, Next.js, shadcn/ui, styled-components, or a component library. The brief suggests them, but they are wrong for a working React 18 + Vite app with a hand-written stylesheet, and a rewrite is not a rebrand.
-- Do not use gold as a fill, a heading colour, or a background.
-- Do not put glass on more than the nav, the hero panel, and modal backdrops.
+- Do not add Tailwind, Next.js, shadcn/ui, styled-components or a component library. The original brief suggests them; they are wrong for a working React 18 + Vite app with a 630-line hand-written stylesheet, and a rewrite is not a rebrand.
+- Do not touch `server/` except for the one route in §8.
+- Do not use gold as a fill, heading colour or background.
+- Do not put glass on more than the nav, the hero panel and modal backdrops.
 - Do not animate anything except transform and opacity.
-- Do not add stock illustrations or 3D renders. The ledger is the illustration.
+- Do not add stock illustrations or 3D renders. The ledger is the illustration, and the six hand-drawn company marks already carry the logo strip.
 - Do not use Title Case.
-- Do not hard-code English on the homepage.
-- Do not touch `server/`.
+- Do not add a homepage string without all three locales.
+- Do not tokenise the 44 `#fff` literals on dark plates.
 
 ---
 
-## 13. Two things to fix while you are in there
+## 13. Three things to fix while you are in there
 
-Neither is branding, both are one-line risks flagged in your own PROJECT.md §9.
+Not branding. All three are flagged in `PROJECT.md` §9 or found in the source.
 
-1. `server/anthropic.js` pins model `claude-opus-4-8`. That is a valid, current ID (Claude Opus 4.8), so nothing is broken — but `claude-opus-5` is the newer model in the same tier, worth switching to whenever the scorer is actually enabled.
-2. `viewer@linkwork.test` is recreated with `can_view_all_applicants` on **every boot**. If you demo from a deployed instance for DEIK.AI, that account exists on it, and it can read every application from every company. Gate the creation behind `NODE_ENV !== 'production'` before anything goes public.
+1. **`viewer@linkwork.test` is recreated with `can_view_all_applicants` on every boot.** If you demo from a deployed instance for DEIK.AI, that account exists on it and can read every application from every company. Gate the creation in `server/db.js` behind `NODE_ENV !== 'production'` before anything goes public. Credit where due: `/api/stats` already excludes it from the public company list, so someone was thinking about this.
+2. **`server/anthropic.js` pins model `claude-opus-4-8`,** which is not a current model ID. Check it against the live lineup before enabling the scorer, or the first real call fails.
+3. **`SESSION_SECRET` falls back to `linkwork-dev-secret` and cookies are not `secure`.** Both need fixing behind HTTPS, and the fallback should throw rather than default in production.
