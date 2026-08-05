@@ -428,9 +428,39 @@ main.container { flex: 1; padding: 32px 0 72px; }
 .brand:hover { text-decoration: none; }
 .brand-mark {
   display: inline-grid; place-items: center; flex-shrink: 0; border-radius: 50%;
-  background: linear-gradient(150deg, var(--verify-bright) 0%, var(--verify) 65%, #0f5a41 100%);
+  background: linear-gradient(150deg, var(--accent) 0%, var(--brand) 65%, var(--blue-900) 100%);
   box-shadow: inset 0 1.5px 2px rgba(255,255,255,.45), inset 0 -3px 6px rgba(0,0,0,.25), 0 3px 10px rgba(0,0,0,.35);
 }
+
+/* Logo draw-in. One pass on first load: the two links draw from their outer
+   ends, then the notch strokes in. 760ms total.
+
+   The resting state below is FULLY DRAWN on purpose. The global
+   prefers-reduced-motion rule kills animations with `animation: none
+   !important`, so if the undrawn state lived here rather than inside the
+   keyframes, reduced-motion users would be left with a permanently blank
+   plate.
+
+   Each hook runs inner -> outer bend -> inner, so its outer end is the path
+   MIDPOINT, not an endpoint. A plain dashoffset sweep would draw from one inner
+   end. Instead the dash grows symmetrically out of the centre: with
+   `dasharray: L 1` and `dashoffset: L/2 - 0.5` the visible run stays centred on
+   the midpoint as L goes 0 -> 1. The connecting bar is a simple stroke from its
+   start, and follows once both hooks are drawn. */
+.brand-mark .lk-link-a,
+.brand-mark .lk-link-b { stroke-dasharray: 1 1; stroke-dashoffset: 0; }
+.brand-mark .lk-notch { stroke-dasharray: 1; stroke-dashoffset: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .brand-mark .lk-link-a,
+  .brand-mark .lk-link-b { animation: lk-link var(--d-slow) var(--ease-out) both; }
+  .brand-mark .lk-notch { animation: lk-notch var(--d-fast) var(--ease-out) var(--d-slow) both; }
+}
+@keyframes lk-link {
+  from { stroke-dasharray: 0 1; stroke-dashoffset: -0.5; }
+  to   { stroke-dasharray: 1 1; stroke-dashoffset: 0; }
+}
+@keyframes lk-notch { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 .nav a.navlink { color: #cfd6e4; font-weight: 500; font-size: 15px; transition: color .15s var(--ease); }
 .nav a.navlink:hover, .nav a.navlink.active { color: #fff; text-decoration: none; }
 .nav a.navlink-lg { font-size: 16.5px; font-weight: 600; }
@@ -443,7 +473,7 @@ main.container { flex: 1; padding: 32px 0 72px; }
 .avatar { border-radius: 50%; object-fit: cover; display: inline-block; flex: none; }
 .avatar-initials {
   display: inline-flex; align-items: center; justify-content: center;
-  background: linear-gradient(150deg, var(--verify-bright), var(--verify));
+  background: linear-gradient(150deg, var(--accent), var(--brand));
   color: #fff; font-family: var(--font-display); font-weight: 800;
 }
 /* avatar menu trigger in the nav */

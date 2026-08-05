@@ -1,9 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Original pre-rebrand glyph and layout, unchanged. Only the plate gradient
+       recoloured, green -> blue, to match .brand-mark in styles.css. -->
   <defs>
     <linearGradient id="g" x1="0%" y1="0%" x2="85%" y2="100%">
-      <stop offset="0%" stop-color="#1ca878" />
-      <stop offset="65%" stop-color="#147d5b" />
-      <stop offset="100%" stop-color="#0f5a41" />
+      <stop offset="0%" stop-color="#4f8ef7" />
+      <stop offset="65%" stop-color="#003b7a" />
+      <stop offset="100%" stop-color="#001b3a" />
     </linearGradient>
   </defs>
   <circle cx="32" cy="32" r="32" fill="url(#g)" />
