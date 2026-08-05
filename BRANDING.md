@@ -4,7 +4,7 @@
 
 Companion file: `tokens.css`.
 
-**Revision 2.** Rewritten after reading the actual source at commit `214dcc9`. Revision 1 was written from `PROJECT.md` alone and got several things wrong. Section 1 lists what changed and why, because the corrections are the most useful part of this document.
+**Revision 4. This is the version to implement.** Revision 1 was written from `PROJECT.md` alone. Revision 2 was written with the source open. Revision 3 absorbed a line-by-line audit. Revision 4 is the result of machine-verifying every factual claim in this document against `5cce7d7`: all 27 file paths, all 46 cited line numbers, every count, the proposed SQL executed against the real schema, and the Task 1 swap built end to end. Section 14 is the verification log. Four more claims failed and are corrected in section 1.
 
 **Before starting anything, read the branch and rollback strategy at the head of section 11.** All ten tasks run on a `rebrand` branch, never on `main`.
 
@@ -29,6 +29,37 @@ Read this first. Two of these would have broken the build.
 **7. Existing bug found.** `styles.css` lines 383 and 393 reference `var(--brand-fg)`, which is never defined anywhere. The `.logo-lockup:hover` colour and its descriptor currently resolve to nothing and inherit. `tokens.css` now defines `--brand-fg`, which fixes it as a side effect.
 
 **8. `.id-tag` and scoped `.eyebrow` already exist.** Revision 1's `tokens.css` redefined `.id-tag` (line 191) and added `.container`, `body`, `h1`-`h4`, `p`, `a` and `:focus-visible` rules that would have been overridden by the existing rules further down the file. Dead code that looks live is worse than no code. All of it is stripped. `tokens.css` is now tokens plus four verified-absent utility classes.
+
+### Corrected again in revision 3
+
+Found by auditing revision 2 against the source. Verified independently before accepting.
+
+**A. `--brand-fg` is not a bug.** `Landing.jsx:415` sets it inline per company: `style={{ '--brand-fg': colors.fg }}`. The hover colouring works today. Revision 2 called it an undefined-variable bug and claimed fixing it was a free win. Wrong. The `:root` value in `tokens.css` is now a harmless fallback and is commented as such.
+
+**B. `claude-opus-4-8` is a valid, current model.** `Claude Opus 4.8` is a real model ID and returns from `/v1/models`. Revision 1 and revision 2 both flagged it as suspect. Both were wrong. Item 2 of section 13 is deleted. `claude-opus-5` is the newer model in that tier if you want to upgrade when the feature is enabled.
+
+**C. The base `.eyebrow` rule breaks Task 1.** Only `.hero .eyebrow` and `.how .eyebrow` are styled today. `Landing.jsx` lines 294, 377 and 408 render bare `.eyebrow` spans carrying `style={{ color: 'var(--verify)' }}`. A base rule would silently drop them from 16px to 11px uppercase mono, which contradicts Task 1's own acceptance criterion of "only typefaces and colour change". The rule is removed from `tokens.css` and moves to Task 8, where the three call sites get fixed in the same commit.
+
+**D. Counts in revision 2 were unreliable.** Verified figures: 30 uses of `var(--ink)`, not 31. 46 uses of `var(--verify)`. 99 hex literals, not 79. Seven `font-weight: 900` declarations, not nine, and the list named three selectors already at 800 while omitting `.logo-mark-initial` (line 388). `.modal-backdrop` was listed as an `--ink` surface use; it is a hard-coded `rgba(22,35,63,.5)` and stays old navy after the swap unless separately fixed. Section 6 also missed `.nav-bell .dot` (line 629) at 10px.
+
+**E. The gold rule was unresolvable.** See section 5. Resolved by separating the seal token from decorative warm tints.
+
+**F. Two token files would diverge.** Task 1 copied `tokens.css` into `styles.css` while `CLAUDE.md` required `tokens.css` stay in root, with nothing saying which wins after Task 2 edits a value. Task 1 now deletes `tokens.css` after the copy. `client/src/styles.css` is canonical from that point.
+
+**G. The hero ledger did not survive contact with the data.** `seed()` in `server/db.js` creates zero rows in `matches`, so `hires` is 0 on any fresh install. Revision 2's hero copy asserted "12 hires recorded" and specified four records writing in. On a fresh deploy that is an empty box under a false number. See section 8 for the resolution, which is not to cut it.
+
+
+### Corrected again in revision 4
+
+Found by machine-verifying revision 3 against `5cce7d7`. All four break implementation as written.
+
+**H. `Field.jsx` is dead code.** Nothing imports it. Revision 3's Task 4 called the restructure "the risky one" and named five pages whose call sites needed updating. There are no call sites. Forms use 40 raw `<label className="field">` blocks across six pages, and no per-field error state exists anywhere in the app. Task 4 is rescoped to CSS. See section 7.
+
+**I. `Button`, `Card` and `Badge` are barely used either.** Three pages import them in total: `Alerts.jsx`, `Companies.jsx`, `CompanyProfile.jsx`. Every other page writes `className="btn"` directly. The component files are four-line `className` joiners. This does not change the design work, but it changes where the work happens: Task 4 is a stylesheet task, not a component task.
+
+**J. There is no `<main>` in `App.jsx`.** Revision 3 said to put the skip-link `id` on `main.container` there. `App.jsx` renders no `<main>` at all; 30 separate per-page `<main className="container">` elements exist instead. The skip link needs a target that exists on every route, so wrap the `<Routes>` block at line 227 in `<div id="content" tabIndex={-1}>`.
+
+**K. Seeded matches must also close the postings.** A real hire does three writes (`server/index.js` 785 to 788): insert the match, increment `jobs.filled`, and set `status='closed'` when the posting is full. Revision 3 said to seed `matches` rows and stopped there. Seeding only the insert leaves `open_jobs` at 10 while the ledger claims postings were filled, which reproduces the exact ghost-posting problem the product exists to solve, on the landing page, in the demo.
 
 ---
 
@@ -186,7 +217,25 @@ Values in `tokens.css`. This is the usage law.
 ### Rules
 
 1. **Blue dominates.** Roughly 70% of coloured surface area is blue or neutral. If a screenshot looks multicoloured, something is miscoded.
-2. **Gold is a seal, not a colour.** A badge, a hairline rule under a partnership block, or the logo notch on verified surfaces. Never a button fill, never a heading, never a background. Well under 1% of pixels. That scarcity is what makes the gold star mean something.
+2. **Gold is a seal, not a colour, and the rule is about the token rather than the hue.**
+
+   Stated flatly, "gold is never a background" contradicts the code and contradicts section 8. Seven existing rules paint gold backgrounds: `.badge.faculty` (185), `.match-mock-badge` (276, a solid `var(--gold)` fill), `.match-mock-logo` (283), `.mm-chip.gold` (290), `.note-tint-b` (365), `.land-gold` (472, `#f2c94c`), `.alert.info` (480) and `.pref-chip:hover` (497). Section 8 also says the match mock and the testimonial notes stay untouched. Both cannot be true.
+
+   The resolution: **`--seal` is reserved, warm decorative tints are not.** `tokens.css` adds `--warm-100`, `--warm-300` and `--warm-fg` for the decorative cases. After Task 2, `var(--seal)` resolves in exactly two places: `.badge.faculty` and the faculty-verified job card top rule. Everything else migrates:
+
+   | Rule | Was | Becomes | Why |
+   |---|---|---|---|
+   | `.badge.faculty` | `--gold-tint` | `--seal-subtle-bg` | This is the seal |
+   | job card top rule | new | 1px `--seal` | This is the seal |
+   | `.match-mock-badge` | solid `--gold` | `--brand` fill, white text | "New roles 6" is a count, not a verification |
+   | `.match-mock-logo` | `--gold-tint` | `--warm-100` / `--warm-fg` | Decorative company monogram |
+   | `.mm-chip.gold` | `--gold-tint` | `--warm-100` / `--warm-fg` | Decorative chip |
+   | `.note-tint-b` | `--gold-tint` | `--warm-100` | Decorative sticky note |
+   | `.land-gold` | `#f2c94c` | `--warm-300` | Decorative card fill |
+   | `.alert.info` | `--gold-tint` | `--brand-subtle-bg` / `--brand-subtle-fg` | Info should be blue; gold implies verification |
+   | `.pref-chip:hover` | `--gold-tint` | `--brand-subtle-bg` | Hover is an interaction, not a seal |
+
+   After that migration the flat rule holds and is enforceable: gold means verified, nothing else.
 3. **Green is status, not brand.** The biggest behavioural change here. `--verify` currently paints every primary button and link. After the swap it resolves to blue, and green survives as `--success-500` for "this passed" and "this is verified" only.
 4. **`#fff` on dark plates is correct.** The 44 occurrences on `.nav`, `.hero` and `footer.site` are intentional. Do not tokenise them into `--surface`, which would invert them in dark mode.
 5. **Never use colour alone to carry meaning.** Every status colour ships with an icon or a label. Faculty-verified is a gold star *and* the words "Faculty verified".
@@ -198,7 +247,7 @@ Verify with a checker, not by eye.
 - `--text-1` on `--surface`: 16.1:1
 - `--text-3` on `--surface`: 4.76:1, so muted text never drops below 14px
 - `--text-on-brand` on `--brand`: 11.4:1
-- Gold: `--gold-500` on white is 2.6:1 and **fails**. Badge text uses `--gold-700` on `--gold-100`. Gold is for the glyph and the border. This applies to the existing `.badge.faculty` (already correct at `#7c5a00`) and to `.alert.info`, `.mm-chip.gold` and `.match-mock-logo`, which reuse the same pairing.
+- Gold: `--gold-500` on white is 2.6:1 and **fails**. Badge text uses `--gold-700` on `--gold-100`. Gold is for the glyph and the border. After the section 5 migration this applies to exactly one rule, `.badge.faculty` (already correct at `#7c5a00`). `.alert.info`, `.mm-chip.gold` and `.match-mock-logo` leave the gold pairing entirely, so do not carry it over to them.
 
 ---
 
@@ -214,7 +263,7 @@ Verify with a checker, not by eye.
 
 Replaces Work Sans, which currently serves as both display and body. Load variable weights with `display=swap` and preconnect. If three families becomes a performance problem, drop Plus Jakarta and set headings in Inter 800 with `--ls-tightest`. Never drop the mono.
 
-Note `styles.css` uses weight 900 in nine places (`.hero h1`, `.land-card.stat b`, `.logo-word b`, `.note-stat b`, `.overlap-band .stat b`, `.match-mock-logo`, `.avatar-initials`, `.account-menu-name`, `.brand`). Plus Jakarta Sans tops out at 800. Map all 900s to 800 in Task 2 or they will silently synthesise.
+Note `styles.css` uses weight 900 in exactly seven places: `.hero h1` (228), `.match-mock-logo` (283), `.overlap-band .stat b` (337), `.note-stat b` (368), `.logo-mark-initial` (388), `.logo-word b` (391) and `.land-card.stat b` (461). `.avatar-initials`, `.account-menu-name` and `.brand` are already at 800. Plus Jakarta Sans tops out at 800, so map all seven to 800 in Task 2 or the browser will synthesise a fake bold.
 
 ### Scale
 
@@ -232,7 +281,7 @@ Note `styles.css` uses weight 900 in nine places (`.hero h1`, `.land-card.stat b
 | `--fs-xs` | 12 | 500 | 1.5 | 0.08em | ID tags, meta |
 | `--fs-micro` | 11 | 500 | 1.5 | 0.16em | Mono eyebrows |
 
-Nothing below 12px ships. `styles.css` currently has `11px`, `11.5px` and `12px` in eleven places; the 11s are mono uppercase labels where tracking carries legibility, so they may stay, but check each at 200% zoom.
+Nothing below 12px ships. `styles.css` currently has eight declarations under 12px. Six are 11 or 11.5px mono or uppercase labels where tracking carries legibility and may stay, subject to a 200% zoom check: `.account-chevron` (102), `.account-menu-email` (114), `.chain .node small` (215), `.logo-word i` (392), `table.ledger th` (514), `.dtp-stepper-label` (570) and `.rec-steps-label` (612). One is a real failure: `.nav-bell .dot` (629) at 10px is the unread notification count, which is information rather than decoration. Raise it to 11px and grow the dot to 16px minimum.
 
 ### Detail rules
 
@@ -277,9 +326,13 @@ Line 180. Variants `.faculty`, `.verified`, `.pending`, `.danger`, `.mono`. Add 
 
 ### Field
 
-Line 154 plus `Field.jsx`. The component wraps everything in a `<label>`, which makes `aria-describedby` awkward because the error message would sit inside the label and get read as part of it.
+**`Field.jsx` is dead code.** Nothing imports it. Forms are written as raw markup: 40 instances of `<label className="field">Label<input ... /></label>` across `Auth.jsx` (18), `CompanyDashboard.jsx` (10), `Profile.jsx` (8), `Settings.jsx` (2), `JobDetail.jsx` (1) and `ApplicantReview.jsx` (1).
 
-Restructure: keep the `<label>` for the label text and hint, move `children` outside it into a wrapping `<div className="field">`, and use `React.cloneElement` to inject `aria-invalid` and `aria-describedby` into the control when an `error` prop is present.
+So the useful work is entirely in `styles.css` at line 154 and lines 157 to 164. Do not restructure the component and do not touch 40 call sites: there is no per-field error state in this app today (errors surface as a page-level `.alert error`), so adding one is a new feature, not a rebrand.
+
+What to do: restyle `label.field` and the `input, select, textarea` block per the focus and error rules below, and add a `.field-error` class so the state exists when someone wants it. Leave `Field.jsx` in place, unused, or delete it as dead code in the same commit. Either is fine; pretending it is load-bearing is not.
+
+If you later want real per-field errors, this is the component to build them into, and it needs `cloneElement` so the message lands outside the `<label>`:
 
 ```jsx
 import { cloneElement, useId } from 'react';
@@ -302,7 +355,7 @@ export default function Field({ label, hint, error, children, ...props }) {
 }
 ```
 
-`label.field` in the CSS becomes `.field` and `.field > label`. Grep for `<Field` before changing this: it is used across `Auth.jsx`, `Profile.jsx`, `Settings.jsx`, `CompanyDashboard.jsx` and `JobDetail.jsx`.
+That is future work. It is not Task 4.
 
 Focus: border to `--brand` plus the ring. Error: `--danger-500` border with a message below in `--fs-sm` `--danger-700` and a 14px icon. Never rely on the red border alone. Keep `font-size: 15px` on inputs or larger so iOS does not zoom on focus.
 
@@ -371,30 +424,21 @@ One thing to fix: `BRAND_PALETTE` in `Landing.jsx` lines 7 to 13 hard-codes six 
 
 **1. Hero.** The brief asks the hero to communicate "every internship opportunity is real". The way to do that is not to assert it in bigger type. It is to show the receipts.
 
-`.hero-chain` currently shows three static nodes labelled Faculty, Company, You. Replace the right panel with a glass ledger card that writes in four recent hire records, one every 400ms, mono, each with its date and gold star where faculty verified. Under them one mono line: `12 hires recorded · 0 postings unaccounted for`.
+But revision 2's version of this did not survive contact with the data, and the objection is worth stating in full because it is the strongest argument against the signature.
 
-This is the product's own database used as the hero image.
+> `seed()` creates zero rows in `matches`. On a fresh install `hires` is 0, so four records writing in at 400ms intervals renders an empty ruled box. The hero copy asserted "12 hires recorded", a number nothing produces. And the privacy note pushes toward dropping `STU-0007`, at which point the row reads `JOB-0042 ⟷ ---`, which is the 404 design from section 7. The signature and the null state collapse into the same image.
 
-**This needs a route that does not exist.** Add exactly this to `server/index.js` next to `/api/stats`:
+Every part of that is correct. The resolution is three changes, not deletion.
 
-```js
-app.get('/api/ledger/recent', (req, res) => {
-  res.json({
-    records: db.prepare(`
-      SELECT m.job_id, m.student_id, m.hired_at,
-             j.title, j.faculty_verified, c.name AS company
-      FROM matches m
-      JOIN jobs j ON j.id = m.job_id
-      JOIN companies c ON c.id = j.company_id
-      ORDER BY m.hired_at DESC LIMIT 6
-    `).all(),
-  });
-});
-```
+**Seed the matches.** Add three or four rows to `matches` in `seed()`, tied to existing seeded jobs and the demo student, with `hired_at` spread over the last two months. This is not dishonest: `seed()` already invents six companies, ten jobs and a demo student, and the `hire()` mechanism the ledger displays is entirely real. Seeding demo hires demonstrates a working mechanism with demo data, exactly like every other seeded row. What would be dishonest is asserting a number in copy that no query produces, which is what revision 2 did.
 
-This is the only sanctioned server change in this document, and `PROJECT.md` §10 already lists a public read-only ledger page as planned.
+**Never hard-code the count.** The mono line under the records reads from `/api/stats`, so it says whatever is true. `3 hires recorded · 0 postings unaccounted for`. The second half is the actual claim and it is true at any n, including zero. A short ledger is the argument, not an embarrassment: the list is short because filled postings come down.
 
-**Privacy check before you ship it.** The response exposes `STU-0007` alongside a job title and a company name. At pilot scale, with one demo student and ten jobs, that tuple identifies a real person to anyone who knows them. Decide deliberately: either the ledger is genuinely public and students consent to it at registration (which means a line in `Privacy.jsx` and `POLICY_VERSION` bumped), or the public route returns the job side and the company only, and the student ID appears solely to the student and the hiring company. The second is the safer default for a pilot.
+**Design for n = 0 first.** Build the empty state before the populated one. At zero records the panel shows the ruled register, the `0 postings unaccounted for` line, and one sentence: "Nothing has been hired here yet. When it is, it appears here and the posting comes down." That reads as a promise rather than a bug, and it is the state a brand-new university partner would see. If it does not look intentional at zero, the design is wrong.
+
+**On the privacy collapse.** The public hero does not need the `⟷` pairing. Show the filled posting: `JOB-0042 · Junior Data Engineer · DataTech · 14 May` with the seal where applicable. That is a record of a real posting that is gone because it was filled, it makes the same argument, and it is nothing like the 404's null pairing. `STU-0007` stays on the private ledger where the student and the hiring company can see it. This resolves the privacy question and the visual collision in one move, and it means the public route never returns a student ID at all.
+
+If you would rather not touch `db.js`, cutting the ledger panel and keeping the existing three-node `.hero-chain` is a legitimate fallback. It costs the identity its signature, and the section 8 ledger section then has to carry it alone.
 
 Keep the existing `.overlap-band` stats. Move the numbers to mono per §7.
 
@@ -420,7 +464,7 @@ Every new string needs `en`, `hu` and `fr` entries in `i18n.jsx`. The file is or
 
 - WCAG 2.2 AA. 4.5:1 under 24px, 3:1 for large text and UI boundaries.
 - Every interactive element keyboard reachable with a visible focus ring. The existing `:focus-visible` (line 46) uses a green outline; retoken it to `--focus-ring-color`.
-- Add a skip link. `.skip-link` is in `tokens.css`; it needs an `id` on `main.container` in `App.jsx`.
+- Add a skip link. `.skip-link` is in the token layer. There is **no single `<main>` to point it at**: `App.jsx` renders none, and 30 per-page `<main className="container">` elements exist instead. Wrap the `<Routes>` block in `App.jsx` (line 227) in `<div id="content" tabIndex={-1}>` and target that.
 - Targets 44x44 on touch. `.dtp-nav` is 30x30 and `.dtp-arrow` is 52x26. Both fail.
 - One `<h1>` per page. Never skip a level for styling.
 - Icon-only buttons need `aria-label`. The nav bell has one. Decorative SVGs need `aria-hidden="true"`.
@@ -505,23 +549,29 @@ Optional, and worth it for the three risky tasks only (1, 2 and 8): branch each 
 
 Replace the Work Sans link with preconnect plus Plus Jakarta Sans (700, 800), Inter (400, 500, 600) and IBM Plex Mono (400, 500), `display=swap`. Add the theme script from §10. Replace **lines 1 to 31 only** of `styles.css` with the full contents of `tokens.css`. Leave every rule from line 32 onward untouched.
 
-**Verified:** this exact swap has been tested. `npm run build` succeeds, and a merged scan of the resulting file reports zero undefined custom properties.
+Then delete `tokens.css` from the repo root in the same commit. `client/src/styles.css` is the canonical token layer from here on, and two hand-synced copies will diverge by Task 5.
 
-**Done when:** the build passes, every page renders fully styled, and the only visible changes are new typefaces and greens becoming blue.
+**Verified:** this exact swap has been tested against `5cce7d7`. `npm run build` succeeds and a merged scan of the resulting file reports zero undefined custom properties. The base `.eyebrow` rule that would have restyled three bare spans in `Landing.jsx` has been removed from `tokens.css`; it returns in Task 8 alongside its call sites.
+
+**Done when:** the build passes, every page renders fully styled, `tokens.css` is gone from the repo, and the only visible changes are new typefaces and greens becoming blue. Confirm specifically that the eyebrow text above "Looking for the right role?", the testimonial and the company showcase is unchanged in size.
 
 ### Task 2: Colour and weight audit
 
 **Files:** `client/src/styles.css`, `client/src/pages/Landing.jsx`
 
-Three passes.
+Four passes.
 
-1. **The `--ink` split.** Every `var(--ink)` used as a text colour becomes `var(--text-1)`. Every `var(--ink)` used as a background or border stays. There are 31 uses; the background ones are `.nav`, `footer.site`, `.hero`, `.meeting-stage`, `.btn.dark`, `.btn.secondary:hover`, `.modal-backdrop` and `.btn.secondary`'s border. This unblocks dark mode.
-2. **The green split.** Every `--verify` use is either a primary action (stays, now blue) or a status (moves to `--success-500`). Statuses include `.badge.verified`, `.alert.ok`, `.mock-track li.done .dot`, and the `table.ledger .match-ids` colour. When unsure, list it and ask rather than guessing.
-3. **Weight 900 to 800**, all nine occurrences, since Plus Jakarta Sans has no 900.
+1. **The `--ink` split.** 30 uses. Seven are background or border and stay: `.nav` (58), `.btn.secondary` border (147), `.btn.secondary:hover` background (148), `.hero` (221), `.btn.dark` (473), `footer.site` (527), `.meeting-stage` (593). The other 23 are text and become `var(--text-1)`. Line 147 is both, so split the declaration. Separately, `.modal-backdrop` (607) hard-codes `rgba(22,35,63,.5)` with no variable and will stay old navy unless you retint it to match `--surface-dark`. This pass is what unblocks dark mode.
 
-Also fix `BRAND_PALETTE` in `Landing.jsx` per §8.
+2. **The green split.** 46 uses. Seven are status and become `var(--success-500)`: `.badge.verified` (186), `.chain .node.done` (212), `.chain .node.current` (213), `.chain .connector.done` (218), `.mm-chip.green` (289), `.mock-track li.done` (433), `.alert.ok` (479). The rest are primary actions and stay, now resolving to blue. `table.ledger .match-ids` (516) is **brand, not status**: ledger IDs are data, not a pass or fail, and `.lr-ids` in the token layer already treats them that way. Where you are unsure, list it and ask rather than guessing.
 
-**Done when:** no `var(--ink)` remains in a `color:` declaration; the nine 900s are gone; `npm run build` passes; and the landing page and `/my-applications` render correctly. Report the count of `--verify` uses moved to `--success-500`.
+3. **The gold migration.** Nine rules, per the table in section 5. After this pass `var(--seal)` must resolve in exactly two places.
+
+4. **Weights.** Seven `font-weight: 900` declarations at lines 228, 283, 337, 368, 388, 391 and 461 become 800, since Plus Jakarta Sans has no 900.
+
+Also update `BRAND_PALETTE` in `Landing.jsx` lines 7-13 per §8.
+
+**Done when:** no `var(--ink)` remains in a `color:` declaration; no `font-weight: 900` remains; `var(--seal)` appears in exactly two rules; `npm run build` passes; and the landing page and `/my-applications` render correctly. Report which `--verify` uses moved to `--success-500`.
 
 ### Task 3: Logo and marks
 
@@ -533,11 +583,13 @@ New glyph per §4. Recolour `.brand-mark` (line 68) and `.avatar-initials` (line
 
 ### Task 4: Button, Card, Badge, Field
 
-**Files:** the four components plus `styles.css`
+**Files:** `client/src/styles.css`, and only incidentally the components.
 
-Per §7. The `Field` restructure is the risky one: grep every `<Field` usage first and update call sites in the same commit.
+This task is roughly 95% CSS. The component files are thin `className` joiners and barely used: `Button`, `Card` and `Badge` are imported by three pages in total (`Alerts.jsx`, `Companies.jsx`, `CompanyProfile.jsx`), every other page writes `className="btn"` directly, and `Field.jsx` is imported by nothing at all. Restyling `.btn`, `.card`, `.badge`, `label.field` and the input block in `styles.css` is what actually changes the app.
 
-**Done when:** every variant renders in light mode, focus is visible on all of them, and the `Auth.jsx`, `Profile.jsx`, `Settings.jsx`, `CompanyDashboard.jsx` and `JobDetail.jsx` forms all still submit.
+Per §7. Add `.btn.seal` and `.badge.warning` as new rules. Add `.field-error`. Do not restructure `Field.jsx` and do not touch the 40 raw `label.field` call sites.
+
+**Done when:** every button variant, badge variant and input state renders correctly in light mode, focus is visible on all of them, and the `Auth.jsx`, `Profile.jsx`, `Settings.jsx` and `CompanyDashboard.jsx` forms all still submit unchanged.
 
 ### Task 5: Chain
 
@@ -559,21 +611,48 @@ Per §7. The faculty-verified gold top rule goes here.
 
 **Files:** `client/src/App.jsx`, `styles.css`
 
-Scroll-triggered glass nav on `/`, sliding active underline, mobile sheet with focus trap below 860px. Add the catch-all 404 route. Add the skip link and the `id` on `main`.
+Scroll-triggered glass nav on `/`, sliding active underline, mobile sheet with focus trap below 860px.
 
-**Done when:** the nav transitions cleanly, the mobile sheet traps focus and closes on Escape, an unknown URL renders the 404, and Tab from page load reveals the skip link first.
+Three exact edits in `App.jsx`:
+1. Wrap the `<Routes>` block (line 227 to 249) in `<div id="content" tabIndex={-1}>`. This is the skip-link target; there is no `<main>` in this file.
+2. Add the skip link as the first child inside `<div className="shell">` (line 191).
+3. Add `<Route path="*" element={<NotFound />} />` as the last route, immediately before `</Routes>` at line 249. There is no catch-all today, so an unknown URL currently renders the nav and footer with an empty middle.
+
+**Done when:** the nav transitions cleanly, the mobile sheet traps focus and closes on Escape, `/does-not-exist` renders the 404, and Tab from page load reveals the skip link first.
 
 ### Task 8: Landing page
 
-**Files:** `client/src/pages/Landing.jsx`, `i18n.jsx`, `styles.css`, `server/index.js`
+**Files:** `client/src/pages/Landing.jsx`, `i18n.jsx`, `styles.css`, `server/index.js`, `server/db.js`
 
 Split into three commits.
 
-- **8a:** the `/api/ledger/recent` route, plus the privacy decision from §8 written down in the commit message.
-- **8b:** the four new sections (problem, trust chain, ledger, FAQ, CTA) and the hero ledger panel, all strings in `en`, `hu` and `fr`. No animation yet.
+- **8a:** the `/api/ledger/recent` route, plus three or four `matches` rows added to `seed()` in `server/db.js`. These are the only two server changes in this document.
+
+  The de-identified query is verified working against the real schema and returns exactly the shape the panel needs:
+
+  ```js
+  app.get('/api/ledger/recent', (req, res) => {
+    res.json({
+      records: db.prepare(`
+        SELECT m.job_id, m.hired_at, j.title, j.faculty_verified, c.name AS company
+        FROM matches m
+        JOIN jobs j ON j.id = m.job_id
+        JOIN companies c ON c.id = j.company_id
+        ORDER BY m.hired_at DESC LIMIT 6
+      `).all(),
+    });
+  });
+  ```
+
+  Sample row: `{job_id: 1, hired_at: "2026-06-14 10:00:00", title: "Software Engineering Intern", faculty_verified: 1, company: "DataTech Hungary Kft."}`. No `student_id` leaves the server.
+
+  **The seeded matches must mirror what a real hire does**, or the ledger will show filled postings still sitting open on `/student`. `server/index.js` lines 785 to 788 insert the match, increment `jobs.filled`, and set `status='closed'` once `filled >= positions`. Seed the same three writes per row, not just the `INSERT`. Otherwise `open_jobs` stays at 10 while the ledger claims three of them were filled, which is precisely the ghost-posting problem the product exists to solve.
+
+  `seed()` only runs when `universities` is empty, so existing databases are unaffected. Delete `server/linkwork.db*` to see it.
+- **8b:** the five new sections (problem, trust chain, ledger, FAQ, CTA), the hero ledger panel built empty-state first, and the base `.eyebrow` rule together with fixes to the three bare spans at `Landing.jsx` 294, 377 and 408 that currently carry inline `color: var(--verify)`. All strings in `en`, `hu` and `fr`. No animation yet.
 - **8c:** motion. Hero records writing in at 400ms intervals, stat counters over 1200ms on scroll into view, section reveals at 16px and 320ms. Transform and opacity only.
 
-**Done when:** every section renders at 375, 768 and 1440; the page works with both endpoints returning 500; `hu` and `fr` are complete with no layout break; and with reduced motion on, all four hero records are visible immediately with final stat values.
+**Done when:** every section renders at 375, 768 and 1440; the page works with both endpoints returning 500 **and** with `/api/ledger/recent` returning an empty array; `hu` and `fr` are complete with no layout break; the three eyebrow spans render at their intended size; and with reduced motion on, all records are visible immediately with final stat values.
 
 ### Task 9: Dark mode
 
@@ -614,10 +693,37 @@ Work §9 top to bottom, then:
 
 ---
 
-## 13. Three things to fix while you are in there
+## 13. Two things to fix while you are in there
 
-Not branding. All three are flagged in `PROJECT.md` §9 or found in the source.
+Not branding. Both are flagged in `PROJECT.md` §9. A third item about the pinned Anthropic model appeared in revisions 1 and 2 and was wrong: `claude-opus-4-8` is a valid, current model ID. It has been removed.
 
 1. **`viewer@linkwork.test` is recreated with `can_view_all_applicants` on every boot.** If you demo from a deployed instance for DEIK.AI, that account exists on it and can read every application from every company. Gate the creation in `server/db.js` behind `NODE_ENV !== 'production'` before anything goes public. Credit where due: `/api/stats` already excludes it from the public company list, so someone was thinking about this.
-2. **`server/anthropic.js` pins model `claude-opus-4-8`,** which is not a current model ID. Check it against the live lineup before enabling the scorer, or the first real call fails.
-3. **`SESSION_SECRET` falls back to `linkwork-dev-secret` and cookies are not `secure`.** Both need fixing behind HTTPS, and the fallback should throw rather than default in production.
+2. **`SESSION_SECRET` falls back to `linkwork-dev-secret` and cookies are not `secure`.** Both need fixing behind HTTPS, and the fallback should throw rather than default in production.
+
+---
+
+## 14. Verification log
+
+Everything below was executed against `5cce7d7`, not inferred. If a claim in this document is not in this list, treat it as a design opinion rather than a verified fact.
+
+**Paths.** All 27 files this document references exist at the stated paths.
+
+**Line citations.** All 46 cited line numbers in `styles.css` point at the rule they are claimed to point at. Two cite the declaration line rather than the selector line above it (`.nav` at 57/58, `.match-mock-badge` at 274/276); both are the line you actually edit.
+
+**Counts.** 28 custom properties defined, all 28 referenced, 297 references. 363 selector blocks. 30 `var(--ink)` uses, 23 text and 7 surface or border, with line 147 being both. 46 `var(--verify)` uses. 99 hex literals, 87 outside `:root`, 44 of them `#fff`. 7 `font-weight: 900` declarations at lines 228, 283, 337, 368, 388, 391, 461. 327 i18n strings across three locales at blocks starting on lines 12, 134 and 256.
+
+**Task 1 swap.** Replacing lines 1 to 31 of `styles.css` with the token layer and running `npm ci && npm run build` succeeds. A post-swap scan for `var(--x)` where `--x` is undefined returns none. Output CSS goes from 32.09 kB to 38.84 kB.
+
+**Ledger SQL.** The `/api/ledger/recent` query in section 8 executes against the real schema and returns the documented shape. Inserting a match and re-running it returns a populated row.
+
+**Seed state.** A fresh database gives `open_jobs: 10`, `hires: 0`, `approved_companies: 7`. `matches` appears exactly once in `db.js`, as `CREATE TABLE`. `seed()` writes no hires. This is why the ledger has to be designed for n = 0 first.
+
+**Hire semantics.** `server/index.js` 782 to 793 does the three writes plus rejecting remaining applicants when a posting closes.
+
+**Absences confirmed.** No `path="*"` route. No `<main>` in `App.jsx`. No `Escape` or focus-trap handling. `.glass`, `.mesh`, `.ruled`, `.sr-only`, `.skip-link`, `.ledger-record` and `.tabular` do not collide with any existing selector. `.eyebrow` and `.id-tag` do, which is why `.eyebrow` is deferred to Task 8.
+
+**Component usage.** `Field.jsx` imported by nothing. `Button`, `Card`, `Badge` imported by three pages. `Chain` by two. `LinkMark` by one.
+
+**Model ID.** `claude-opus-4-8` is Claude Opus 4.8, released 28 May 2026, confirmed against Anthropic's announcement. Earlier revisions flagged it in error.
+
+**Not verified, and needing your eyes:** anything visual. Contrast ratios are calculated, not measured in a browser. Hungarian and French layout behaviour under the new type scale is untested. No screenshots were taken and no page was rendered.

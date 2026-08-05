@@ -3,6 +3,9 @@
    Verified against client/src/styles.css @ commit 214dcc9.
 
    Replaces lines 1-31 of client/src/styles.css (the :root block only).
+   AFTER Task 1 this file is DELETED from the repo. client/src/styles.css is
+   the single canonical token layer from that point on. Two copies hand-synced
+   will diverge by Task 5.
    Leave every rule from line 32 onward untouched in Task 1.
 
    This file is a SUPERSET. All 28 custom properties the codebase currently
@@ -96,7 +99,8 @@
   --brand:           var(--blue-700);
   --brand-hover:     var(--blue-600);
   --brand-active:    var(--blue-800);
-  --brand-fg:        var(--blue-700);   /* was referenced, never defined */
+  --brand-fg:        var(--blue-700);   /* fallback only: Landing.jsx sets
+                                           this inline per company logo */
   --brand-subtle-bg: var(--blue-50);
   --brand-subtle-fg: var(--blue-700);
   --accent:          var(--blue-400);
@@ -104,6 +108,13 @@
   --seal-fg:         var(--gold-700);
   --seal-subtle-bg:  var(--gold-100);
   --seal-border:     #e5cd95;
+
+  /* Decorative warm tints. NOT the seal. Used by .note-tint-b, .land-gold,
+     .mm-chip.gold and .pref-chip:hover so that var(--seal) resolves in
+     exactly two places after Task 2: .badge.faculty and the job card rule. */
+  --warm-100:        #fdf1d8;
+  --warm-300:        #f6dc9a;
+  --warm-fg:         #7c5a00;
 
   /* --- Glass ------------------------------------------------------------ */
   --glass-bg:     rgba(255, 255, 255, 0.72);
@@ -281,6 +292,9 @@
   --seal-fg:         var(--gold-300);
   --seal-subtle-bg:  rgba(200, 155, 60, 0.14);
   --seal-border:     rgba(200, 155, 60, 0.35);
+  --warm-100:        rgba(246, 220, 154, 0.13);
+  --warm-300:        rgba(246, 220, 154, 0.28);
+  --warm-fg:         #e3c583;
 
   --success-50: rgba(23, 166, 115, 0.14);
   --danger-50:  rgba(217, 83, 79, 0.14);
@@ -347,15 +361,6 @@
   transition: top var(--d-fast) var(--ease-out);
 }
 .skip-link:focus { top: var(--s-4); text-decoration: none; }
-
-/* The signature. Mono is reserved for things that are on the record. */
-.eyebrow {
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  letter-spacing: var(--ls-widest);
-  text-transform: uppercase;
-  color: var(--brand-subtle-fg);
-}
 
 .ledger-record {
   display: flex; align-items: baseline; gap: var(--s-4); flex-wrap: wrap;

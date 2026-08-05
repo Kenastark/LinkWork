@@ -30,14 +30,18 @@ design system in BRANDING.md, token layer in tokens.css.
   .hero, .meeting-stage and .btn.dark. Text uses migrate to `--text-1`;
   background and border uses stay. Dark mode cannot ship until this split is
   done (BRANDING.md task 2).
-- Colour law: blue dominates. Gold (#c89b3c) is a verification seal only, never
-  a fill, heading colour or background. Green means status only, never a button
-  or a link. The 44 `#fff` literals painted on dark plates are correct; leave
-  them alone.
+- Colour law: blue dominates. `var(--seal)` (#c89b3c) means faculty-verified and
+  nothing else; after task 2 it resolves in exactly two rules. Warm decorative
+  fills use --warm-100 / --warm-300 / --warm-fg, which are NOT the seal. Green
+  means status only, never a button or a link. The `#fff` literals painted on
+  dark plates are correct; leave them alone.
 - Sentence case everywhere, including buttons and headings.
 - Animate only transform and opacity. Respect prefers-reduced-motion.
-- Keep tokens.css in the repo root as the reference source of truth. Do not
-  @import it and do not move it into client/src/.
+- client/src/styles.css is the single canonical token layer. tokens.css was a
+  delivery artifact and is deleted in task 1; do not recreate it, do not @import
+  anything, and never keep two copies of a token in sync by hand.
+- `--brand-fg` is set inline per company in Landing.jsx:415. The :root value is
+  a fallback. Do not "fix" it.
 
 ## Working agreement
 
