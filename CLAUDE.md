@@ -2,7 +2,7 @@
 
 Faculty-verified internship and entry-level hiring platform. React 18 + Vite 6
 client, Express 4 + SQLite server. Full architecture in PROJECT.md. Visual
-design system in BRANDING.md, token layer in tokens.css.
+design system in BRANDING.md, token layer at the top of client/src/styles.css.
 
 ## Git workflow
 
@@ -29,7 +29,10 @@ design system in BRANDING.md, token layer in tokens.css.
 - `--ink` is BOTH heading text and the dark plate behind .nav, footer.site,
   .hero, .meeting-stage and .btn.dark. Text uses migrate to `--text-1`;
   background and border uses stay. Dark mode cannot ship until this split is
-  done (BRANDING.md task 2).
+  done (BRANDING.md task 2). The dark palette is already in styles.css but is
+  unreachable: the resolver in client/index.html defaults to `'light'`, not
+  `'system'`. Restoring `'system'` before task 2 renders body text #0d1b31 on
+  a #070d1a canvas. That flip is task 9's job.
 - Colour law: blue dominates. `var(--seal)` (#c89b3c) means faculty-verified and
   nothing else; after task 2 it resolves in exactly two rules. Warm decorative
   fills use --warm-100 / --warm-300 / --warm-fg, which are NOT the seal. Green

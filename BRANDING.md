@@ -2,7 +2,9 @@
 
 **Implementation brief. Written to be handed to Claude Code and executed against this repo.**
 
-Companion file: `tokens.css`.
+Token layer: the `:root` block at the top of `client/src/styles.css`. It was delivered as a root-level `tokens.css`, which task 1 copied in and deleted. There is no companion file; do not recreate one.
+
+**All `styles.css` line numbers in this document are post-task-1.** The token block grew from 31 lines to 394, so every reference to a rule below it moved by +363 against pre-rebrand commits. Line numbers for `App.jsx`, `Landing.jsx`, `i18n.jsx` and `server/index.js` are unaffected.
 
 **Revision 4. This is the version to implement.** Revision 1 was written from `PROJECT.md` alone. Revision 2 was written with the source open. Revision 3 absorbed a line-by-line audit. Revision 4 is the result of machine-verifying every factual claim in this document against `5cce7d7`: all 27 file paths, all 46 cited line numbers, every count, the proposed SQL executed against the real schema, and the Task 1 swap built end to end. Section 14 is the verification log. Four more claims failed and are corrected in section 1.
 
@@ -26,9 +28,9 @@ Read this first. Two of these would have broken the build.
 
 **6. The Task 2 acceptance criterion was unachievable.** "No hex outside the token block" cannot pass: 44 of the 79 hex occurrences are `#fff` painted on dark navy plates, which is correct and should stay. Rewritten to something real.
 
-**7. Existing bug found.** `styles.css` lines 383 and 393 reference `var(--brand-fg)`, which is never defined anywhere. The `.logo-lockup:hover` colour and its descriptor currently resolve to nothing and inherit. `tokens.css` now defines `--brand-fg`, which fixes it as a side effect.
+**7. Existing bug found.** `styles.css` lines 746 and 756 reference `var(--brand-fg)`, which is never defined anywhere. The `.logo-lockup:hover` colour and its descriptor currently resolve to nothing and inherit. `tokens.css` now defines `--brand-fg`, which fixes it as a side effect.
 
-**8. `.id-tag` and scoped `.eyebrow` already exist.** Revision 1's `tokens.css` redefined `.id-tag` (line 191) and added `.container`, `body`, `h1`-`h4`, `p`, `a` and `:focus-visible` rules that would have been overridden by the existing rules further down the file. Dead code that looks live is worse than no code. All of it is stripped. `tokens.css` is now tokens plus four verified-absent utility classes.
+**8. `.id-tag` and scoped `.eyebrow` already exist.** Revision 1's `tokens.css` redefined `.id-tag` (line 554) and added `.container`, `body`, `h1`-`h4`, `p`, `a` and `:focus-visible` rules that would have been overridden by the existing rules further down the file. Dead code that looks live is worse than no code. All of it is stripped. `tokens.css` is now tokens plus four verified-absent utility classes.
 
 ### Corrected again in revision 3
 
@@ -40,7 +42,7 @@ Found by auditing revision 2 against the source. Verified independently before a
 
 **C. The base `.eyebrow` rule breaks Task 1.** Only `.hero .eyebrow` and `.how .eyebrow` are styled today. `Landing.jsx` lines 294, 377 and 408 render bare `.eyebrow` spans carrying `style={{ color: 'var(--verify)' }}`. A base rule would silently drop them from 16px to 11px uppercase mono, which contradicts Task 1's own acceptance criterion of "only typefaces and colour change". The rule is removed from `tokens.css` and moves to Task 8, where the three call sites get fixed in the same commit.
 
-**D. Counts in revision 2 were unreliable.** Verified figures: 30 uses of `var(--ink)`, not 31. 46 uses of `var(--verify)`. 99 hex literals, not 79. Seven `font-weight: 900` declarations, not nine, and the list named three selectors already at 800 while omitting `.logo-mark-initial` (line 388). `.modal-backdrop` was listed as an `--ink` surface use; it is a hard-coded `rgba(22,35,63,.5)` and stays old navy after the swap unless separately fixed. Section 6 also missed `.nav-bell .dot` (line 629) at 10px.
+**D. Counts in revision 2 were unreliable.** Verified figures: 30 uses of `var(--ink)`, not 31. 46 uses of `var(--verify)`. 99 hex literals, not 79. Seven `font-weight: 900` declarations, not nine, and the list named three selectors already at 800 while omitting `.logo-mark-initial` (line 751). `.modal-backdrop` was listed as an `--ink` surface use; it is a hard-coded `rgba(22,35,63,.5)` and stays old navy after the swap unless separately fixed. Section 6 also missed `.nav-bell .dot` (line 992) at 10px.
 
 **E. The gold rule was unresolvable.** See section 5. Resolved by separating the seal token from decorative warm tints.
 
@@ -168,9 +170,9 @@ export default function LinkMark({ size = 42, sealed = false }) {
 }
 ```
 
-The `.brand-mark` gradient in `styles.css` line 70 currently runs `--verify-bright → --verify → #0f5a41`. Change it to `--blue-400 → --blue-700 → --blue-900` and update the `#0f5a41` literal. `public/favicon.svg` carries the same three stops hard-coded (`#1ca878`, `#147d5b`, `#0f5a41`); update those to `#4f8ef7`, `#003b7a`, `#001b3a` and replace the glyph paths to match.
+The `.brand-mark` gradient in `styles.css` line 433 currently runs `--verify-bright → --verify → #0f5a41`. Change it to `--blue-400 → --blue-700 → --blue-900` and update the `#0f5a41` literal. `public/favicon.svg` carries the same three stops hard-coded (`#1ca878`, `#147d5b`, `#0f5a41`); update those to `#4f8ef7`, `#003b7a`, `#001b3a` and replace the glyph paths to match.
 
-`.avatar-initials` (line 85) uses the same green gradient. Update it too, or avatars stay green while everything else turns blue.
+`.avatar-initials` (line 448) uses the same green gradient. Update it too, or avatars stay green while everything else turns blue.
 
 ### Construction
 
@@ -195,7 +197,7 @@ Do not rotate it, do not fill the links, do not recolour the notch gold outside 
 
 ## 5. Colour
 
-Values in `tokens.css`. This is the usage law.
+Values in the token layer at the top of `client/src/styles.css`. This is the usage law.
 
 ### Roles
 
@@ -221,7 +223,7 @@ Values in `tokens.css`. This is the usage law.
 
    Stated flatly, "gold is never a background" contradicts the code and contradicts section 8. Seven existing rules paint gold backgrounds: `.badge.faculty` (185), `.match-mock-badge` (276, a solid `var(--gold)` fill), `.match-mock-logo` (283), `.mm-chip.gold` (290), `.note-tint-b` (365), `.land-gold` (472, `#f2c94c`), `.alert.info` (480) and `.pref-chip:hover` (497). Section 8 also says the match mock and the testimonial notes stay untouched. Both cannot be true.
 
-   The resolution: **`--seal` is reserved, warm decorative tints are not.** `tokens.css` adds `--warm-100`, `--warm-300` and `--warm-fg` for the decorative cases. After Task 2, `var(--seal)` resolves in exactly two places: `.badge.faculty` and the faculty-verified job card top rule. Everything else migrates:
+   The resolution: **`--seal` is reserved, warm decorative tints are not.** The token layer defines `--warm-100`, `--warm-300` and `--warm-fg` for the decorative cases. After Task 2, `var(--seal)` resolves in exactly two places: `.badge.faculty` and the faculty-verified job card top rule. Everything else migrates:
 
    | Rule | Was | Becomes | Why |
    |---|---|---|---|
@@ -285,7 +287,7 @@ Nothing below 12px ships. `styles.css` currently has eight declarations under 12
 
 ### Detail rules
 
-- Figures in tables, stats and scores get `font-variant-numeric: tabular-nums`. The `.tabular` utility is in `tokens.css`.
+- Figures in tables, stats and scores get `font-variant-numeric: tabular-nums`. The `.tabular` utility is in the token layer.
 - Headings get `text-wrap: balance`, paragraphs `text-wrap: pretty`.
 - Never letterspace lowercase body text.
 - **Hungarian runs 15 to 20% longer than English.** Buttons and nav items must not be fixed-width, and headings must survive a 25% length increase. `i18n.jsx` already carries full `hu` and `fr`, so this is testable today: switch locale and look.
@@ -310,11 +312,11 @@ Eight components exist in `client/src/components/`. All are thin wrappers over C
 | `.btn.sm` | 7px 14px | unchanged |
 | `.btn.seal` | does not exist | new: `--seal-subtle-bg`, `--gold-700`, 1px `--seal`. Faculty-verified filter only. |
 
-Heights 36 / 44 / 52 via padding. Radius stays `--radius-sm`. Hover lifts 1px, active returns to 0, focus-visible shows the ring, disabled is 45% opacity with `cursor: not-allowed` and **keeps its shape** rather than turning grey (line 146 currently sets `#a9b6ad`, which reads as broken).
+Heights 36 / 44 / 52 via padding. Radius stays `--radius-sm`. Hover lifts 1px, active returns to 0, focus-visible shows the ring, disabled is 45% opacity with `cursor: not-allowed` and **keeps its shape** rather than turning grey (line 509 currently sets `#a9b6ad`, which reads as broken).
 
 Loading: the label stays and a 14px spinner takes the leading icon slot. Never let the button change width mid-action.
 
-Note `.lang-trigger.btn.ghost` (line 127) overrides ghost with white-on-dark for the nav. Keep that override.
+Note `.lang-trigger.btn.ghost` (line 490) overrides ghost with white-on-dark for the nav. Keep that override.
 
 ### Card
 
@@ -328,7 +330,7 @@ Line 180. Variants `.faculty`, `.verified`, `.pending`, `.danger`, `.mono`. Add 
 
 **`Field.jsx` is dead code.** Nothing imports it. Forms are written as raw markup: 40 instances of `<label className="field">Label<input ... /></label>` across `Auth.jsx` (18), `CompanyDashboard.jsx` (10), `Profile.jsx` (8), `Settings.jsx` (2), `JobDetail.jsx` (1) and `ApplicantReview.jsx` (1).
 
-So the useful work is entirely in `styles.css` at line 154 and lines 157 to 164. Do not restructure the component and do not touch 40 call sites: there is no per-field error state in this app today (errors surface as a page-level `.alert error`), so adding one is a new feature, not a rebrand.
+So the useful work is entirely in `styles.css` at line 517 and lines 520 to 527. Do not restructure the component and do not touch 40 call sites: there is no per-field error state in this app today (errors surface as a page-level `.alert error`), so adding one is a new feature, not a rebrand.
 
 What to do: restyle `label.field` and the `input, select, textarea` block per the focus and error rules below, and add a `.field-error` class so the state exists when someone wants it. Leave `Field.jsx` in place, unused, or delete it as dead code in the same commit. Either is fine; pretending it is load-bearing is not.
 
@@ -361,7 +363,7 @@ Focus: border to `--brand` plus the ring. Error: `--danger-500` border with a me
 
 ### Chain
 
-`Chain.jsx` plus line 201. This is the most important component in the product and it is in better shape than revision 1 assumed. It already numbers the stages, already uses `role="list"`, and already fills connectors behind completed nodes.
+`Chain.jsx` plus line 564. This is the most important component in the product and it is in better shape than revision 1 assumed. It already numbers the stages, already uses `role="list"`, and already fills connectors behind completed nodes.
 
 What to add:
 
@@ -375,7 +377,7 @@ What to add:
 
 ### LedgerRecord
 
-New. `.ledger-record` is styled in `tokens.css`.
+New. `.ledger-record` is already styled in the token layer's additive utilities.
 
 ```
 JOB-0042  ⟷  STU-0007     Junior Data Engineer · DataTech    14 May 2026  ★
@@ -385,17 +387,17 @@ Mono for IDs and date, Inter `--fs-sm` for the role line, gold star only if facu
 
 ### Job card
 
-`.job-row` (line 482) plus `Card`. Add the `JOB-0042` mono tag top right in `--text-3`. Faculty-verified cards get a 1px `--seal` top border, 2px inset, plus the existing `.badge.faculty`. That top rule is the only place gold touches a card.
+`.job-row` (line 845) plus `Card`. Add the `JOB-0042` mono tag top right in `--text-3`. Faculty-verified cards get a 1px `--seal` top border, 2px inset, plus the existing `.badge.faculty`. That top rule is the only place gold touches a card.
 
 ### Stat
 
-`.overlap-band .stat` (line 336) and `.note-stat` (line 367). Both currently use `--font-display` at weight 900 in `--verify` green. Move to `--font-mono` at `--fs-3xl` weight 600 with `tabular-nums`, in `--brand`. Mono is the ledger voice and these numbers come from the ledger.
+`.overlap-band .stat` (line 699) and `.note-stat` (line 730). Both currently use `--font-display` at weight 900 in `--verify` green. Move to `--font-mono` at `--fs-3xl` weight 600 with `tabular-nums`, in `--brand`. Mono is the ledger voice and these numbers come from the ledger.
 
 Counters animate from 0 over 1200ms, once, on scroll into view, only when motion is allowed. `Landing.jsx` already fetches `/api/stats`; if it fails, render the last known value or hide the block. Never render a spinning zero.
 
 ### Nav
 
-`.nav` (line 57) is a solid `--ink` sticky bar. Keep it dark, repaint to `--surface-dark`.
+`.nav` (line 420) is a solid `--ink` sticky bar. Keep it dark, repaint to `--surface-dark`.
 
 Add: transparent over the hero on `/` only, becoming `.glass` with `--shadow-2` past 24px of scroll over `--d-base`. A sliding 2px underline on the active route. A mobile sheet below 860px with trapped focus and Escape to close.
 
@@ -463,14 +465,14 @@ Every new string needs `en`, `hu` and `fr` entries in `i18n.jsx`. The file is or
 ## 9. Accessibility
 
 - WCAG 2.2 AA. 4.5:1 under 24px, 3:1 for large text and UI boundaries.
-- Every interactive element keyboard reachable with a visible focus ring. The existing `:focus-visible` (line 46) uses a green outline; retoken it to `--focus-ring-color`.
+- Every interactive element keyboard reachable with a visible focus ring. The existing `:focus-visible` (line 409) uses a green outline; retoken it to `--focus-ring-color`.
 - Add a skip link. `.skip-link` is in the token layer. There is **no single `<main>` to point it at**: `App.jsx` renders none, and 30 per-page `<main className="container">` elements exist instead. Wrap the `<Routes>` block in `App.jsx` (line 227) in `<div id="content" tabIndex={-1}>` and target that.
 - Targets 44x44 on touch. `.dtp-nav` is 30x30 and `.dtp-arrow` is 52x26. Both fail.
 - One `<h1>` per page. Never skip a level for styling.
 - Icon-only buttons need `aria-label`. The nav bell has one. Decorative SVGs need `aria-hidden="true"`.
 - Live regions on the notification count and on stage changes.
 - Modals trap focus and close on Escape. `.modal` exists in the CSS with neither.
-- `prefers-reduced-motion` is handled at line 47 with `animation: none; transition: none`. That is correct and blunt. Verify it by toggling the OS setting, not by reading the media query. The hero ledger must still show all four records immediately.
+- `prefers-reduced-motion` is handled at line 410 with `animation: none; transition: none`. That is correct and blunt. Verify it by toggling the OS setting, not by reading the media query. The hero ledger must still show all four records immediately.
 - Test at 200% zoom and 320px width. The `.chain` at seven nodes and the `.filter-layout` 300px sidebar are the likely failures.
 - Run axe DevTools on `/`, `/auth`, `/student`, `/jobs/:id`, `/my-applications`, `/company`. Zero criticals.
 
@@ -497,7 +499,7 @@ Gated behind Task 2. Until text uses of `--ink` migrate to `--text-1`, headings 
 
 Notes that matter here:
 
-- `--blue-700` is unreadable on a dark canvas, so `--brand` becomes `--blue-400` in dark. Handled in `tokens.css`.
+- `--blue-700` is unreadable on a dark canvas, so `--brand` becomes `--blue-400` in dark. Already handled in the `[data-theme="dark"]` block.
 - Gold moves to `--gold-300` so the seal does not vanish.
 - Shadows become neutral black. Blue-tinted shadows are invisible on dark.
 - Surfaces get lighter as they get closer: `--bg-canvas` → `--surface` → `--surface-alt`.
@@ -543,17 +545,15 @@ When everything passes Task 10, open a PR from `rebrand` into `main`, or merge l
 
 Optional, and worth it for the three risky tasks only (1, 2 and 8): branch each off `rebrand` as `rebrand/01-tokens` and merge back with `--no-ff`. For the other seven the extra ceremony costs more than it saves.
 
-### Task 1: Fonts and token layer
+### Task 1: Fonts and token layer — DONE
 
-**Files:** `client/index.html`, `client/src/styles.css`
+**Files:** `client/index.html`, `client/src/styles.css`, `tokens.css` (deleted)
 
-Replace the Work Sans link with preconnect plus Plus Jakarta Sans (700, 800), Inter (400, 500, 600) and IBM Plex Mono (400, 500), `display=swap`. Add the theme script from §10. Replace **lines 1 to 31 only** of `styles.css` with the full contents of `tokens.css`. Leave every rule from line 32 onward untouched.
+The Work Sans link was replaced with preconnect plus Plus Jakarta Sans (700, 800), Inter (400, 500, 600) and IBM Plex Mono (400, 500), `display=swap`. The theme script from §10 was added inline in `<head>`, ahead of the module script. Lines 1 to 31 of `styles.css` were replaced with the full token layer; every rule from old line 32 onward is byte-for-byte unchanged. `tokens.css` was deleted from the repo root.
 
-Then delete `tokens.css` from the repo root in the same commit. `client/src/styles.css` is the canonical token layer from here on, and two hand-synced copies will diverge by Task 5.
+**One deviation from the brief, and it matters.** §11 said to add the §10 theme script; §10 says dark mode is gated behind Task 2. Shipping both together makes dark mode live for any visitor whose OS prefers dark, in exactly the state §10 warns about: `--ink` still resolves to `--surface-dark`, so body text renders `#0d1b31` on a `#070d1a` canvas, plus 23 other `color: var(--ink)` rules. The resolver therefore defaults to `'light'`, not `'system'`. No toggle exists yet, so nothing can have written the `linkwork-theme` key. **Task 9 restores the `'system'` default; do not do it earlier.**
 
-**Verified:** this exact swap has been tested against `5cce7d7`. `npm run build` succeeds and a merged scan of the resulting file reports zero undefined custom properties. The base `.eyebrow` rule that would have restyled three bare spans in `Landing.jsx` has been removed from `tokens.css`; it returns in Task 8 alongside its call sites.
-
-**Done when:** the build passes, every page renders fully styled, `tokens.css` is gone from the repo, and the only visible changes are new typefaces and greens becoming blue. Confirm specifically that the eyebrow text above "Looking for the right role?", the testimonial and the company showcase is unchanged in size.
+**Verified on `rebrand`:** `npm run build` passes. CSS 32.09 kB → 38.84 kB (gzip 6.94 → 8.97), JS unchanged. A scan of the merged file reports 91 distinct `var(--x)` referenced against 172 defined and **zero undefined**, including `--brand-fg` and the five `var()` calls in JSX inline styles. Both halves of the splice were diff-checked rather than eyeballed. No bare `.eyebrow` selector exists in source or in the compiled bundle, so the three bare spans in `Landing.jsx` keep inherited body size; that rule returns in Task 8 alongside its call sites.
 
 ### Task 2: Colour and weight audit
 
@@ -567,7 +567,7 @@ Four passes.
 
 3. **The gold migration.** Nine rules, per the table in section 5. After this pass `var(--seal)` must resolve in exactly two places.
 
-4. **Weights.** Seven `font-weight: 900` declarations at lines 228, 283, 337, 368, 388, 391 and 461 become 800, since Plus Jakarta Sans has no 900.
+4. **Weights.** Seven `font-weight: 900` declarations at lines 591, 646, 700, 731, 751, 754 and 824 become 800, since Plus Jakarta Sans has no 900.
 
 Also update `BRAND_PALETTE` in `Landing.jsx` lines 7-13 per §8.
 
@@ -577,7 +577,7 @@ Also update `BRAND_PALETTE` in `Landing.jsx` lines 7-13 per §8.
 
 **Files:** `client/src/components/LinkMark.jsx`, `client/public/favicon.svg`, `client/src/styles.css`
 
-New glyph per §4. Recolour `.brand-mark` (line 68) and `.avatar-initials` (line 83). Update `favicon.svg` glyph and gradient. Generate 16, 32 and 180 PNGs. Add the draw-in animation gated on `prefers-reduced-motion`.
+New glyph per §4. Recolour `.brand-mark` (line 431) and `.avatar-initials` (line 446). Update `favicon.svg` glyph and gradient. Generate 16, 32 and 180 PNGs. Add the draw-in animation gated on `prefers-reduced-motion`.
 
 **Done when:** the mark renders correctly at 16, 28, 42 and 96px, the nav and footer lockups both look right, and no green gradient remains anywhere.
 
@@ -710,9 +710,9 @@ Everything below was executed against `5cce7d7`, not inferred. If a claim in thi
 
 **Line citations.** All 46 cited line numbers in `styles.css` point at the rule they are claimed to point at. Two cite the declaration line rather than the selector line above it (`.nav` at 57/58, `.match-mock-badge` at 274/276); both are the line you actually edit.
 
-**Counts.** 28 custom properties defined, all 28 referenced, 297 references. 363 selector blocks. 30 `var(--ink)` uses, 23 text and 7 surface or border, with line 147 being both. 46 `var(--verify)` uses. 99 hex literals, 87 outside `:root`, 44 of them `#fff`. 7 `font-weight: 900` declarations at lines 228, 283, 337, 368, 388, 391, 461. 327 i18n strings across three locales at blocks starting on lines 12, 134 and 256.
+**Counts.** 28 custom properties defined, all 28 referenced, 297 references. 363 selector blocks. 30 `var(--ink)` uses, 23 text and 7 surface or border, with line 510 being both. 46 `var(--verify)` uses. 99 hex literals, 87 outside `:root`, 44 of them `#fff`. 7 `font-weight: 900` declarations at lines 591, 646, 700, 731, 751, 754, 824. 327 i18n strings across three locales at blocks starting on lines 12, 134 and 256.
 
-**Task 1 swap.** Replacing lines 1 to 31 of `styles.css` with the token layer and running `npm ci && npm run build` succeeds. A post-swap scan for `var(--x)` where `--x` is undefined returns none. Output CSS goes from 32.09 kB to 38.84 kB.
+**Task 1 swap.** Executed on `rebrand`, not just rehearsed. `npm run build` succeeds. A post-swap scan reports 91 distinct `var(--x)` referenced, 172 defined, none undefined. Output CSS goes from 32.09 kB to 38.84 kB. The theme resolver ships pinned to `'light'`; see Task 1 for why.
 
 **Ledger SQL.** The `/api/ledger/recent` query in section 8 executes against the real schema and returns the documented shape. Inserting a match and re-running it returns a populated row.
 

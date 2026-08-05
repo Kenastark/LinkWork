@@ -1,34 +1,397 @@
-/* ============ LinkWork design tokens ============ */
+/* ============================================================================
+   LinkWork Design Tokens  v2
+
+   This block is the canonical token layer. It was previously maintained as a
+   separate tokens.css at the repo root; that file was deleted in task 1 so
+   that there is exactly one definition to edit. Do not recreate it.
+
+   The token set is a SUPERSET. All 28 custom properties the pre-rebrand
+   stylesheet referenced are redefined in the COMPATIBILITY LAYER below, so
+   every rule that follows keeps working unchanged.
+
+   IMPORTANT: --ink is used in this codebase both as heading text AND as a
+   dark surface fill (.nav, footer.site, .hero, .meeting-stage, .btn.dark).
+   It therefore stays a fixed navy in both themes. Text that currently reads
+   var(--ink) must be migrated to var(--text-1) in task 2 before dark mode
+   can be switched on. See BRANDING.md section 11 task 2.
+   ========================================================================== */
+
 :root {
-  --ink: #16233f;          /* deep academic navy — headings, nav */
-  --ink-soft: #46526b;     /* secondary text */
-  --paper: #f5f7f4;        /* cool paper background */
-  --card: #ffffff;
-  --verify: #147d5b;       /* verification green — the brand */
-  --verify-bright: #1ca878;
-  --verify-tint: #e3f3ec;
-  --gold: #d99a06;         /* University of Debrecen gold — faculty badges ONLY */
-  --gold-tint: #fbf3dd;
-  --danger: #b3372f;
-  --danger-tint: #fbe9e7;
-  --line: #dfe4dc;
-  --radius: 14px;
-  --radius-sm: 10px;
-  --radius-lg: 18px;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --shadow-sm: 0 1px 2px rgba(22, 35, 63, 0.06), 0 1px 1px rgba(22, 35, 63, 0.04);
-  --shadow-md: 0 4px 16px rgba(22, 35, 63, 0.08), 0 2px 6px rgba(22, 35, 63, 0.05);
-  --shadow-lg: 0 12px 32px rgba(22, 35, 63, 0.14), 0 4px 12px rgba(22, 35, 63, 0.06);
-  --ease: cubic-bezier(0.2, 0.65, 0.3, 1);
-  --font-display: "Work Sans", system-ui, sans-serif;
-  --font-body: "Work Sans", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  color-scheme: light;
+
+  /* --- Brand: University of Debrecen blue ------------------------------- */
+  --blue-50:  #eff5fc;
+  --blue-100: #d8e7f7;
+  --blue-200: #b0cdef;
+  --blue-300: #7fade3;
+  --blue-400: #4f8ef7;  /* accent, interactive highlight, dark-mode primary */
+  --blue-500: #1f6bc4;
+  --blue-600: #00539f;
+  --blue-700: #003b7a;  /* PRIMARY */
+  --blue-800: #002855;  /* primary dark */
+  --blue-900: #001b3a;
+
+  /* --- Seal: University gold. Verification only. Never decorative. ------- */
+  --gold-100: #f7edd6;
+  --gold-300: #efd9a6;
+  --gold-500: #c89b3c;  /* THE gold */
+  --gold-700: #8a651f;
+
+  /* --- Neutrals --------------------------------------------------------- */
+  --n-0:   #ffffff;
+  --n-25:  #fbfcfe;
+  --n-50:  #f7f9fc;
+  --n-100: #eef2f8;
+  --n-200: #e1e8f0;
+  --n-300: #cbd5e1;
+  --n-400: #94a3b8;
+  --n-500: #64748b;
+  --n-600: #475569;
+  --n-700: #334155;
+  --n-800: #1e293b;
+  --n-900: #0f172a;
+  --n-950: #070d1a;
+
+  /* --- Status ----------------------------------------------------------- */
+  --success-50:  #e7f7f0;
+  --success-500: #17a673;
+  --success-600: #128b60;
+  --success-700: #0e7150;
+  --warning-50:  #fdf3e2;
+  --warning-500: #f2a93b;
+  --warning-700: #a86f14;
+  --danger-50:   #fbeceb;
+  --danger-500:  #d9534f;
+  --danger-700:  #9b312e;
+
+  /* --- Fixed dark surface. Same in both themes. ------------------------- */
+  /* The nav, footer, hero and meeting stage are dark plates in light mode
+     and stay dark in dark mode. This is the colour they are painted with. */
+  --surface-dark:       #0d1b31;
+  --surface-dark-hover: #08111f;
+  --on-dark:            #ffffff;
+  --on-dark-muted:      #a9b6cc;
+  --on-dark-faint:      #7d8aa3;
+
+  /* --- Semantic surfaces ------------------------------------------------ */
+  --bg-canvas:     var(--n-50);
+  --bg-sunken:     var(--n-100);
+  --surface:       var(--n-0);
+  --surface-alt:   var(--n-25);
+  --surface-hover: var(--n-50);
+  --border:        var(--n-200);
+  --border-strong: var(--n-300);
+  --border-hair:   rgba(0, 59, 122, 0.08);
+
+  /* --- Semantic text ---------------------------------------------------- */
+  --text-1: var(--n-900);
+  --text-2: var(--n-600);
+  --text-3: var(--n-500);
+  --text-on-brand: #ffffff;
+  --text-link: var(--blue-700);
+  --text-link-hover: var(--blue-500);
+
+  /* --- Semantic brand roles --------------------------------------------- */
+  --brand:           var(--blue-700);
+  --brand-hover:     var(--blue-600);
+  --brand-active:    var(--blue-800);
+  --brand-fg:        var(--blue-700);   /* fallback only: Landing.jsx sets
+                                           this inline per company logo */
+  --brand-subtle-bg: var(--blue-50);
+  --brand-subtle-fg: var(--blue-700);
+  --accent:          var(--blue-400);
+  --seal:            var(--gold-500);
+  --seal-fg:         var(--gold-700);
+  --seal-subtle-bg:  var(--gold-100);
+  --seal-border:     #e5cd95;
+
+  /* Decorative warm tints. NOT the seal. Used by .note-tint-b, .land-gold,
+     .mm-chip.gold and .pref-chip:hover so that var(--seal) resolves in
+     exactly two places after Task 2: .badge.faculty and the job card rule. */
+  --warm-100:        #fdf1d8;
+  --warm-300:        #f6dc9a;
+  --warm-fg:         #7c5a00;
+
+  /* --- Glass ------------------------------------------------------------ */
+  --glass-bg:     rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-blur:   saturate(180%) blur(16px);
+
+  /* --- Elevation. Blue-tinted, never neutral black. --------------------- */
+  --shadow-0: none;
+  --shadow-1: 0 1px 2px rgba(0, 40, 85, 0.05), 0 1px 3px rgba(0, 40, 85, 0.04);
+  --shadow-2: 0 2px 4px rgba(0, 40, 85, 0.05), 0 6px 16px -4px rgba(0, 40, 85, 0.08);
+  --shadow-3: 0 4px 8px rgba(0, 40, 85, 0.06), 0 16px 32px -8px rgba(0, 40, 85, 0.12);
+  --shadow-4: 0 8px 16px rgba(0, 40, 85, 0.08), 0 32px 64px -16px rgba(0, 40, 85, 0.18);
+  --shadow-brand: 0 6px 20px -6px rgba(0, 59, 122, 0.45);
+  --shadow-seal:  0 4px 14px -4px rgba(200, 155, 60, 0.4);
+
+  /* --- Radius ----------------------------------------------------------- */
+  --r-xs:   6px;
+  --r-sm:   10px;
+  --r-md:   14px;
+  --r-lg:   20px;
+  --r-xl:   28px;
+  --r-2xl:  36px;
+  --r-pill: 999px;
+
+  /* --- Spacing. 4px base. ----------------------------------------------- */
+  --s-1:  4px;
+  --s-2:  8px;
+  --s-3:  12px;
+  --s-4:  16px;
+  --s-5:  20px;
+  --s-6:  24px;
+  --s-8:  32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+  --s-20: 80px;
+  --s-24: 96px;
+  --section-y: clamp(64px, 9vw, 128px);
+  --measure: 68ch;
+
+  /* --- Typography ------------------------------------------------------- */
+  --font-display-new: "Plus Jakarta Sans", "Work Sans", system-ui, sans-serif;
+  --font-body-new:    "Inter", "Work Sans", system-ui, sans-serif;
+  --font-mono-new:    "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --fs-micro: 0.6875rem;
+  --fs-xs:    0.75rem;
+  --fs-sm:    0.875rem;
+  --fs-base:  1rem;
+  --fs-md:    1.0625rem;
+  --fs-lg:    clamp(1.125rem, 0.4vw + 1.05rem, 1.25rem);
+  --fs-xl:    clamp(1.375rem, 0.8vw + 1.2rem, 1.625rem);
+  --fs-2xl:   clamp(1.75rem, 1.4vw + 1.4rem, 2.25rem);
+  --fs-3xl:   clamp(2.25rem, 2.4vw + 1.6rem, 3rem);
+  --fs-4xl:   clamp(2.75rem, 4vw + 1.6rem, 4.25rem);
+  --fs-5xl:   clamp(3.25rem, 6vw + 1.4rem, 5.5rem);
+
+  --lh-tight:   1.06;
+  --lh-snug:    1.22;
+  --lh-normal:  1.5;
+  --lh-relaxed: 1.65;
+
+  --ls-tightest: -0.035em;
+  --ls-tight:    -0.02em;
+  --ls-normal:   -0.011em;
+  --ls-wide:     0.08em;
+  --ls-widest:   0.16em;
+
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+  --fw-extra:    800;
+
+  /* --- Motion ----------------------------------------------------------- */
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --d-instant: 120ms;
+  --d-fast:    200ms;
+  --d-base:    320ms;
+  --d-slow:    560ms;
+  --d-ambient: 1200ms;
+
+  /* --- Focus and layering ----------------------------------------------- */
+  --focus-ring-color: var(--blue-400);
+  --z-sticky:   100;
+  --z-nav:      200;
+  --z-dropdown: 300;
+  --z-overlay:  400;
+  --z-modal:    500;
+  --z-toast:    600;
 }
+
+/* ============================================================================
+   COMPATIBILITY LAYER
+   Every custom property the pre-rebrand stylesheet used, remapped onto the new
+   scale, so that none of the rules further down this file had to change in
+   task 1.
+
+   Two deliberate behaviour changes, both intended:
+     1. --verify now resolves to BLUE. Primary actions become blue. The old
+        green survives as --success-500 and is used only for pass / verified
+        status after the Task 2 audit.
+     2. --paper moves from the warm #f5f7f4 to the cool #f7f9fc from the brief.
+
+   Delete a line from this block only once nothing references that name.
+   ========================================================================== */
+
+:root {
+  --ink:            var(--surface-dark);   /* SEE HEADER NOTE */
+  --ink-soft:       var(--text-2);
+  --paper:          var(--bg-canvas);
+  --card:           var(--surface);
+  --verify:         var(--brand);
+  --verify-bright:  var(--accent);
+  --verify-tint:    var(--brand-subtle-bg);
+  --gold:           var(--seal);
+  --gold-tint:      var(--seal-subtle-bg);
+  --danger:         var(--danger-500);
+  --danger-tint:    var(--danger-50);
+  --line:           var(--border);
+  --radius:         var(--r-md);
+  --radius-sm:      var(--r-sm);
+  --radius-lg:      var(--r-lg);
+  --space-1:        var(--s-1);
+  --space-2:        var(--s-2);
+  --space-3:        var(--s-3);
+  --space-4:        var(--s-4);
+  --space-5:        var(--s-6);
+  --space-6:        var(--s-8);
+  --shadow-sm:      var(--shadow-1);
+  --shadow-md:      var(--shadow-2);
+  --shadow-lg:      var(--shadow-3);
+  --ease:           var(--ease-out);
+  --font-display:   var(--font-display-new);
+  --font-body:      var(--font-body-new);
+  --font-mono:      var(--font-mono-new);
+}
+
+/* ============================================================================
+   DARK MODE — PRESENT BUT DELIBERATELY UNREACHABLE
+
+   These rules are correct and dormant. Nothing sets data-theme="dark" yet:
+   the resolver in client/index.html is pinned to 'light' precisely because
+   task 2 has not run. Until it does, --ink still resolves to --surface-dark,
+   so body text would render #0d1b31 on a #070d1a canvas.
+
+   Turning this on is task 9, and task 2 is its hard prerequisite. Do not
+   restore the 'system' default in index.html before then.
+   ========================================================================== */
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg-canvas:     var(--n-950);
+  --bg-sunken:     #04080f;
+  --surface:       #0f1a2e;
+  --surface-alt:   #16243d;
+  --surface-hover: #1b2b47;
+  --border:        rgba(148, 163, 184, 0.16);
+  --border-strong: rgba(148, 163, 184, 0.28);
+  --border-hair:   rgba(148, 163, 184, 0.10);
+
+  --text-1: #e8eef7;
+  --text-2: #b6c4d6;
+  --text-3: var(--n-400);
+  --text-on-brand: #04080f;
+  --text-link: var(--blue-300);
+  --text-link-hover: #a8ccf5;
+
+  /* #003b7a is unreadable on a dark canvas, so the accent carries the brand */
+  --brand:           var(--blue-400);
+  --brand-hover:     #6ba1f9;
+  --brand-active:    var(--blue-500);
+  --brand-fg:        var(--blue-300);
+  --brand-subtle-bg: rgba(79, 142, 247, 0.12);
+  --brand-subtle-fg: var(--blue-300);
+  --seal:            var(--gold-300);
+  --seal-fg:         var(--gold-300);
+  --seal-subtle-bg:  rgba(200, 155, 60, 0.14);
+  --seal-border:     rgba(200, 155, 60, 0.35);
+  --warm-100:        rgba(246, 220, 154, 0.13);
+  --warm-300:        rgba(246, 220, 154, 0.28);
+  --warm-fg:         #e3c583;
+
+  --success-50: rgba(23, 166, 115, 0.14);
+  --danger-50:  rgba(217, 83, 79, 0.14);
+  --warning-50: rgba(242, 169, 59, 0.14);
+  --danger-700: #f0918e;
+  --success-700: #5fd3aa;
+  --warning-700: #f5c377;
+
+  --glass-bg:     rgba(15, 26, 46, 0.68);
+  --glass-border: rgba(148, 163, 184, 0.14);
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-2: 0 2px 4px rgba(0, 0, 0, 0.40), 0 6px 16px -4px rgba(0, 0, 0, 0.50);
+  --shadow-3: 0 4px 8px rgba(0, 0, 0, 0.45), 0 16px 32px -8px rgba(0, 0, 0, 0.55);
+  --shadow-4: 0 8px 16px rgba(0, 0, 0, 0.50), 0 32px 64px -16px rgba(0, 0, 0, 0.65);
+  --shadow-brand: 0 6px 24px -6px rgba(79, 142, 247, 0.50);
+
+  --focus-ring-color: var(--blue-300);
+}
+
+/* ============================================================================
+   ADDITIVE UTILITIES
+   Seven helpers, none of which existed before the rebrand and none of which
+   override a rule further down this file. They are consumed by later tasks.
+
+   There is deliberately no base .eyebrow rule here. Only .hero .eyebrow and
+   .how .eyebrow are styled; Landing.jsx also renders three bare .eyebrow
+   spans (match pitch, testimonials, company showcase) that inherit body size.
+   A base rule would silently shrink those three to 11px mono.
+   ========================================================================== */
+
+.glass {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass { background: var(--surface); }
+}
+
+/* Ambient brand mesh. Hero and closing CTA only. Never behind body copy. */
+.mesh {
+  background-image:
+    radial-gradient(60% 55% at 15% 0%,   rgba(79, 142, 247, 0.22), transparent 60%),
+    radial-gradient(50% 50% at 85% 10%,  rgba(0, 59, 122, 0.30),   transparent 60%),
+    radial-gradient(40% 40% at 50% 100%, rgba(200, 155, 60, 0.10), transparent 60%);
+}
+[data-theme="dark"] .mesh { opacity: 0.65; }
+
+/* Ruled-register texture. Ledger sections only. Two per page, maximum. */
+.ruled {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--border-hair) 0 1px,
+    transparent 1px 40px
+  );
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.skip-link {
+  position: absolute; left: var(--s-4); top: -60px; z-index: var(--z-toast);
+  background: var(--surface); color: var(--brand); font-weight: var(--fw-semibold);
+  padding: var(--s-3) var(--s-5); border-radius: var(--r-sm); box-shadow: var(--shadow-3);
+  transition: top var(--d-fast) var(--ease-out);
+}
+.skip-link:focus { top: var(--s-4); text-decoration: none; }
+
+.ledger-record {
+  display: flex; align-items: baseline; gap: var(--s-4); flex-wrap: wrap;
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--border-hair);
+  font-size: var(--fs-sm);
+}
+.ledger-record .lr-ids {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--ls-wide);
+  color: var(--brand);
+  white-space: nowrap;
+}
+.ledger-record .lr-role { color: var(--text-2); flex: 1; min-width: 12ch; }
+.ledger-record .lr-date {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+/* Numbers that jitter while a counter animates look broken. */
+.tabular { font-variant-numeric: tabular-nums; }
 
 * { box-sizing: border-box; margin: 0; }
 html { scroll-behavior: smooth; }
