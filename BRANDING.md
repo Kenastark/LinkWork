@@ -4,7 +4,7 @@
 
 Token layer: the `:root` block at the top of `client/src/styles.css`. It was delivered as a root-level `tokens.css`, which task 1 copied in and deleted. There is no companion file; do not recreate one.
 
-**All `styles.css` line numbers in this document are current as of task 3** and were re-verified against the file, not recomputed by offset. They shift on every task that edits the stylesheet, so re-verify before leaning on them. Where a citation names a whole rule it points at the selector line; where it names a single declaration to change — a weight, a gradient stop — it points at that declaration. Line numbers for `App.jsx`, `Landing.jsx`, `i18n.jsx` and `server/index.js` are unaffected by stylesheet work.
+**This document cites `styles.css` rules by selector, never by line number.** Line numbers were used through task 3 and had to be remapped after every single one of those tasks, because any edit to the stylesheet moves every rule below it. The selector is what you actually search for, it never rots, and it is unambiguous — so `grep -n '^\.btn:disabled' client/src/styles.css` replaces a number that was wrong by the next commit. Line numbers are still used for `App.jsx`, `Landing.jsx`, `i18n.jsx` and `server/index.js`, which stylesheet work does not touch; re-verify those too if the task at hand edits them.
 
 **Revision 4. This is the version to implement.** Revision 1 was written from `PROJECT.md` alone. Revision 2 was written with the source open. Revision 3 absorbed a line-by-line audit. Revision 4 is the result of machine-verifying every factual claim in this document against `5cce7d7`: all 27 file paths, all 46 cited line numbers, every count, the proposed SQL executed against the real schema, and the Task 1 swap built end to end. Section 14 is the verification log. Four more claims failed and are corrected in section 1.
 
@@ -28,9 +28,9 @@ Read this first. Two of these would have broken the build.
 
 **6. The Task 2 acceptance criterion was unachievable.** "No hex outside the token block" cannot pass: 44 of the 79 hex occurrences are `#fff` painted on dark navy plates, which is correct and should stay. Rewritten to something real.
 
-**7. Existing bug found.** `styles.css` lines 776 and 786 reference `var(--brand-fg)`, which is never defined anywhere. The `.logo-lockup:hover` colour and its descriptor currently resolve to nothing and inherit. `tokens.css` now defines `--brand-fg`, which fixes it as a side effect.
+**7. Existing bug found.** `styles.css` references `var(--brand-fg)` twice — in `.logo-lockup:hover` and its descriptor rule — and it is never defined anywhere, so both resolve to nothing and inherit. `tokens.css` now defines `--brand-fg`, which fixes it as a side effect. *(Wrong. See item A.)*
 
-**8. `.id-tag` and scoped `.eyebrow` already exist.** Revision 1's `tokens.css` redefined `.id-tag` (line 584) and added `.container`, `body`, `h1`-`h4`, `p`, `a` and `:focus-visible` rules that would have been overridden by the existing rules further down the file. Dead code that looks live is worse than no code. All of it is stripped. `tokens.css` is now tokens plus four verified-absent utility classes.
+**8. `.id-tag` and scoped `.eyebrow` already exist.** Revision 1's `tokens.css` redefined `.id-tag` and added `.container`, `body`, `h1`-`h4`, `p`, `a` and `:focus-visible` rules that would have been overridden by the existing rules further down the file. Dead code that looks live is worse than no code. All of it is stripped. `tokens.css` is now tokens plus four verified-absent utility classes.
 
 ### Corrected again in revision 3
 
@@ -42,7 +42,7 @@ Found by auditing revision 2 against the source. Verified independently before a
 
 **C. The base `.eyebrow` rule breaks Task 1.** Only `.hero .eyebrow` and `.how .eyebrow` are styled today. `Landing.jsx` lines 294, 377 and 408 render bare `.eyebrow` spans carrying `style={{ color: 'var(--verify)' }}`. A base rule would silently drop them from 16px to 11px uppercase mono, which contradicts Task 1's own acceptance criterion of "only typefaces and colour change". The rule is removed from `tokens.css` and moves to Task 8, where the three call sites get fixed in the same commit.
 
-**D. Counts in revision 2 were unreliable.** Verified figures: 30 uses of `var(--ink)`, not 31. 46 uses of `var(--verify)`. 99 hex literals, not 79. Seven `font-weight: 900` declarations, not nine, and the list named three selectors already at 800 while omitting `.logo-mark-initial` (line 781). `.modal-backdrop` was listed as an `--ink` surface use; it is a hard-coded `rgba(22,35,63,.5)` and stays old navy after the swap unless separately fixed. Section 6 also missed `.nav-bell .dot` (line 1024) at 10px.
+**D. Counts in revision 2 were unreliable.** Verified figures: 30 uses of `var(--ink)`, not 31. 46 uses of `var(--verify)`. 99 hex literals, not 79. Seven `font-weight: 900` declarations, not nine, and the list named three selectors already at 800 while omitting `.logo-mark-initial`. `.modal-backdrop` was listed as an `--ink` surface use; it is a hard-coded `rgba(22,35,63,.5)` and stays old navy after the swap unless separately fixed. Section 6 also missed `.nav-bell .dot` at 10px.
 
 **E. The gold rule was unresolvable.** See section 5. Resolved by separating the seal token from decorative warm tints.
 
@@ -228,7 +228,7 @@ Values in the token layer at the top of `client/src/styles.css`. This is the usa
 1. **Blue dominates.** Roughly 70% of coloured surface area is blue or neutral. If a screenshot looks multicoloured, something is miscoded.
 2. **Gold is a seal, not a colour, and the rule is about the token rather than the hue.**
 
-   Stated flatly, "gold is never a background" contradicted the code and contradicted section 8. Eight rules painted gold backgrounds — `.badge.faculty` (578), `.match-mock-badge` (667, a solid `var(--gold)` fill), `.match-mock-logo` (674), `.mm-chip.gold` (683), `.note-tint-b` (758), `.land-gold` (867, `#f2c94c`), `.alert.info` (875) and `.pref-chip:hover` (892) — while section 8 also says the match mock and the testimonial notes stay untouched. Both cannot be true.
+   Stated flatly, "gold is never a background" contradicted the code and contradicted section 8. Eight rules painted gold backgrounds — `.badge.faculty`, `.match-mock-badge` (a solid `var(--gold)` fill), `.match-mock-logo`, `.mm-chip.gold`, `.note-tint-b`, `.land-gold` (`#f2c94c`), `.alert.info` and `.pref-chip:hover` — while section 8 also says the match mock and the testimonial notes stay untouched. Both cannot be true.
 
    The resolution: **`--seal` is reserved, warm decorative tints are not.** The token layer defines `--warm-100`, `--warm-300` and `--warm-fg` for the decorative cases. After Task 2, `var(--seal)` resolves in exactly two places: `.badge.faculty` and the faculty-verified job card top rule. Everything else migrates:
 
@@ -272,7 +272,7 @@ Verify with a checker, not by eye.
 
 Replaces Work Sans, which currently serves as both display and body. Load variable weights with `display=swap` and preconnect. If three families becomes a performance problem, drop Plus Jakarta and set headings in Inter 800 with `--ls-tightest`. Never drop the mono.
 
-Plus Jakarta Sans tops out at 800. `styles.css` used weight 900 in exactly seven places — `.hero h1` (621), `.match-mock-logo` (676), `.overlap-band .stat b` (730), `.note-stat b` (761), `.logo-mark-initial` (781), `.logo-word b` (784) and `.land-card.stat b` (856) — and **task 2 mapped all seven to 800**. `.avatar-initials`, `.account-menu-name` and `.brand` were already at 800. Never reintroduce a 900, or the browser will synthesise a fake bold.
+Plus Jakarta Sans tops out at 800. `styles.css` used weight 900 in exactly seven places — `.hero h1`, `.match-mock-logo`, `.overlap-band .stat b`, `.note-stat b`, `.logo-mark-initial`, `.logo-word b` and `.land-card.stat b` — and **task 2 mapped all seven to 800**. `.avatar-initials`, `.account-menu-name` and `.brand` were already at 800. Never reintroduce a 900, or the browser will synthesise a fake bold.
 
 ### Scale
 
@@ -290,7 +290,7 @@ Plus Jakarta Sans tops out at 800. `styles.css` used weight 900 in exactly seven
 | `--fs-xs` | 12 | 500 | 1.5 | 0.08em | ID tags, meta |
 | `--fs-micro` | 11 | 500 | 1.5 | 0.16em | Mono eyebrows |
 
-Nothing below 12px ships. `styles.css` currently has eight declarations under 12px. Six are 11 or 11.5px mono or uppercase labels where tracking carries legibility and may stay, subject to a 200% zoom check: `.account-chevron` (493), `.account-menu-email` (504), `.chain .node small` (608), `.logo-word i` (785), `table.ledger th` (909), `.dtp-stepper-label` (965) and `.rec-steps-label` (1007). One is a real failure: `.nav-bell .dot` (994) at 10px is the unread notification count, which is information rather than decoration. Raise it to 11px and grow the dot to 16px minimum.
+Nothing below 12px ships. `styles.css` currently has eight declarations under 12px. Six are 11 or 11.5px mono or uppercase labels where tracking carries legibility and may stay, subject to a 200% zoom check: `.account-chevron`, `.account-menu-email`, `.chain .node small`, `.logo-word i`, `table.ledger th`, `.dtp-stepper-label` and `.rec-steps-label`. One is a real failure: `.nav-bell .dot` (994) at 10px is the unread notification count, which is information rather than decoration. Raise it to 11px and grow the dot to 16px minimum.
 
 ### Detail rules
 
@@ -319,11 +319,11 @@ Eight components exist in `client/src/components/`. All are thin wrappers over C
 | `.btn.sm` | 7px 14px | unchanged |
 | `.btn.seal` | does not exist | new: `--seal-subtle-bg`, `--gold-700`, 1px `--seal`. Faculty-verified filter only. |
 
-Heights 36 / 44 / 52 via padding. Radius stays `--radius-sm`. Hover lifts 1px, active returns to 0, focus-visible shows the ring, disabled is 45% opacity with `cursor: not-allowed` and **keeps its shape** rather than turning grey (line 537 currently sets `#a9b6ad`, which reads as broken).
+Heights 36 / 44 / 52 via padding. Radius stays `--radius-sm`. Hover lifts 1px, active returns to 0, focus-visible shows the ring, disabled is 45% opacity with `cursor: not-allowed` and **keeps its shape** rather than turning grey (`.btn:disabled` currently sets `#a9b6ad`, which reads as broken).
 
 Loading: the label stays and a 14px spinner takes the leading icon slot. Never let the button change width mid-action.
 
-Note `.lang-trigger.btn.ghost` (line 518) overrides ghost with white-on-dark for the nav. Keep that override.
+Note `.lang-trigger.btn.ghost` overrides ghost with white-on-dark for the nav. Keep that override.
 
 ### Card
 
@@ -337,7 +337,7 @@ Line 180. Variants `.faculty`, `.verified`, `.pending`, `.danger`, `.mono`. Add 
 
 **`Field.jsx` is dead code.** Nothing imports it. Forms are written as raw markup: 40 instances of `<label className="field">Label<input ... /></label>` across `Auth.jsx` (18), `CompanyDashboard.jsx` (10), `Profile.jsx` (8), `Settings.jsx` (2), `JobDetail.jsx` (1) and `ApplicantReview.jsx` (1).
 
-So the useful work is entirely in `styles.css` at line 545 and lines 548 to 555. Do not restructure the component and do not touch 40 call sites: there is no per-field error state in this app today (errors surface as a page-level `.alert error`), so adding one is a new feature, not a rebrand.
+So the useful work is entirely in `styles.css`, in the `label.field` rules and the shared `input, select, textarea` rule. Do not restructure the component and do not touch 40 call sites: there is no per-field error state in this app today (errors surface as a page-level `.alert error`), so adding one is a new feature, not a rebrand.
 
 What to do: restyle `label.field` and the `input, select, textarea` block per the focus and error rules below, and add a `.field-error` class so the state exists when someone wants it. Leave `Field.jsx` in place, unused, or delete it as dead code in the same commit. Either is fine; pretending it is load-bearing is not.
 
@@ -370,7 +370,7 @@ Focus: border to `--brand` plus the ring. Error: `--danger-500` border with a me
 
 ### Chain
 
-`Chain.jsx` plus line 594. This is the most important component in the product and it is in better shape than revision 1 assumed. It already numbers the stages, already uses `role="list"`, and already fills connectors behind completed nodes.
+`Chain.jsx` plus the `.chain` rules. This is the most important component in the product and it is in better shape than revision 1 assumed. It already numbers the stages, already uses `role="list"`, and already fills connectors behind completed nodes.
 
 What to add:
 
@@ -394,17 +394,17 @@ Mono for IDs and date, Inter `--fs-sm` for the role line, gold star only if facu
 
 ### Job card
 
-`.job-row` (line 877) plus `Card`. Add the `JOB-0042` mono tag top right in `--text-3`. Faculty-verified cards get a 1px `--seal` top border, 2px inset, plus the existing `.badge.faculty`. That top rule is the only place gold touches a card.
+`.job-row` plus `Card`. Add the `JOB-0042` mono tag top right in `--text-3`. Faculty-verified cards get a 1px `--seal` top border, 2px inset, plus the existing `.badge.faculty`. That top rule is the only place gold touches a card.
 
 ### Stat
 
-`.overlap-band .stat` (line 729) and `.note-stat` (line 760). Both currently use `--font-display` at weight 900 in `--verify` green. Move to `--font-mono` at `--fs-3xl` weight 600 with `tabular-nums`, in `--brand`. Mono is the ledger voice and these numbers come from the ledger.
+`.overlap-band .stat` and `.note-stat`. Both currently use `--font-display` at weight 900 in `--verify` green. Move to `--font-mono` at `--fs-3xl` weight 600 with `tabular-nums`, in `--brand`. Mono is the ledger voice and these numbers come from the ledger.
 
 Counters animate from 0 over 1200ms, once, on scroll into view, only when motion is allowed. `Landing.jsx` already fetches `/api/stats`; if it fails, render the last known value or hide the block. Never render a spinning zero.
 
 ### Nav
 
-`.nav` (line 418) is a solid `--ink` sticky bar. Keep it dark, repaint to `--surface-dark`.
+`.nav` is a solid `--ink` sticky bar. Keep it dark, repaint to `--surface-dark`.
 
 Add: transparent over the hero on `/` only, becoming `.glass` with `--shadow-2` past 24px of scroll over `--d-base`. A sliding 2px underline on the active route. A mobile sheet below 860px with trapped focus and Escape to close.
 
@@ -472,14 +472,14 @@ Every new string needs `en`, `hu` and `fr` entries in `i18n.jsx`. The file is or
 ## 9. Accessibility
 
 - WCAG 2.2 AA. 4.5:1 under 24px, 3:1 for large text and UI boundaries.
-- Every interactive element keyboard reachable with a visible focus ring. The existing `:focus-visible` (line 407) uses a green outline; retoken it to `--focus-ring-color`.
+- Every interactive element keyboard reachable with a visible focus ring. The existing `:focus-visible` rule uses a green outline; retoken it to `--focus-ring-color`.
 - Add a skip link. `.skip-link` is in the token layer. There is **no single `<main>` to point it at**: `App.jsx` renders none, and 30 per-page `<main className="container">` elements exist instead. Wrap the `<Routes>` block in `App.jsx` (line 227) in `<div id="content" tabIndex={-1}>` and target that.
 - Targets 44x44 on touch. `.dtp-nav` is 30x30 and `.dtp-arrow` is 52x26. Both fail.
 - One `<h1>` per page. Never skip a level for styling.
 - Icon-only buttons need `aria-label`. The nav bell has one. Decorative SVGs need `aria-hidden="true"`.
 - Live regions on the notification count and on stage changes.
 - Modals trap focus and close on Escape. `.modal` exists in the CSS with neither.
-- `prefers-reduced-motion` is handled at line 408 with `animation: none; transition: none`. That is correct and blunt. Verify it by toggling the OS setting, not by reading the media query. The hero ledger must still show all four records immediately.
+- `prefers-reduced-motion` is handled by a top-level `@media (prefers-reduced-motion: reduce)` rule with `animation: none; transition: none`. That is correct and blunt. Verify it by toggling the OS setting, not by reading the media query. The hero ledger must still show all four records immediately.
 - Test at 200% zoom and 320px width. The `.chain` at seven nodes and the `.filter-layout` 300px sidebar are the likely failures.
 - Run axe DevTools on `/`, `/auth`, `/student`, `/jobs/:id`, `/my-applications`, `/company`. Zero criticals.
 
@@ -566,15 +566,15 @@ The Work Sans link was replaced with preconnect plus Plus Jakarta Sans (700, 800
 
 **Files:** `client/src/styles.css`, `client/src/pages/Landing.jsx`
 
-1. **The `--ink` split.** 30 uses. The 23 text uses moved to `var(--text-1)`. Seven background or border uses stay and are now the only `var(--ink)` left in the file: `.nav` (419), `.btn.secondary` border (538), `.btn.secondary:hover` background (539), `.hero` (614), `.btn.dark` (868), `footer.site` (922), `.meeting-stage` (988). Line 508 was both and was split. This pass is what unblocks dark mode. **Still open:** `.modal-backdrop` (1002) hard-codes `rgba(22,35,63,.5)` with no variable, so it remains the old navy; retint it to match `--surface-dark` when convenient.
+1. **The `--ink` split.** 30 uses. The 23 text uses moved to `var(--text-1)`. Seven background or border uses stay and are now the only `var(--ink)` left in the file: `.nav`, `.btn.secondary` border, `.btn.secondary:hover` background, `.hero`, `.btn.dark`, `footer.site`, `.meeting-stage`. `.btn.secondary` was both and was split. This pass is what unblocks dark mode. **Still open:** `.modal-backdrop` hard-codes `rgba(22,35,63,.5)` with no variable, so it remains the old navy; retint it to match `--surface-dark` when convenient.
 
-2. **The green split.** 46 uses. Nine occurrences across five rules moved to the success family: `.badge.verified` (579), `.chain .node.done .dot` (605), `.chain .connector.done` (611), `.mock-track li.done .dot` (828), `.alert.ok` (874). The other 39 are primary actions and stay blue, including `table.ledger .match-ids` (911), which is **brand, not status** — ledger IDs are data, not a pass or fail.
+2. **The green split.** 46 uses. Nine occurrences across five rules moved to the success family: `.badge.verified`, `.chain .node.done .dot`, `.chain .connector.done`, `.mock-track li.done .dot`, `.alert.ok`. The other 39 are primary actions and stay blue, including `table.ledger .match-ids`, which is **brand, not status** — ledger IDs are data, not a pass or fail.
 
    **The shade is `--success-700`, not `--success-500`, wherever the surface carries text or a glyph.** `--success-500` on `--success-50` is 2.81:1 and `#fff` on `--success-500` is 3.12:1, against a 5.10:1 pre-rebrand baseline; using it would have introduced a new AA failure on the chain checkmark. `--success-700` gives 5.42:1 and 6.01:1. `--success-500` survives only on `.mock-track li.done .dot`, a bare dot with no glyph.
 
    Eight rules were judged actions rather than status and stay blue: current chain node, unread notification row and dot, recruitment step dots, chosen interview slot, both mockup chip styles, and today's date in the picker. None mean "this passed" — they mean where you are, what needs attention, or what you selected.
 
-3. **The gold migration.** All eight existing rules from the section 5 table. `var(--seal)` now resolves in **one** rule, `.badge.faculty` (578), on its border, because the section 5 contrast floor reserves gold for the glyph and the border. The second sanctioned use is the faculty-verified job card top rule, which does not exist yet and arrives in Task 6 — at which point the "exactly two" criterion becomes checkable. `--gold` and `--gold-tint` were left unreferenced and deleted from the compatibility layer.
+3. **The gold migration.** All eight existing rules from the section 5 table. `var(--seal)` now resolves in **one** rule, `.badge.faculty`, on its border, because the section 5 contrast floor reserves gold for the glyph and the border. The second sanctioned use is the faculty-verified job card top rule, which does not exist yet and arrives in Task 6 — at which point the "exactly two" criterion becomes checkable. `--gold` and `--gold-tint` were left unreferenced and deleted from the compatibility layer.
 
 4. **Weights.** All seven `font-weight: 900` declarations became 800. `BRAND_PALETTE` in `Landing.jsx` had its green pair replaced with `--blue-50` / `--blue-700`; the other five stay varied. Note only `.fg` is ever read (`Landing.jsx:415`), so the six `bg` values are dead and can go in Task 8.
 
@@ -582,7 +582,7 @@ The Work Sans link was replaced with preconnect plus Plus Jakarta Sans (700, 800
 
 **Verified:** `npm run build` passes. Zero `var(--ink)` in any `color:` declaration, zero `font-weight: 900`, zero undefined custom properties. Every colour pairing checked with a contrast calculation. Landing page confirmed in a browser: completed pipeline steps green, in-progress step blue.
 
-**Deferred to Task 8 by agreement:** `.match-mock-panel` (654) still fades `#d8efe0` into `--verify-tint`, and `.panel-green` (818) is still a green gradient. Both are decorative landing-page art that section 8 says to leave alone until that page is open. The `.mm-chip.green` and `.feature-green` class names are also now misnomers and get renamed with their call sites.
+**Deferred to Task 8 by agreement:** `.match-mock-panel` still fades `#d8efe0` into `--verify-tint`, and `.panel-green` is still a green gradient. Both are decorative landing-page art that section 8 says to leave alone until that page is open. The `.mm-chip.green` and `.feature-green` class names are also now misnomers and get renamed with their call sites.
 
 ### Task 3: Logo and marks — DONE
 
@@ -723,7 +723,7 @@ Everything below was executed against `5cce7d7`, not inferred. If a claim in thi
 
 **Paths.** All 27 files this document references exist at the stated paths.
 
-**Line citations.** Re-verified against `styles.css` after task 2. Every cited line number points at the rule it claims to. Some cite the declaration line rather than the selector line above it (`.nav`, `.match-mock-badge`, `.match-mock-logo`, `.logo-mark-initial`); in each case that is the line you actually edit.
+**Rule citations.** `styles.css` rules are cited by selector, not line number. Line numbers were verified against the file at revision 4, then remapped after task 1, again after task 2 and again after task 3 — every stylesheet edit moves every rule below it, so the numbers were wrong by the next commit and the remap was pure overhead. Every citation already named its selector, so the number was carrying no information a `grep -n` would not recover. Dropped after task 3. Each selector in this document was confirmed to match exactly one rule in `styles.css` at the time of dropping.
 
 **Counts.** Pre-rebrand baseline: 28 custom properties defined, all 28 referenced, 297 references, 363 selector blocks, 30 `var(--ink)` uses (23 text, 7 surface or border), 46 `var(--verify)` uses, 99 hex literals (87 outside `:root`, 44 of them `#fff`), 7 `font-weight: 900` declarations, 327 i18n strings across three locales at blocks starting on lines 12, 134 and 256.
 
