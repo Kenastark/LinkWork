@@ -145,6 +145,7 @@ const translations = {
     'chain.stateCurrent': `in progress`,
     'chain.stateDone': `completed`,
     'chain.stateFailed': `application not selected`,
+    'ledger.facultyVerified': `Faculty verified`,
   },
 
   hu: {
@@ -282,6 +283,7 @@ const translations = {
     'chain.stateCurrent': `folyamatban`,
     'chain.stateDone': `befejezve`,
     'chain.stateFailed': `a jelentkezést nem választották ki`,
+    'ledger.facultyVerified': `Kar által ellenőrizve`,
   },
 
   fr: {
@@ -419,6 +421,7 @@ const translations = {
     'chain.stateCurrent': `en cours`,
     'chain.stateDone': `terminée`,
     'chain.stateFailed': `candidature non retenue`,
+    'ledger.facultyVerified': `Vérifié par la faculté`,
   },
 };
 

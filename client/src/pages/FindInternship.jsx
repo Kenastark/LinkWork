@@ -141,10 +141,10 @@ export default function FindInternship() {
           {filtered.length === 0 ? (
             <div className="card"><p className="muted">No openings match your filters right now. Try clearing a filter or check back soon.</p></div>
           ) : filtered.map(j => (
-            <div className="card" key={j.id}>
+            <div className="card job-card" key={j.id}>
+              <span className="id-tag">JOB-{String(j.id).padStart(4, '0')}</span>
               <div className="job-row">
                 <div>
-                  <span className="id-tag">JOB-{String(j.id).padStart(4, '0')}</span>
                   <h3><Link to={`/jobs/${j.id}`} style={{ color: 'inherit' }}>{j.title}</Link></h3>
                   <p className="muted">{j.company_name} · {j.positions - j.filled} of {j.positions} position{j.positions > 1 ? 's' : ''} open</p>
                   <div className="meta">

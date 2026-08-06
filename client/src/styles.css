@@ -392,6 +392,9 @@
   color: var(--text-3);
   white-space: nowrap;
 }
+/* Gold star on a faculty-verified record. Decorative glyph only — the record
+   also carries the words, per the rule that colour never means anything alone. */
+.ledger-record .lr-seal { color: var(--seal); font-size: var(--fs-sm); line-height: 1; }
 
 /* Numbers that jitter while a counter animates look broken. */
 .tabular { font-variant-numeric: tabular-nums; }
@@ -645,10 +648,14 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
    is the faculty-verified job card top rule, added in task 6. */
 .badge.faculty { background: var(--seal-subtle-bg); color: var(--seal-fg); border: 1px solid var(--seal); }
 .badge.verified { background: var(--success-50); color: var(--success-700); }
-/* .pending and .warning are deliberately identical: pending review IS the
-   warning state. They differ in meaning, not appearance. Text is --warning-800
-   rather than the --warning-700 section 7 specifies, which is 3.86:1 here. */
-.badge.pending, .badge.warning { background: var(--warning-50); color: var(--warning-800); }
+/* .pending is a NEUTRAL metadata chip, not a warning. Section 7 moved it to the
+   warning ramp assuming it meant "pending review", but of its 17 uses almost
+   none are a status: job type, location, work mode, salary, applicant counts
+   and "Coming soon" placeholders. Warning-toning them made every job card's
+   metadata compete with the faculty seal for attention. It stays neutral.
+   Genuine warnings use .badge.warning. */
+.badge.pending { background: var(--bg-sunken); color: var(--text-2); }
+.badge.warning { background: var(--warning-50); color: var(--warning-800); }
 .badge.danger { background: var(--danger-50); color: var(--danger-700); }
 .badge.mono { font-family: var(--font-mono); font-weight: 500; }
 
@@ -991,6 +998,24 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 .job-row { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; }
 .job-row .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .job-row > .btn { flex-shrink: 0; align-self: center; }
+
+/* Job card. .job-row on its own is a generic two-column layout used for
+   applicant-review section headers too, so anything job-specific hangs off
+   .card.job-card instead. The id tag sits top right, out of the flow, and the
+   row reserves space so a long title never runs under it. */
+.card.job-card { position: relative; }
+.card.job-card > .id-tag { position: absolute; top: var(--space-5); right: var(--space-5); }
+.card.job-card > .job-row { padding-right: 92px; }
+
+/* No gold rule on the card. Section 7 specified a --seal top border here, but
+   with the metadata chips back to neutral the .badge.faculty pill is the only
+   gold on a job card and carries the distinction on its own. Gold on both the
+   badge and the card edge was doubling the same signal. */
+
+@media (max-width: 560px) {
+  .card.job-card > .job-row { padding-right: 0; }
+  .card.job-card > .id-tag { position: static; display: block; margin-bottom: 6px; }
+}
 
 /* ============ Find an internship — left filter sidebar ============ */
 .filter-layout { display: grid; grid-template-columns: 300px 1fr; gap: 20px; align-items: start; }

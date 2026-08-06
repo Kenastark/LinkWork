@@ -53,10 +53,10 @@ export default function CompanyProfile() {
       {jobs.length === 0 ? (
         <Card><p className="muted">No open positions right now.</p></Card>
       ) : jobs.map(j => (
-        <Card key={j.id}>
+        <Card key={j.id} className="job-card">
+          <span className="id-tag">JOB-{String(j.id).padStart(4, '0')}</span>
           <div className="job-row">
             <div>
-              <span className="id-tag">JOB-{String(j.id).padStart(4, '0')}</span>
               <h3><Link to={`/jobs/${j.id}`} style={{ color: 'inherit' }}>{j.title}</Link></h3>
               <div className="meta">
                 {j.faculty_verified ? <Badge variant="faculty">★ Faculty partnership · {j.faculty_name || 'University-wide'}</Badge> : <Badge variant="verified">✓ Platform-committed hire</Badge>}

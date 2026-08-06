@@ -231,7 +231,7 @@ Values in the token layer at the top of `client/src/styles.css`. This is the usa
 
    Stated flatly, "gold is never a background" contradicted the code and contradicted section 8. Eight rules painted gold backgrounds — `.badge.faculty`, `.match-mock-badge` (a solid `var(--gold)` fill), `.match-mock-logo`, `.mm-chip.gold`, `.note-tint-b`, `.land-gold` (`#f2c94c`), `.alert.info` and `.pref-chip:hover` — while section 8 also says the match mock and the testimonial notes stay untouched. Both cannot be true.
 
-   The resolution: **`--seal` is reserved, warm decorative tints are not.** The token layer defines `--warm-100`, `--warm-300` and `--warm-fg` for the decorative cases. After Task 2, `var(--seal)` resolves in exactly two places: `.badge.faculty` and the faculty-verified job card top rule. Everything else migrates:
+   The resolution: **`--seal` is reserved, warm decorative tints are not.** The token layer defines `--warm-100`, `--warm-300` and `--warm-fg` for the decorative cases. `var(--seal)` resolves in exactly three rules, all of them faculty-verification contexts: `.badge.faculty`, `.btn.seal` (§7 Button) and `.ledger-record .lr-seal` (§7 LedgerRecord). Earlier revisions said "exactly two places: `.badge.faculty` and the job card top rule" — but §7 itself introduced two more gold uses, and the job card rule was dropped in Task 6. The count is not the law; **gold means faculty-verified and nothing else** is. Everything else migrates:
 
    | Rule | Was | Becomes | Why |
    |---|---|---|---|
@@ -258,7 +258,7 @@ Verify with a checker, not by eye.
 - `--text-3` on `--surface`: 4.76:1, so muted text never drops below 14px
 - `--text-on-brand` on `--brand`: 11.4:1
 - Gold: `--gold-500` on white is 2.6:1 and **fails**. Badge text uses `--gold-700` on `--gold-100`. Gold is for the glyph and the border. After the section 5 migration this applies to exactly one rule, `.badge.faculty`, at 4.55:1. `.alert.info`, `.mm-chip.gold` and `.match-mock-logo` leave the gold pairing entirely, so do not carry it over to them.
-- Warning: `--warning-700` on `--warning-50` is 3.86:1 and **fails**. Warning text uses `--warning-800`, 5.38:1.
+- Warning: `--warning-700` on `--warning-50` is 3.86:1 and **fails**. Warning text uses `--warning-800`, 5.38:1. Note this applies to `.badge.warning` only — `.badge.pending` is a neutral chip, not a warning. See §7 Badge.
 - Danger: white on `--danger-500` is 3.96:1 and **fails** for anything but large text. Filled danger controls use `--danger-700`, 7.31:1.
 
 **Two of the three status ramps cannot carry text at their 500 or 700 step.** Before pairing text with any status colour, measure it. The audited pairings as shipped: primary 11.01, primary hover 7.67, primary active 14.64, secondary 11.01, secondary hover 10.04, ghost 7.58, ghost hover 16.93, danger 7.31, dark 17.24, seal 4.55, badge faculty 4.55, badge verified 5.42, badge pending/warning 5.38, badge danger 6.37, field error 7.31. The floor is 4.55:1 and nothing sits below it.
@@ -344,9 +344,13 @@ Note `.lang-trigger.btn.ghost` overrides ghost with white-on-dark for the nav. K
 
 Variants `.faculty`, `.verified`, `.pending`, `.danger`, `.mono`, plus `.warning`. Keep the pill shape and 6px glyph gap. `.verified` moves from `--verify-tint` to `--success-50` with `--success-700` text, because it is a status and not an action.
 
-`.pending` and `.warning` share one rule: `--warning-50` with **`--warning-800`** text. Not `--warning-700`, which is 3.86:1 here and fails at 12.5px — a regression from the pre-rebrand grey pairing's 6.87:1. `--warning-800` `#8a5a10` was added for this: 5.38:1 on `--warning-50`, 5.91:1 on white, and it is the general-purpose readable ink for warning surfaces. `--warning-700` keeps its value and meaning for borders and glyphs.
+**`.pending` is a NEUTRAL chip, not a warning.** `--bg-sunken` with `--text-2`, 6.74:1 — effectively the pre-rebrand grey it replaced.
 
-The two variants are deliberately identical in appearance — pending review *is* the warning state. They differ in meaning only.
+Task 4 moved it to the warning ramp on this document's own instruction, and Task 6 reverted it. The instruction assumed the name: it does not mean "pending review" in this codebase. Of its 17 uses, essentially none are a status — job type, location, work mode and salary on `FindInternship`, `JobDetail` and `CompanyProfile`; applicant counts and "Filled & closed" on `CompanyDashboard`; "Coming soon" on `Resources`, `ComingSoon`, `Notifications` and `Meeting`. Warning-toning all of that made every job card's metadata compete with the gold faculty badge for attention, which is the one thing on a card that is supposed to stand out.
+
+**Before restyling a variant, grep its call sites.** The class name is not the contract.
+
+`.warning` carries the warning ramp: `--warning-50` with `--warning-800` text, 5.38:1. Not `--warning-700`, which is 3.86:1 and fails at 12.5px. `--warning-800` `#8a5a10` was added for this and is the general-purpose readable ink on warning surfaces; `--warning-700` keeps its value for borders and glyphs. `.warning` currently has no consumer. The two computed status badges (`stage === 'hired' ? 'verified' : 'rejected' ? 'danger' : 'pending'`) fall through to `.pending`, so in-progress stages render neutral; switching them to `.warning` is a JSX change nobody has asked for yet.
 
 ### Field
 
@@ -409,7 +413,11 @@ Mono for IDs and date, Inter `--fs-sm` for the role line, gold star only if facu
 
 ### Job card
 
-`.job-row` plus `Card`. Add the `JOB-0042` mono tag top right in `--text-3`. Faculty-verified cards get a 1px `--seal` top border, 2px inset, plus the existing `.badge.faculty`. That top rule is the only place gold touches a card.
+**`.job-row` is not the job card.** It is a generic two-column layout, also used for `ApplicantReview`'s section headers ("AI interview — score the answers"). Anything job-specific hangs off `.card.job-card`, added in Task 6. Styling `.job-row` puts it on those headers too.
+
+The `JOB-0042` mono tag sits top right, positioned out of the flow, with the row reserving 92px so a long title cannot run under it. Below 560px it returns to the flow, since absolute positioning collides on narrow screens. It stays `.id-tag` at `--text-2`, not the `--text-3` earlier revisions specified: the tag is 12.5px, `--text-3` on white is 4.76:1 against `--text-2`'s 7.58:1, and §9 already warns muted text should not drop below 14px.
+
+**There is no gold rule on the card.** Earlier revisions specified a 1px `--seal` top border. It was built, tried at 1px, 2px and 3px, and removed: `.badge.faculty` is the only gold a job card needs, and gold on both the badge and the card edge doubles one signal. The faculty pill against the green `.verified` pill is what distinguishes a verified card.
 
 ### Stat
 
@@ -621,7 +629,7 @@ Per §7. `Field.jsx` was left in place, unused and unmodified, and none of the 4
 
 **Three rules ship with no consumer, by design:** `.btn.seal` (the faculty-verified filter is currently a checkbox in `FindInternship.jsx`), `.badge.warning`, and `.field-error` with its `[aria-invalid="true"]` companions. They exist so the states are defined when something needs them. `.field-error` in particular is *not* wired up: errors still surface as a page-level `.alert.error`, and building real per-field errors is a feature, not a rebrand.
 
-**Two deviations from §7, both contrast, both documented above:** `.btn.danger` uses `--danger-700`, and `.badge.pending`/`.badge.warning` use the new `--warning-800`. Each replaced a pairing that failed AA *and* regressed against a passing pre-rebrand baseline.
+**Two deviations from §7, both contrast, both documented above:** `.btn.danger` uses `--danger-700`, and `.badge.warning` uses the new `--warning-800`. Each replaced a pairing that failed AA *and* regressed against a passing pre-rebrand baseline. (`.badge.pending` was also moved to the warning ramp here and **reverted in Task 6** — see §7 Badge.)
 
 **Two defects found during verification:** `.btn.dark` was still on `var(--ink)` with a hard-coded `#0e1830` hover, now `--surface-dark` / `--surface-dark-hover`; and `a.card` laid out inline, fixed with `display: block`.
 
@@ -637,13 +645,17 @@ All seven items in §7. Import labels from `stages.js`, translate them, decide o
 
 **Done when:** the chain is readable at 375px, the current stage is announced by a screen reader with its position, a rejected application is visually unambiguous, and stage labels change with the locale.
 
-### Task 6: LedgerRecord and job card
+### Task 6: LedgerRecord and job card — DONE
 
-**Files:** new `components/LedgerRecord.jsx`, `styles.css`, the job card markup
+**Files:** new `components/LedgerRecord.jsx`, `styles.css`, `i18n.jsx`, and three job-card call sites — `FindInternship.jsx`, `CompanyProfile.jsx`, `CompanyDashboard.jsx`
 
-Per §7. The faculty-verified gold top rule goes here.
+`LedgerRecord` takes the `/api/ledger/recent` shape from §8 so that route drops in without reshaping anything. `studentId` is optional and the row degrades cleanly without it, which is the privacy-safe variant §8 flags. It does not hover, link or carry an interactive role. One i18n key was added across all three locales for the star's text equivalent — §5 rule 5 forbids colour carrying meaning alone, and hard-coding English into a component §8 puts on the homepage would create exactly the partial-translation regression §8 warns about.
 
-**Done when:** a verified and an unverified job card side by side differ obviously without reading the badge text.
+The job card gained `.card.job-card` and the top-right ID tag. It did **not** gain a gold top rule; see §7 Job card. Job cards are also **not** links — the title is already a `<Link>` and there is a separate action button, so wrapping the card in a third link would be invalid markup and an accessibility problem. `a.card` / `.card-link` from Task 4 stay unused.
+
+Applied to three of the four job-card sites. `CompanyDashboard`'s closed-positions list is excluded because [its query](server/index.js) does not select `faculty_verified`; adding it is a server change.
+
+**Done when:** a verified and an unverified job card side by side are obviously different. The original criterion said "without reading the badge text", which the dropped gold rule was there to satisfy. The badge now carries it — a gold pill against a green one, distinguishable at a glance without reading either.
 
 ### Task 7: Nav, footer, 404
 

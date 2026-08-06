@@ -98,10 +98,10 @@ export default function CompanyDashboard() {
         jobs.length === 0
           ? <div className="card"><p className="muted">No postings yet. Publish your first opening — remember, posting on LinkWork means committing to hire from it.</p></div>
           : jobs.map(j => (
-            <div className="card" key={j.id}>
+            <div className="card job-card" key={j.id}>
+              <span className="id-tag">JOB-{String(j.id).padStart(4, '0')}</span>
               <div className="job-row">
                 <div>
-                  <span className="id-tag">JOB-{String(j.id).padStart(4, '0')}</span>
                   <h3>{j.title}</h3>
                   <p className="muted">{j.filled} hired of {j.positions} position{j.positions > 1 ? 's' : ''}</p>
                   <div className="meta">
