@@ -215,7 +215,8 @@ Values in the token layer at the top of `client/src/styles.css`. This is the usa
 | Accent | `--accent` | `#4f8ef7` | Focus rings, hover glow, mesh, dark-mode primary |
 | Seal | `--seal` | `#c89b3c` | Faculty-verified only |
 | Success | `--success-500` | `#17a673` | Passed, verified, hired |
-| Warning | `--warning-500` | `#f2a93b` | Pending review |
+| Warning | `--warning-500` | `#f2a93b` | Pending review — surfaces and glyphs |
+| Warning ink | `--warning-800` | `#8a5a10` | Text on any warning surface; `--warning-700` fails there |
 | Danger | `--danger-500` | `#d9534f` | Rejected, destructive |
 | Dark plate | `--surface-dark` | `#0d1b31` | Nav, footer, hero, meeting stage |
 | Canvas | `--bg-canvas` | `#f7f9fc` | Page background |
@@ -256,7 +257,11 @@ Verify with a checker, not by eye.
 - `--text-1` on `--surface`: 16.1:1
 - `--text-3` on `--surface`: 4.76:1, so muted text never drops below 14px
 - `--text-on-brand` on `--brand`: 11.4:1
-- Gold: `--gold-500` on white is 2.6:1 and **fails**. Badge text uses `--gold-700` on `--gold-100`. Gold is for the glyph and the border. After the section 5 migration this applies to exactly one rule, `.badge.faculty` (already correct at `#7c5a00`). `.alert.info`, `.mm-chip.gold` and `.match-mock-logo` leave the gold pairing entirely, so do not carry it over to them.
+- Gold: `--gold-500` on white is 2.6:1 and **fails**. Badge text uses `--gold-700` on `--gold-100`. Gold is for the glyph and the border. After the section 5 migration this applies to exactly one rule, `.badge.faculty`, at 4.55:1. `.alert.info`, `.mm-chip.gold` and `.match-mock-logo` leave the gold pairing entirely, so do not carry it over to them.
+- Warning: `--warning-700` on `--warning-50` is 3.86:1 and **fails**. Warning text uses `--warning-800`, 5.38:1.
+- Danger: white on `--danger-500` is 3.96:1 and **fails** for anything but large text. Filled danger controls use `--danger-700`, 7.31:1.
+
+**Two of the three status ramps cannot carry text at their 500 or 700 step.** Before pairing text with any status colour, measure it. The audited pairings as shipped: primary 11.01, primary hover 7.67, primary active 14.64, secondary 11.01, secondary hover 10.04, ghost 7.58, ghost hover 16.93, danger 7.31, dark 17.24, seal 4.55, badge faculty 4.55, badge verified 5.42, badge pending/warning 5.38, badge danger 6.37, field error 7.31. The floor is 4.55:1 and nothing sits below it.
 
 ---
 
@@ -314,12 +319,16 @@ Eight components exist in `client/src/components/`. All are thin wrappers over C
 | `.btn` | `--verify` green fill | `--brand` blue fill, `--text-on-brand` |
 | `.btn.secondary` | transparent, `--ink` border | transparent, `--brand` text, `--border-strong` border |
 | `.btn.ghost` | transparent, `--verify` text | transparent, `--text-2` text |
-| `.btn.danger` | `--danger` fill | unchanged, now `--danger-500` |
+| `.btn.danger` | `--danger` fill | `--danger-700` fill — **not** `--danger-500`, see below |
 | `.btn.dark` | `--ink` fill | `--surface-dark` fill |
 | `.btn.sm` | 7px 14px | unchanged |
 | `.btn.seal` | does not exist | new: `--seal-subtle-bg`, `--gold-700`, 1px `--seal`. Faculty-verified filter only. |
 
-Heights 36 / 44 / 52 via padding. Radius stays `--radius-sm`. Hover lifts 1px, active returns to 0, focus-visible shows the ring, disabled is 45% opacity with `cursor: not-allowed` and **keeps its shape** rather than turning grey (`.btn:disabled` currently sets `#a9b6ad`, which reads as broken).
+**`.btn.danger` is `--danger-700`, not `--danger-500`.** White on `#d9534f` is 3.96:1 and the label is 15px/600, so it needs 4.5:1. Pre-rebrand `--danger` `#b3372f` passed at 5.99:1, which makes `--danger-500` a regression rather than an inherited failure. `--danger-700` restores it at 7.31:1. Hover lifts without recolouring, because the palette has no danger step between 500 and 700 that also clears 4.5:1. `--danger-500` remains correct for borders and non-text surfaces.
+
+Heights 36 / 44 / 52 via padding — `.btn.sm` `10px 14px`, base `13px 20px`, `.hero .cta-row .btn` `16px 24px`. **This only holds because `.btn` pins `line-height: 1.2`.** The UA stylesheet sets `line-height: normal` on `button`, so buttons do not inherit the body's 1.55 and their height otherwise depends on font metrics — which is why the ladder silently drifted to 30 / 40 / 52 when the typeface changed in Task 1. Do not remove that declaration. `.btn.ghost` (34px) and `.lang-trigger` (32px) sit off the ladder deliberately: one is a text button, the other the compact nav control. Both are on Task 10's touch-target list.
+
+Radius stays `--radius-sm`. Hover lifts 1px, active returns to 0, focus-visible shows the ring, disabled is 45% opacity with `cursor: not-allowed` and **keeps its shape** rather than turning grey (the pre-rebrand `#a9b6ad` read as broken). Every hover and active selector carries `:not(:disabled)`, which is what lets `:disabled` keep `cursor: not-allowed` instead of needing `pointer-events: none`.
 
 Loading: the label stays and a 14px spinner takes the leading icon slot. Never let the button change width mid-action.
 
@@ -327,11 +336,17 @@ Note `.lang-trigger.btn.ghost` overrides ghost with white-on-dark for the nav. K
 
 ### Card
 
-Line 167. `--surface`, `--radius`, 1px `--border`, `--shadow-1`, `--space-5` padding. It already transitions shadow and transform but no hover rule ever fires. Add hover only when the card is a link: `--shadow-2` and `translateY(-2px)`. Cards that are not links do not move.
+`--surface`, `--radius`, 1px `--border`, `--shadow-1`, `--space-5` padding. Hover fires only when the card is a link — `a.card` and `.card-link` — lifting to `--shadow-2` and `translateY(-2px)`. Cards that are not links do not move, because a card that moves implies one.
+
+`a.card` and `.card-link` also set `display: block` and `color: inherit`. `.card` never declared either, which was harmless while every card was a `<div>`, but an `<a class="card">` otherwise lays out inline and inherits the link colour. Nothing matches these selectors yet; job cards become links in Task 6.
 
 ### Badge
 
-Line 180. Variants `.faculty`, `.verified`, `.pending`, `.danger`, `.mono`. Add `.warning`. Keep the pill shape and 6px glyph gap. `.verified` moves from `--verify-tint` to `--success-50` with `--success-700` text, because it is a status and not an action. `.pending` moves to `--warning-50` and `--warning-700`.
+Variants `.faculty`, `.verified`, `.pending`, `.danger`, `.mono`, plus `.warning`. Keep the pill shape and 6px glyph gap. `.verified` moves from `--verify-tint` to `--success-50` with `--success-700` text, because it is a status and not an action.
+
+`.pending` and `.warning` share one rule: `--warning-50` with **`--warning-800`** text. Not `--warning-700`, which is 3.86:1 here and fails at 12.5px — a regression from the pre-rebrand grey pairing's 6.87:1. `--warning-800` `#8a5a10` was added for this: 5.38:1 on `--warning-50`, 5.91:1 on white, and it is the general-purpose readable ink for warning surfaces. `--warning-700` keeps its value and meaning for borders and glyphs.
+
+The two variants are deliberately identical in appearance — pending review *is* the warning state. They differ in meaning only.
 
 ### Field
 
@@ -596,15 +611,23 @@ PNGs at 16, 32 and 180 are generated into `client/public/` but **not referenced 
 
 **Verified:** build passes. Mark renders at 16, 28, 42 and 96px; nav and footer lockups checked in the running app; reduced motion confirmed to show the complete mark rather than a blank plate; draw direction confirmed by stretching the duration so a capture lands mid-animation; PNGs checked at all three sizes over light and dark chrome. No green gradient remains anywhere except `.match-mock-panel`, deferred to Task 8.
 
-### Task 4: Button, Card, Badge, Field
+### Task 4: Button, Card, Badge, Field — DONE
 
-**Files:** `client/src/styles.css`, and only incidentally the components.
+**Files:** `client/src/styles.css` only. No JSX changed, no component restructured, no call site touched.
 
 This task is roughly 95% CSS. The component files are thin `className` joiners and barely used: `Button`, `Card` and `Badge` are imported by three pages in total (`Alerts.jsx`, `Companies.jsx`, `CompanyProfile.jsx`), every other page writes `className="btn"` directly, and `Field.jsx` is imported by nothing at all. Restyling `.btn`, `.card`, `.badge`, `label.field` and the input block in `styles.css` is what actually changes the app.
 
-Per §7. Add `.btn.seal` and `.badge.warning` as new rules. Add `.field-error`. Do not restructure `Field.jsx` and do not touch the 40 raw `label.field` call sites.
+Per §7. `Field.jsx` was left in place, unused and unmodified, and none of the 40 raw `label.field` call sites were touched.
 
-**Done when:** every button variant, badge variant and input state renders correctly in light mode, focus is visible on all of them, and the `Auth.jsx`, `Profile.jsx`, `Settings.jsx` and `CompanyDashboard.jsx` forms all still submit unchanged.
+**Three rules ship with no consumer, by design:** `.btn.seal` (the faculty-verified filter is currently a checkbox in `FindInternship.jsx`), `.badge.warning`, and `.field-error` with its `[aria-invalid="true"]` companions. They exist so the states are defined when something needs them. `.field-error` in particular is *not* wired up: errors still surface as a page-level `.alert.error`, and building real per-field errors is a feature, not a rebrand.
+
+**Two deviations from §7, both contrast, both documented above:** `.btn.danger` uses `--danger-700`, and `.badge.pending`/`.badge.warning` use the new `--warning-800`. Each replaced a pairing that failed AA *and* regressed against a passing pre-rebrand baseline.
+
+**Two defects found during verification:** `.btn.dark` was still on `var(--ink)` with a hard-coded `#0e1830` hover, now `--surface-dark` / `--surface-dark-hover`; and `a.card` laid out inline, fixed with `display: block`.
+
+**Verified:** all seven button variants, four disabled states, six badges and four input states rendered against the built stylesheet and inspected. Size ladder measured at exactly 36 / 44 / 52 via `getBoundingClientRect`. Every colour pairing computed — floor 4.55:1, nothing below. All 19 selectors confirmed present in the compiled bundle, including the hero override and `.lang-trigger.btn.ghost`. No `.btn` rule sets `outline`, so the global `:focus-visible` is not suppressed. Diff confirmed CSS-only, and live `POST /api/auth/login` and `/api/auth/profile` round-trips succeeded against the running server. Zero undefined custom properties. `npm run build` passes.
+
+**Not verified by running:** button `:focus-visible` was not triggered — headless Chrome cannot synthesise keyboard focus and `.focus()` does not match `:focus-visible`. Nor was a click-through of the four forms driven in the browser UI.
 
 ### Task 5: Chain
 

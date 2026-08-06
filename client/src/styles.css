@@ -60,6 +60,10 @@
   --warning-50:  #fdf3e2;
   --warning-500: #f2a93b;
   --warning-700: #a86f14;
+  /* --warning-700 on --warning-50 is only 3.86:1, so it cannot carry badge or
+     body text. This darker step is the readable ink for warning surfaces:
+     5.38:1 on --warning-50, 5.91:1 on white. */
+  --warning-800: #8a5a10;
   --danger-50:   #fbeceb;
   --danger-500:  #d9534f;
   --danger-700:  #9b312e;
@@ -301,6 +305,7 @@
   --danger-700: #f0918e;
   --success-700: #5fd3aa;
   --warning-700: #f5c377;
+  --warning-800: #f5c377;
 
   --glass-bg:     rgba(15, 26, 46, 0.68);
   --glass-border: rgba(148, 163, 184, 0.14);
@@ -525,41 +530,104 @@ main.container { flex: 1; padding: 32px 0 72px; }
 .lang-menu { min-width: 160px; }
 
 /* ============ buttons & forms ============ */
+/* The base .btn IS the primary button. Every hover carries :not(:disabled) so a
+   disabled button never lifts or recolours, which also lets :disabled keep
+   cursor: not-allowed instead of needing pointer-events: none. */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0;
-  background: var(--verify); color: #fff; font-weight: 600; font-size: 15px;
-  padding: 11px 20px; border-radius: var(--radius-sm); box-shadow: var(--shadow-sm);
+  background: var(--brand); color: var(--text-on-brand); font-weight: 600; font-size: 15px;
+  /* Buttons do not inherit the body line-height - the UA stylesheet sets
+     `normal` on button - so without this the height depends on font metrics and
+     the size ladder drifts. Pinning it makes 36 / 44 / 52 fall out of padding. */
+  line-height: 1.2;
+  padding: 13px 20px; border-radius: var(--radius-sm); box-shadow: var(--shadow-1);
   white-space: nowrap; text-align: center;
-  transition: background .15s var(--ease), transform .1s var(--ease), box-shadow .15s var(--ease);
+  transition: background var(--d-fast) var(--ease-out), transform var(--d-instant) var(--ease-out),
+              box-shadow var(--d-fast) var(--ease-out), border-color var(--d-fast) var(--ease-out);
 }
-.btn:hover { background: var(--verify-bright); box-shadow: var(--shadow-md); transform: translateY(-1px); }
-.btn:active { transform: translateY(0); box-shadow: var(--shadow-sm); }
-.btn:disabled { background: #a9b6ad; cursor: not-allowed; box-shadow: none; transform: none; }
-.btn.secondary { background: transparent; color: var(--text-1); border: 1.5px solid var(--ink); box-shadow: none; }
-.btn.secondary:hover { background: var(--ink); color: #fff; }
-.btn.danger { background: var(--danger); }
-.btn.ghost { background: transparent; color: var(--verify); padding: 8px 12px; box-shadow: none; }
-.btn.ghost:hover { background: var(--verify-tint); box-shadow: none; transform: none; }
-.btn.sm { padding: 7px 14px; font-size: 13.5px; }
+.btn:hover:not(:disabled) { background: var(--brand-hover); box-shadow: var(--shadow-2); transform: translateY(-1px); }
+.btn:active:not(:disabled) { background: var(--brand-active); transform: translateY(0); box-shadow: var(--shadow-1); }
+
+/* Disabled keeps its shape and its colour at 45%. The old #a9b6ad grey fill
+   read as broken rather than as temporarily unavailable. */
+.btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; transform: none; }
+
+.btn.secondary { background: transparent; color: var(--brand); border: 1.5px solid var(--border-strong); box-shadow: none; }
+.btn.secondary:hover:not(:disabled) { background: var(--brand-subtle-bg); border-color: var(--brand); box-shadow: none; }
+
+/* The hero's secondary CTAs carry inline white border and text over the dark
+   plate, so the pale-blue hover above would paint white on near-white. */
+.hero .cta-row .btn.secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14); border-color: #fff; color: #fff;
+}
+
+/* Section 7's table says --danger-500, but white on #d9534f is 3.96:1 and this
+   label is 15px/600, so it needs 4.5:1. Pre-rebrand --danger #b3372f passed at
+   5.99:1, making --danger-500 a regression rather than a pre-existing failure.
+   --danger-700 restores it at 7.31:1. Hover lifts without recolouring because
+   the palette has no danger step between 500 and 700 that also passes. */
+.btn.danger { background: var(--danger-700); }
+.btn.danger:hover:not(:disabled) { background: var(--danger-700); }
+
+.btn.ghost { background: transparent; color: var(--text-2); padding: 8px 12px; box-shadow: none; }
+.btn.ghost:hover:not(:disabled) { background: var(--surface-hover); color: var(--text-1); box-shadow: none; transform: none; }
+
+/* Faculty-verified filter only. No consumer yet: that filter is currently a
+   checkbox in FindInternship.jsx. One of the sanctioned var(--seal) uses. */
+.btn.seal { background: var(--seal-subtle-bg); color: var(--seal-fg); border: 1px solid var(--seal); box-shadow: none; }
+/* Hover deepens the border rather than the fill: --seal-fg on --warm-300 is
+   3.94:1, below the 4.55:1 the resting pairing already sits at. */
+.btn.seal:hover:not(:disabled) { border-color: var(--seal-fg); box-shadow: none; }
+
+/* Size ladder: 36 / 44 / 52. .sm here, base above, .hero .cta-row .btn below. */
+.btn.sm { padding: 10px 14px; font-size: 13.5px; }
 
 label.field { display: block; margin-bottom: var(--space-4); font-weight: 600; font-size: 14px; }
-label.field span.hint { font-weight: 400; color: var(--ink-soft); font-size: 13px; }
+label.field span.hint { font-weight: 400; color: var(--text-2); font-size: 13px; }
 .char-count { display: block; text-align: right; font-weight: 400; font-size: 12px; margin-top: 4px; }
+/* font-size stays at 15px or above: iOS Safari zooms the viewport on focus for
+   anything smaller. */
 input, select, textarea {
   width: 100%; margin-top: 6px; padding: 11px 13px; font: inherit; font-size: 15px;
-  border: 1.5px solid var(--line); border-radius: var(--radius-sm); background: #fff; color: var(--text-1);
-  transition: border-color .15s var(--ease), box-shadow .15s var(--ease);
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-1);
+  transition: border-color var(--d-fast) var(--ease-out), box-shadow var(--d-fast) var(--ease-out);
 }
-input:focus, select:focus, textarea:focus { border-color: var(--verify-bright); outline: none; box-shadow: 0 0 0 3px var(--verify-tint); }
-input:disabled { background: #f3f4f1; color: var(--ink-soft); }
+input:focus, select:focus, textarea:focus {
+  border-color: var(--brand); outline: none; box-shadow: 0 0 0 3px var(--brand-subtle-bg);
+}
+input:disabled, select:disabled, textarea:disabled {
+  background: var(--bg-sunken); color: var(--text-3); cursor: not-allowed;
+}
 textarea { min-height: 110px; resize: vertical; }
+
+/* Per-field error state. Nothing sets aria-invalid today - errors surface as a
+   page-level .alert.error - but the state exists for when one is built. The
+   border never carries the meaning alone; .field-error supplies the message. */
+input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="true"] {
+  border-color: var(--danger-500);
+}
+input[aria-invalid="true"]:focus, select[aria-invalid="true"]:focus, textarea[aria-invalid="true"]:focus {
+  border-color: var(--danger-500); box-shadow: 0 0 0 3px var(--danger-50);
+}
+.field-error {
+  display: flex; align-items: flex-start; gap: var(--s-2); margin-top: var(--s-2);
+  font-size: var(--fs-sm); font-weight: 500; color: var(--danger-700);
+}
+.field-error svg { width: 14px; height: 14px; flex: none; margin-top: 2px; }
 
 /* ============ cards ============ */
 .card {
-  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
-  padding: var(--space-5); box-shadow: var(--shadow-sm);
-  transition: box-shadow .18s var(--ease), transform .18s var(--ease);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: var(--space-5); box-shadow: var(--shadow-1);
+  transition: box-shadow var(--d-base) var(--ease-out), transform var(--d-base) var(--ease-out);
 }
+/* Only a card that is actually a link moves. Nothing matches this yet; job
+   cards become links in task 6. A card that is not a link must not imply one.
+   The anchor needs display and colour resetting: .card never set either, which
+   was harmless while no card was a link, but an <a class="card"> would
+   otherwise lay out inline and inherit the link colour. */
+a.card, .card-link { display: block; color: inherit; }
+a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: translateY(-2px); text-decoration: none; }
 .card + .card { margin-top: var(--space-4); }
 .card h3 { margin-bottom: 6px; }
 .grid { display: grid; gap: var(--space-4); }
@@ -577,8 +645,11 @@ textarea { min-height: 110px; resize: vertical; }
    is the faculty-verified job card top rule, added in task 6. */
 .badge.faculty { background: var(--seal-subtle-bg); color: var(--seal-fg); border: 1px solid var(--seal); }
 .badge.verified { background: var(--success-50); color: var(--success-700); }
-.badge.pending { background: #eef0f5; color: var(--ink-soft); }
-.badge.danger { background: var(--danger-tint); color: var(--danger); }
+/* .pending and .warning are deliberately identical: pending review IS the
+   warning state. They differ in meaning, not appearance. Text is --warning-800
+   rather than the --warning-700 section 7 specifies, which is 3.86:1 here. */
+.badge.pending, .badge.warning { background: var(--warning-50); color: var(--warning-800); }
+.badge.danger { background: var(--danger-50); color: var(--danger-700); }
 .badge.mono { font-family: var(--font-mono); font-weight: 500; }
 
 .id-tag { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-soft); letter-spacing: 0.02em; }
@@ -622,7 +693,7 @@ textarea { min-height: 110px; resize: vertical; }
 .hero h1 em { font-style: normal; color: var(--verify-bright); }
 .hero p.lede { font-size: 21px; line-height: 1.5; color: #c4cddd; max-width: 54ch; margin-bottom: 32px; }
 .hero .cta-row { display: flex; gap: 14px; flex-wrap: wrap; }
-.hero .cta-row .btn { font-size: 17px; padding: 13px 24px; }
+.hero .cta-row .btn { font-size: 17px; padding: 16px 24px; }
 
 .hero-chain { display: flex; flex-direction: column; gap: 0; }
 .hero-chain .hnode {
@@ -865,8 +936,8 @@ textarea { min-height: 110px; resize: vertical; }
 .land-peri { background: #cdd9f4; }
 .land-cream { background: #f5efe0; }
 .land-gold { background: var(--warm-300); }
-.btn.dark { background: var(--ink); color: #fff; }
-.btn.dark:hover { background: #0e1830; color: #fff; }
+.btn.dark { background: var(--surface-dark); color: var(--text-on-brand); }
+.btn.dark:hover:not(:disabled) { background: var(--surface-dark-hover); color: var(--text-on-brand); }
 
 /* ============ misc ============ */
 .alert { border-radius: var(--radius-sm); padding: 12px 16px; font-size: 14.5px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
