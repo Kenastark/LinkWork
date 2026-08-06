@@ -411,6 +411,12 @@ JOB-0042  ⟷  STU-0007     Junior Data Engineer · DataTech    14 May 2026  ★
 
 Mono for IDs and date, Inter `--fs-sm` for the role line, gold star only if faculty verified. Hairline divider between records. Rows do not hover or link on the public page. They are records, not controls.
 
+**The row is a four-column grid — id, role, date, seal — not flex.** It was flex, with `flex: 1` on the role, and that absorbed the seal's width on any row *without* a star, so the date column came out ragged: `1086` on the unstarred row against `1056` on the starred ones. **The seal column is reserved whether or not a row has a star.** A register reads as columns; if the dates do not line up it is not a register. Below 640px it restructures rather than squeezing — id and date on the first line, role on the second.
+
+Worth recording how that was found: the complaint was that the position name looked misaligned. Measuring first showed the roles were already flush at `left=207` and the date was the ragged column. Measure before restyling.
+
+`studentId` is optional and currently not passed — see "Publishing the student ID" in §8. `style` is a passthrough so the caller can set a per-row `animation-delay` for the write-in sequence.
+
 ### Job card
 
 **`.job-row` is not the job card.** It is a generic two-column layout, also used for `ApplicantReview`'s section headers ("AI interview — score the answers"). Anything job-specific hangs off `.card.job-card`, added in Task 6. Styling `.job-row` puts it on those headers too.
@@ -755,9 +761,21 @@ Split into three commits.
 
   **Verified:** the empty state by clearing `matches` and restoring it. All three failure modes by blocking the routes over CDP. Nine locale-by-breakpoint combinations at 375, 768 and 1440 across `en`, `hu` and `fr` — zero elements past the viewport in any. Rendered body text scanned against English markers in `hu` and `fr`, zero hits.
 
-- **8c:** motion. Stat counters over 1200ms on scroll into view, section reveals at 16px and 320ms. Transform and opacity only. **Note the hero records writing in at 400ms intervals no longer applies** — the hero shows the chain, so there are no hero records to animate. The ledger section's rows are the remaining candidate.
+- **8c — DONE.** Motion. Transform and opacity only, nothing that affects layout.
+
+  **Ledger rows write in, one every 400ms** — in the ledger section, not the hero, since the hero shows the chain and has no records to animate. Travel is **24px over `--d-slow`**: 8px over `--d-base` was built first and was too subtle to read as a sequence at all. Delays are set per row from JS; the keyframes stay in CSS.
+
+  **"Once on mount" is not the same as once per page load.** `main.jsx` wraps the app in `StrictMode`, so React double-mounts, and a flag set *on* mount disables the animation on the second one — it would never be visible in development. The flag is set when the sequence **finishes**: StrictMode's remount lands within milliseconds and still plays, while a genuine client-side return seconds later finds it already set. A hard reload replays it, which is correct.
+
+  **Stat counters** run 0 → value over 1200ms on the cubic shape of `--ease-out`, once, when the band scrolls into view. The `<b>` reserves `min-width` in `ch` from the final digit count, so a number growing from one digit to two cannot shift what is around it. Note the band sits just below the fold at 1280×800, so the count fires on scroll rather than at first paint.
+
+  **Section reveals**, 16px over 320ms, on all fourteen sections **except the hero** — animating the first paint delays the largest element on the page for no benefit, since it is already in view.
+
+  **The hiding state is only ever applied by JavaScript.** CSS hides `.reveal-armed`, and nothing in the markup carries that class. If the script fails, sections render normally instead of staying blank. Hiding in CSS and revealing in JS fails *invisible*, which is precisely how the reduced-motion bugs in Tasks 3 and 5 happened. Apply the same rule to any reveal added later.
 
 **Done when:** every section renders at 375, 768 and 1440; the page works with both endpoints returning 500 **and** with `/api/ledger/recent` returning an empty array; `hu` and `fr` are complete with no layout break; the three eyebrow spans render at their intended size; and with reduced motion on, all records are visible immediately with final stat values.
+
+**Verified across all three commits.** Reduced motion was toggled through the browser's emulated media feature — what the OS setting drives — rather than by reading the media query: zero sections armed, zero invisible, ledger rows at `opacity: 1` / `transform: none`, stats at final values, nothing counting. With motion allowed, 14 sections armed and 14 revealed with none left hidden, and counters observed stepping `0/0/0 → 1/1/2 → … → 6/4/7` without restarting on a second pass. Layout held constant through the count: band `1100×150`, digit `31px`, page height `8155`, identical mid-count and settled. Nine locale-by-breakpoint combinations, scrolled to the bottom so every reveal fires, zero elements past the viewport.
 
 ### Task 9: Dark mode
 
