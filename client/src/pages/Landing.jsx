@@ -115,7 +115,7 @@ const CARD_ICONS = {
 
 function FeatureRow({ tone, icon, title, body, ctaTo, ctaLabel, art, reverse }) {
   return (
-    <section className={`feature-row feature-${tone}${reverse ? ' reverse' : ''}`}>
+    <section className={`feature-row reveal feature-${tone}${reverse ? ' reverse' : ''}`}>
       <div className="container feature-grid">
         <div className="feature-copy">
           <span className="feature-badge">{icon}</span>
@@ -211,7 +211,7 @@ function HowItWorks() {
   }, []);
 
   return (
-    <section className="how">
+    <section className="how reveal">
       <div className="container">
         <span className="eyebrow">{t('how.eyebrow')}</span>
         <h2>{t('how.title')}</h2>
@@ -230,6 +230,76 @@ function HowItWorks() {
   );
 }
 
+// The ledger intro plays once per page load, not once per mount. React
+// StrictMode double-mounts in development, and Landing remounts on every
+// client-side return to "/". The flag is therefore set when the sequence
+// FINISHES: StrictMode's remount happens within milliseconds and still plays,
+// while a genuine navigation back seconds later finds it already set.
+const LEDGER_STAGGER = 400;
+const LEDGER_DURATION = 320;
+let ledgerIntroPlayed = false;
+
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined'
+  && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+// Counts 0 -> value once the element is scrolled into view. Under reduced
+// motion it renders the final value immediately and never observes anything.
+// min-width is reserved from the final digit count so the surrounding layout
+// cannot shift as the number grows.
+function CountUp({ value, duration = 1200 }) {
+  const ref = useRef(null);
+  const [shown, setShown] = useState(() => (prefersReducedMotion() ? value : 0));
+
+  useEffect(() => {
+    if (prefersReducedMotion()) { setShown(value); return; }
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === 'undefined') { setShown(value); return; }
+    let raf = 0;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      observer.disconnect();
+      const start = performance.now();
+      const tick = (now) => {
+        const p = Math.min((now - start) / duration, 1);
+        // --ease-out is cubic-bezier(0.22, 1, 0.36, 1); this is its shape.
+        const eased = 1 - Math.pow(1 - p, 3);
+        setShown(Math.round(value * eased));
+        if (p < 1) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    }, { threshold: 0.4 });
+    observer.observe(el);
+    return () => { observer.disconnect(); cancelAnimationFrame(raf); };
+  }, [value, duration]);
+
+  return (
+    <b ref={ref} className="tabular" style={{ display: 'inline-block', minWidth: `${String(value).length}ch` }}>
+      {shown}
+    </b>
+  );
+}
+
+// Section reveals. One observer set for the whole page: each target is armed
+// from JS (never from markup) so a script failure cannot leave a section
+// invisible, and reduced motion arms nothing at all.
+function useSectionReveals(deps) {
+  useEffect(() => {
+    if (prefersReducedMotion() || typeof IntersectionObserver === 'undefined') return;
+    const els = Array.from(document.querySelectorAll('.reveal'));
+    els.forEach(el => el.classList.add('reveal-armed'));
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-revealed');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, deps);
+}
+
 function ProblemSection() {
   const { t } = useI18n();
   const cards = [
@@ -238,7 +308,7 @@ function ProblemSection() {
     ['problem.card3Title', 'problem.card3Body'],
   ];
   return (
-    <section className="problem">
+    <section className="problem reveal">
       <div className="container">
         <span className="eyebrow">{t('problem.eyebrow')}</span>
         <h2>{t('problem.title')}</h2>
@@ -260,7 +330,7 @@ function TrustChain() {
   const { t } = useI18n();
   const nodes = ['n1', 'n2', 'n3', 'n4'];
   return (
-    <section className="trust">
+    <section className="trust reveal">
       <div className="container">
         <span className="eyebrow">{t('trust.eyebrow')}</span>
         <h2>{t('trust.title')}</h2>
@@ -281,19 +351,28 @@ function TrustChain() {
 function LedgerSection({ records, failed, hires }) {
   const { t } = useI18n();
   const empty = !records || records.length === 0;
+  const [play] = useState(() => !ledgerIntroPlayed && !prefersReducedMotion());
+
+  useEffect(() => {
+    if (!play) return;
+    const total = LEDGER_STAGGER * Math.max(records?.length || 0, 1) + LEDGER_DURATION;
+    const id = setTimeout(() => { ledgerIntroPlayed = true; }, total);
+    return () => clearTimeout(id);
+  }, [play, records]);
   return (
-    <section className="ledger-section">
+    <section className="ledger-section reveal">
       <div className="container">
         <span className="eyebrow">{t('ledgerSection.eyebrow')}</span>
         <h2>{t('ledgerSection.title')}</h2>
         <p className="muted ledger-section-body">{t('ledgerSection.body')}</p>
-        <div className="card ruled ledger-sheet">
+        <div className={'card ruled ledger-sheet' + (play ? ' is-writing-in' : '')}>
           <span className="eyebrow ledger-sheet-title">{t('ledger.panelTitle')}</span>
           {failed || empty
             ? <p className="muted">{failed ? t('ledger.unavailable') : t('ledger.empty')}</p>
-            : records.map(r => (
+            : records.map((r, i) => (
               <LedgerRecord
                 key={r.job_id}
+                style={play ? { animationDelay: `${i * LEDGER_STAGGER}ms` } : undefined}
                 jobId={r.job_id}
                 title={r.title}
                 company={r.company}
@@ -318,7 +397,7 @@ function Faq() {
   const [open, setOpen] = useState(null);
   const items = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6'];
   return (
-    <section className="faq">
+    <section className="faq reveal">
       <div className="container">
         <span className="eyebrow">{t('faq.eyebrow')}</span>
         <h2>{t('faq.title')}</h2>
@@ -361,7 +440,7 @@ function Faq() {
 function ClosingCta({ user }) {
   const { t } = useI18n();
   return (
-    <section className="closing-cta mesh">
+    <section className="closing-cta mesh reveal">
       <div className="container">
         <h2>{t('cta.title')}</h2>
         <p>{t('cta.body')}</p>
@@ -390,6 +469,8 @@ export default function Landing() {
       .then(d => setLedger(Array.isArray(d?.records) ? d.records : []))
       .catch(() => setLedger('failed'));
   }, []);
+
+  useSectionReveals([stats, ledger]);
 
   const ledgerFailed = ledger === 'failed';
   const records = Array.isArray(ledger) ? ledger : [];
@@ -438,17 +519,17 @@ export default function Landing() {
 
       {stats && (
         <div className="container">
-          <div className="overlap-band">
-            <div className="stat"><b>{stats.open_jobs}</b><span>{t('stats.openPostings')}</span></div>
-            <div className="stat"><b>{stats.hires}</b><span>{t('stats.hires')}</span></div>
-            <div className="stat"><b>{stats.approved_companies}</b><span>{t('stats.companies')}</span></div>
+          <div className="overlap-band reveal">
+            <div className="stat"><CountUp value={stats.open_jobs} /><span>{t('stats.openPostings')}</span></div>
+            <div className="stat"><CountUp value={stats.hires} /><span>{t('stats.hires')}</span></div>
+            <div className="stat"><CountUp value={stats.approved_companies} /><span>{t('stats.companies')}</span></div>
           </div>
         </div>
       )}
 
       <ProblemSection />
 
-      <section className="match-pitch">
+      <section className="match-pitch reveal">
         <div className="container match-pitch-grid">
           <div>
             <span className="eyebrow">{t('matchPitch.eyebrow')}</span>
@@ -499,7 +580,7 @@ export default function Landing() {
 
       <LedgerSection records={records} failed={ledgerFailed} hires={stats?.hires} />
 
-      <section className="land-job">
+      <section className="land-job reveal">
         <div className="container">
           <h2 className="land-title"><span className="land-title-light">{t('landJob.titleLight')}</span><span className="land-title-bold">{t('landJob.titleBold')}</span></h2>
           <div className="land-grid">
@@ -532,7 +613,7 @@ export default function Landing() {
       <HowItWorks />
 
       {/* Illustrative placeholder testimonials — replace with real student quotes before public launch. */}
-      <section className="testimonials">
+      <section className="testimonials reveal">
         <div className="container testimonials-grid">
           <div className="testimonials-photo">
             <img src="/images/students-testimonial.jpg" alt="A multicultural group of students studying together" />
@@ -567,7 +648,7 @@ export default function Landing() {
       </section>
 
       {stats?.companies?.length > 0 && (
-        <section className="company-showcase">
+        <section className="company-showcase reveal">
           <div className="container">
             <span className="eyebrow">{t('companyShowcase.eyebrow')}</span>
             <h2>{t('companyShowcase.title')}</h2>

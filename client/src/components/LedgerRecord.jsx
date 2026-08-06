@@ -14,7 +14,7 @@ const pad = (n) => String(n).padStart(4, '0');
 // section 8 flags that publishing it alongside a job title and company can
 // identify a real person at pilot scale, and the safer variant omits it.
 export default function LedgerRecord({
-  jobId, studentId, title, company, hiredAt, facultyVerified = false,
+  jobId, studentId, title, company, hiredAt, facultyVerified = false, style,
 }) {
   const { t } = useI18n();
   const date = hiredAt
@@ -22,7 +22,7 @@ export default function LedgerRecord({
     : null;
 
   return (
-    <div className="ledger-record">
+    <div className="ledger-record" style={style}>
       <span className="lr-ids">
         JOB-{pad(jobId)}
         {studentId != null && <> ⟷ STU-{pad(studentId)}</>}

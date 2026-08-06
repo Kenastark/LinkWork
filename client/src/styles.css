@@ -375,11 +375,22 @@
 }
 .skip-link:focus { top: var(--s-4); text-decoration: none; }
 
+/* A register reads as columns. Flex with `flex: 1` on the role let the seal's
+   width push the date left on starred rows only, so the date column came out
+   ragged. The seal column is now reserved whether or not a row has one. */
 .ledger-record {
-  display: flex; align-items: baseline; gap: var(--s-4); flex-wrap: wrap;
+  display: grid; grid-template-columns: max-content 1fr max-content 1rem;
+  align-items: baseline; gap: var(--s-4);
   padding: var(--s-3) 0;
   border-bottom: 1px solid var(--border-hair);
   font-size: var(--fs-sm);
+}
+.ledger-record .lr-seal { grid-column: 4; justify-self: center; }
+@media (max-width: 640px) {
+  .ledger-record { grid-template-columns: max-content 1fr; row-gap: 2px; }
+  .ledger-record .lr-role { grid-column: 1 / -1; grid-row: 2; }
+  .ledger-record .lr-date { grid-column: 2; grid-row: 1; justify-self: end; }
+  .ledger-record .lr-seal { grid-column: 2; grid-row: 2; justify-self: end; }
 }
 .ledger-record .lr-ids {
   font-family: var(--font-mono);
@@ -388,7 +399,7 @@
   color: var(--brand);
   white-space: nowrap;
 }
-.ledger-record .lr-role { color: var(--text-2); flex: 1; min-width: 12ch; }
+.ledger-record .lr-role { color: var(--text-2); min-width: 0; text-align: left; }
 
 /* The signature. Mono is reserved for things that are on the record.
    Scoped rules for .hero .eyebrow and .how .eyebrow still win on specificity;
@@ -1366,3 +1377,35 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 .closing-cta-actions { margin-top: var(--space-6); display: flex; justify-content: center; }
 .closing-cta-btn { background: #fff; color: var(--brand); font-size: 16px; }
 .closing-cta-btn:hover:not(:disabled) { background: var(--blue-50); color: var(--brand-active); }
+
+/* ============ task 8c: motion ============ */
+
+/* Ledger rows write themselves in, one every 400ms.
+
+   The RESTING state is the finished one. The global reduced-motion rule kills
+   animations with `animation: none !important`, so an opacity-0 resting state
+   would leave every record permanently invisible — the same trap as the logo
+   draw-in and the chain connectors. Transform and opacity only; the rows never
+   move in the layout. */
+@media (prefers-reduced-motion: no-preference) {
+  .ledger-sheet.is-writing-in .ledger-record {
+    animation: lr-write-in var(--d-slow) var(--ease-out) both;
+  }
+}
+@keyframes lr-write-in {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Section reveals: 16px of travel, 320ms, on entry, once.
+
+   The hiding state lives on .reveal-armed, which only JavaScript ever adds —
+   so if the script fails, nothing is left invisible. And the whole block sits
+   inside no-preference, so reduced motion never sees a hidden state at all. */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-armed { opacity: 0; transform: translateY(16px); }
+  .reveal-armed.is-revealed {
+    opacity: 1; transform: none;
+    transition: opacity var(--d-base) var(--ease-out), transform var(--d-base) var(--ease-out);
+  }
+}
