@@ -86,10 +86,25 @@ export default function JobDetail() {
   const [aiAttempt, setAiAttempt] = useState(1);
   const [aiQs, setAiQs] = useState(null);
   const [aiAnswers, setAiAnswers] = useState([]);
-  const [pendingAi, setPendingAi] = useState(false); // round 1 submitted, awaiting Retake/Finish choice
+  const [pendingAi, setPendingAi] = useState(null); // {canRetake} once a round is submitted and the Retake/Finish choice is open
 
   const load = () => api.get(`/api/jobs/${id}`).then(setData).catch(e => setError(e.message));
   useEffect(() => { load(); }, [id]);
+
+  // Two stages park the student on a choice the server records but `stage` alone
+  // cannot express: skill test attempt 1 scored (retake or continue?) and AI round 1
+  // answered (retake or finish?). Both used to live only in this component's state,
+  // so a reload offered a "start" button the server could only reject. Ask the server.
+  const stage = data?.application?.stage;
+  const applicationId = data?.application?.id;
+  useEffect(() => {
+    if (!applicationId || user.role !== 'student') return;
+    let live = true;
+    const probe = (path, apply) => api.get(path).then(s => { if (live && s.status === 'awaiting_choice') apply(s); }).catch(() => {});
+    if (stage === 'skill_test') probe(`/api/applications/${applicationId}/skill-test?state=1`, setPendingResult);
+    else if (stage === 'ai_interview') probe(`/api/applications/${applicationId}/ai-interview?state=1`, s => setPendingAi({ canRetake: s.canRetake }));
+    return () => { live = false; };
+  }, [applicationId, stage, user.role]);
 
   const job = data?.job;
   const [description, requirements, companyDescription] = useTranslatedTexts([
@@ -145,7 +160,7 @@ export default function JobDetail() {
 
   // ---------- AI interview ----------
   const startAI = async () => {
-    setError(''); setPendingAi(false);
+    setError(''); setPendingAi(null);
     try {
       const d = await api.get(`/api/applications/${application.id}/ai-interview`);
       setAiAttempt(d.attempt); setAiQs(d.questions); setAiAnswers(d.questions.map(() => ''));
@@ -158,7 +173,7 @@ export default function JobDetail() {
       const r = await api.post(`/api/applications/${application.id}/ai-interview`, { answers: aiAnswers, attempt: aiAttempt });
       setAiQs(null);
       if (r.canRetake) {
-        setPendingAi(true);
+        setPendingAi({ canRetake: true });
       } else {
         await api.post(`/api/applications/${application.id}/ai-interview/continue`);
         await load();
@@ -170,7 +185,7 @@ export default function JobDetail() {
     setError('');
     try {
       const d = await api.get(`/api/applications/${application.id}/ai-interview?retake=1`);
-      setAiAttempt(d.attempt); setAiQs(d.questions); setAiAnswers(d.questions.map(() => '')); setPendingAi(false);
+      setAiAttempt(d.attempt); setAiQs(d.questions); setAiAnswers(d.questions.map(() => '')); setPendingAi(null);
     } catch (e) { setError(e.message); }
   };
 
@@ -178,7 +193,7 @@ export default function JobDetail() {
     setError('');
     try {
       await api.post(`/api/applications/${application.id}/ai-interview/continue`);
-      setPendingAi(false); await load();
+      setPendingAi(null); await load();
     } catch (e) { setError(e.message); }
   };
 
@@ -295,9 +310,13 @@ export default function JobDetail() {
               )}
               {pendingAi && (
                 <div style={{ marginTop: 10 }}>
-                  <p className="muted" style={{ marginBottom: 14 }}>Your answers are recorded. You can answer a second, different set of reflection questions — both rounds go on file for the company — or finish here.</p>
+                  <p className="muted" style={{ marginBottom: 14 }}>
+                    {pendingAi.canRetake
+                      ? 'Your answers are recorded. You can answer a second, different set of reflection questions — both rounds go on file for the company — or finish here.'
+                      : 'Both rounds are recorded and on file for the company. Finish to move on to the company test.'}
+                  </p>
                   <div style={{ display: 'flex', gap: 10 }}>
-                    <button className="btn secondary" onClick={retakeAI}>Retake interview (new questions)</button>
+                    {pendingAi.canRetake && <button className="btn secondary" onClick={retakeAI}>Retake interview (new questions)</button>}
                     <button className="btn" onClick={finishAI}>Finish interview</button>
                   </div>
                 </div>

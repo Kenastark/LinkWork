@@ -352,6 +352,19 @@ app.get('/api/applications/:id/skill-test', requireAuth('student'), (req, res) =
   const wantRetake = req.query.retake === '1';
   let attempt = attempts.find(x => x.score == null);
 
+  // Read-only probe. The choice between "retake" and "continue" lives only in the
+  // client's state otherwise, so a reload after attempt 1 stranded the student on a
+  // "Take the skill test" button that could only answer "Test already completed."
+  // This must not create an attempt: the plain GET below does, which is why the
+  // client cannot use it to ask what the current state is.
+  if (req.query.state === '1') {
+    if (attempt) return res.json({ status: 'in_progress', attemptNumber: attempt.attempt_number });
+    if (attempts.length === 1) {
+      return res.json({ status: 'awaiting_choice', attemptNumber: 1, score: attempts[0].score, canRetake: true });
+    }
+    return res.json({ status: attempts.length ? 'completed' : 'not_started' });
+  }
+
   if (!attempt) {
     if (wantRetake) {
       if (attempts.length !== 1 || attempts[0].score == null) return res.status(400).json({ error: 'No attempt available to retake.' });
@@ -366,7 +379,7 @@ app.get('/api/applications/:id/skill-test', requireAuth('student'), (req, res) =
       db.prepare('INSERT INTO skill_test_attempts (application_id, attempt_number, question_ids) VALUES (?,1,?)').run(a.id, JSON.stringify(ids));
       attempt = db.prepare('SELECT * FROM skill_test_attempts WHERE application_id=? AND attempt_number=1').get(a.id);
     } else {
-      return res.status(400).json({ error: 'Test already completed.' });
+      return res.status(400).json({ error: 'Attempt 1 is already scored. Continue with that score, or retake the test.' });
     }
   }
   const ids = JSON.parse(attempt.question_ids);
@@ -428,6 +441,14 @@ app.get('/api/applications/:id/ai-interview', requireAuth('student'), (req, res)
   if (!a || a.stage !== 'ai_interview') return res.status(400).json({ error: 'The AI interview is not the current step.' });
   const round1Done = db.prepare('SELECT 1 FROM ai_answers WHERE application_id=? AND attempt=1').get(a.id);
   const round2Done = db.prepare('SELECT 1 FROM ai_answers WHERE application_id=? AND attempt=2').get(a.id);
+  // Read-only probe, same reason as the skill test above: the retake/finish choice
+  // was client state only. Round 2 answered while the stage is still ai_interview
+  // means the auto-continue never landed, so the student needs Finish, not Retake.
+  if (req.query.state === '1') {
+    if (round2Done) return res.json({ status: 'awaiting_choice', attempt: 2, canRetake: false });
+    if (round1Done) return res.json({ status: 'awaiting_choice', attempt: 1, canRetake: true });
+    return res.json({ status: 'not_started' });
+  }
   if (req.query.retake === '1') {
     if (!round1Done || round2Done) return res.status(400).json({ error: 'No retake available.' });
     return res.json({ attempt: 2, questions: AI_QUESTIONS_ROUND2 });
