@@ -529,6 +529,12 @@ export default function Landing() {
 
       <ProblemSection />
 
+      <TrustChain />
+
+      <HowItWorks />
+
+      <LedgerSection records={records} failed={ledgerFailed} hires={stats?.hires} />
+
       <section className="match-pitch reveal">
         <div className="container match-pitch-grid">
           <div>
@@ -575,42 +581,6 @@ export default function Landing() {
         ctaLabel={t('feature.transparentCta')}
         art={<TransparentArt t={t} />}
       />
-
-      <TrustChain />
-
-      <LedgerSection records={records} failed={ledgerFailed} hires={stats?.hires} />
-
-      <section className="land-job reveal">
-        <div className="container">
-          <h2 className="land-title"><span className="land-title-light">{t('landJob.titleLight')}</span><span className="land-title-bold">{t('landJob.titleBold')}</span></h2>
-          <div className="land-grid">
-            <div className="land-card stat land-lav">
-              <b>{stats ? stats.open_jobs : '—'}</b>
-              <p>{t('landJob.card1Pre')}<b>{t('landJob.card1Bold')}</b></p>
-            </div>
-            <div className="land-card action land-peri">
-              <div className="land-card-top">
-                <h3>{t('landJob.card2Title')}</h3>
-                <span className="land-ic">{CARD_ICONS.doc}</span>
-              </div>
-              <Link to={user ? '/profile' : '/auth?mode=student'} className="btn dark">{t('landJob.card2Cta')}</Link>
-            </div>
-            <div className="land-card stat land-cream">
-              <b>{stats ? stats.approved_companies : '—'}</b>
-              <p>{t('landJob.card3Pre')}<b>{t('landJob.card3Bold')}</b></p>
-            </div>
-            <div className="land-card action land-gold">
-              <div className="land-card-top">
-                <h3>{t('landJob.card4Title')}</h3>
-                <span className="land-ic">{CARD_ICONS.bell}</span>
-              </div>
-              <Link to={user ? '/alerts' : '/auth?mode=student'} className="btn dark">{t('landJob.card4Cta')}</Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <HowItWorks />
 
       {/* Illustrative placeholder testimonials — replace with real student quotes before public launch. */}
       <section className="testimonials reveal">
@@ -676,6 +646,36 @@ export default function Landing() {
           </div>
         </section>
       )}
+
+      <section className="land-job reveal">
+        <div className="container">
+          <h2 className="land-title"><span className="land-title-light">{t('landJob.titleLight')}</span><span className="land-title-bold">{t('landJob.titleBold')}</span></h2>
+          <div className="land-grid">
+            <div className="land-card stat land-lav">
+              <b>{stats ? stats.open_jobs : '—'}</b>
+              <p>{t('landJob.card1Pre')}<b>{t('landJob.card1Bold')}</b></p>
+            </div>
+            <div className="land-card action land-peri">
+              <div className="land-card-top">
+                <h3>{t('landJob.card2Title')}</h3>
+                <span className="land-ic">{CARD_ICONS.doc}</span>
+              </div>
+              <Link to={user ? '/profile' : '/auth?mode=student'} className="btn dark">{t('landJob.card2Cta')}</Link>
+            </div>
+            <div className="land-card stat land-cream">
+              <b>{stats ? stats.approved_companies : '—'}</b>
+              <p>{t('landJob.card3Pre')}<b>{t('landJob.card3Bold')}</b></p>
+            </div>
+            <div className="land-card action land-gold">
+              <div className="land-card-top">
+                <h3>{t('landJob.card4Title')}</h3>
+                <span className="land-ic">{CARD_ICONS.bell}</span>
+              </div>
+              <Link to={user ? '/alerts' : '/auth?mode=student'} className="btn dark">{t('landJob.card4Cta')}</Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <Faq />
 
