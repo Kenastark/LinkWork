@@ -433,7 +433,7 @@ function AppShell({ user, setUser, logout }) {
                 <Link to="/coming-soon?feature=Clients' testimonials">{t('footer.testimonials')}</Link>
                 <Link to="/coming-soon?feature=Resources">{t('nav.resources')}</Link>
                 <Link to="/coming-soon?feature=Need help?">{t('footer.needHelp')}</Link>
-                <Link to="/auth?mode=company">{t('footer.haveAccount')}</Link>
+                <Link to="/auth?mode=login">{t('footer.haveAccount')}</Link>
               </div>
               <div className="footer-col">
                 <h2 className="footer-head">{t('footer.about')}</h2>
