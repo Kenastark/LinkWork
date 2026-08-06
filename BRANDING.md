@@ -427,11 +427,17 @@ Counters animate from 0 over 1200ms, once, on scroll into view, only when motion
 
 ### Nav
 
-`.nav` is a solid `--ink` sticky bar. Keep it dark, repaint to `--surface-dark`.
+`.nav` is a dark `--surface-dark` sticky bar. Transparent over the hero on `/` only, frosting past 24px of scroll with `--shadow-2` over `--d-base`. A 2px underline slides to the active route. A mobile sheet below 860px traps focus and closes on Escape.
 
-Add: transparent over the hero on `/` only, becoming `.glass` with `--shadow-2` past 24px of scroll over `--d-base`. A sliding 2px underline on the active route. A mobile sheet below 860px with trapped focus and Escape to close.
+Everything already built is preserved: role-aware items, the notification bell with unread badge, the EN/HU/FR switcher, the account dropdown, and the wider `min(1400px, 98vw)` nav track. The link list is built once and shared by the bar and the sheet, so the two cannot drift.
 
-Keep everything already built: role-aware items, the notification bell with unread badge, the EN/HU/FR switcher, the account dropdown, and the wider `min(1400px, 98vw)` nav track.
+**It frosts with `--glass-dark-bg`, not `.glass`.** Earlier revisions said `.glass`, but that token is `rgba(255,255,255,0.72)` and every piece of nav chrome is white-on-dark — over the hero it composites to roughly `#b8bec8`, i.e. white text on light grey. It also contradicts §10, which says the nav stays dark in both themes. `--glass-dark-bg` is the nav's own surface at 0.82 with the same blur, so all existing chrome keeps working untouched. There is a `@supports not (backdrop-filter)` fallback to solid `--surface-dark`.
+
+**Transparency needs `#content.under-nav`.** `.nav` is `position: sticky`, so it occupies flow space and page content begins *below* it. A transparent bar therefore reveals the page background, not the hero — white text on near-white. On routes that have a hero, `#content` is pulled up by the bar's 62px so the hero starts behind it; the hero's 128px top padding clears it. This is not optional decoration, it is what makes transparency legible at all.
+
+**The underline animates transform only.** A 1px element with `translateX()` and `scaleX()`, never `left`/`width`, per the motion rule. It is remeasured on route change, on resize and on `document.fonts.ready`, because item widths depend on the locale and on whether the display face has loaded.
+
+**Sheet visibility hangs off `.open`, not the `hidden` attribute.** A class selector outranks the UA's `[hidden] { display: none }`, so `display: flex` on `.nav-sheet` kept the sheet in the layout with all its links focusable while it was closed — and with no focus trap active, since the trap is gated on the same state. This is invisible in a screenshot; it was caught by walking Tab through the sheet with native key events.
 
 ### Empty, loading, error
 
@@ -657,7 +663,7 @@ Applied to three of the four job-card sites. `CompanyDashboard`'s closed-positio
 
 **Done when:** a verified and an unverified job card side by side are obviously different. The original criterion said "without reading the badge text", which the dropped gold rule was there to satisfy. The badge now carries it — a gold pill against a green one, distinguishable at a glance without reading either.
 
-### Task 7: Nav, footer, 404
+### Task 7: Nav, footer, 404 — DONE
 
 **Files:** `client/src/App.jsx`, `styles.css`
 
@@ -668,7 +674,9 @@ Three exact edits in `App.jsx`:
 2. Add the skip link as the first child inside `<div className="shell">` (line 191).
 3. Add `<Route path="*" element={<NotFound />} />` as the last route, immediately before `</Routes>` at line 249. There is no catch-all today, so an unknown URL currently renders the nav and footer with an empty middle.
 
-**Done when:** the nav transitions cleanly, the mobile sheet traps focus and closes on Escape, `/does-not-exist` renders the 404, and Tab from page load reveals the skip link first.
+**Verified:** with a dependency-free Chrome DevTools Protocol client over raw sockets, so key events are native rather than synthetic — a synthetic `KeyboardEvent` would only have tested the handler against itself. One native Tab from a fresh load focuses the skip link and animates it into view; Enter sets the hash to `#content`. At 390px the closed sheet has zero focusables; opened, seven tabs through five items wrapped at the boundary every time without escaping, Shift+Tab from the first wrapped to the last, and Escape closed it, unlocked body scroll and returned focus to the toggle. `/does-not-exist` renders in all three locales. Nav class and computed background checked at rest, past the threshold, and on a non-hero route. Signed in as a student, role-aware links, bell, account menu, switcher, the 1274px track and the underline on the active route all confirmed.
+
+**Pre-existing quirk, unchanged:** on `/auth` eight elements carry `.active`, because the three signed-out nav links all point at `/auth`. The underline picks the first, which matches the existing highlight behaviour.
 
 ### Task 8: Landing page
 
@@ -676,7 +684,15 @@ Three exact edits in `App.jsx`:
 
 Split into three commits.
 
-- **8a:** the `/api/ledger/recent` route, plus three or four `matches` rows added to `seed()` in `server/db.js`. These are the only two server changes in this document.
+- **8a — DONE.** The `/api/ledger/recent` route, plus four `matches` rows added to `seed()` in `server/db.js`. These are the only two server changes in this document, and both shipped exactly as scoped.
+
+  Four hires were seeded rather than three, into postings with `positions = 1` so each closes with a single hire: `Junior Software Engineer`, `Embedded Systems Intern`, `Data Science Intern` and `Legal Research Assistant`. Three are faculty-verified and one is not, so the ledger's gold star is visibly conditional rather than decorative. Dates are relative (`datetime('now', '-54 days')` and so on), not absolute, so the ledger still reads as recent whenever the database is next reseeded.
+
+  **Seeded hires mirror three of `hire()`'s writes, not four.** Insert the match, increment `jobs.filled`, close the posting when full. A real hire also sets `applications.stage='hired'` and rejects the remaining applicants, but there are no seeded `applications` rows for these jobs to act on. The result is `matches` rows without parent `applications` rows — structurally fine, there is no foreign key between them, and invisible in the company and admin views, but it is a shape a real hire never produces.
+
+  **Verified on a fresh boot,** by deleting `server/linkwork.db*` and restarting, since `seed()` only runs when `universities` is empty. `/api/ledger/recent` returns 4 records; `open_jobs` drops 10 → 6 and `hires` 0 → 4. An integrity query for any posting that has a match but is still open, or whose `filled` disagrees with its match count, returns none. `/api/jobs` returns 6, all `open`. The public payload contains no `student` field; the company and admin views still see `student_id`, which is the intended split.
+
+  **Not verifiable here:** §8's requirement that the page survive `/api/ledger/recent` returning an empty array. `matches` now has 4 rows, and `seed()` will not re-run on an existing database, so any deployment seeded before this commit has an empty ledger. 8b must build the empty state first and test it by clearing `matches`.
 
   The de-identified query is verified working against the real schema and returns exactly the shape the panel needs:
 

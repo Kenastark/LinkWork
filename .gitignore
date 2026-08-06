@@ -5,3 +5,6 @@ server/linkwork.db*
 *.db-journal
 server/uploads/
 .env
+
+# macOS Finder metadata
+.DS_Store

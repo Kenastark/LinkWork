@@ -228,6 +228,22 @@ app.get('/api/stats', (req, res) => {
   });
 });
 
+// Public hire ledger for the landing page. De-identified on purpose: no
+// student_id is selected, so none can leave the server. A job title, a company
+// and a date identify a real person at pilot scale, where there is one demo
+// student and ten postings.
+app.get('/api/ledger/recent', (req, res) => {
+  res.json({
+    records: db.prepare(`
+      SELECT m.job_id, m.hired_at, j.title, j.faculty_verified, c.name AS company
+      FROM matches m
+      JOIN jobs j ON j.id = m.job_id
+      JOIN companies c ON c.id = j.company_id
+      ORDER BY m.hired_at DESC LIMIT 6
+    `).all(),
+  });
+});
+
 // ---------- translation (Google Cloud Translation API, DB-cached) ----------
 app.post('/api/translate', requireAuth(), async (req, res) => {
   const { texts, lang } = req.body || {};

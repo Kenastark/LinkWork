@@ -290,9 +290,10 @@ function seed() {
     .run(hash('admin1234'));
 
   // Demo student (verified)
-  db.prepare(`INSERT INTO users (role,email,password_hash,name,university_id,faculty_id,major,doc_status,education_level)
+  const studentId = db.prepare(`INSERT INTO users (role,email,password_hash,name,university_id,faculty_id,major,doc_status,education_level)
     VALUES ('student','demo.student@mailbox.unideb.hu',?,?,?,?,?,'verified',?)`)
-    .run(hash('student1234'), 'Anna Kovács', uniId, facIds['Faculty of Informatics'], 'Computer Science', "Bachelor's");
+    .run(hash('student1234'), 'Anna Kovács', uniId, facIds['Faculty of Informatics'], 'Computer Science', "Bachelor's")
+    .lastInsertRowid;
 
   // Demo companies (approved)
   const mkCompany = (email, contactName, name, website, description) => {
@@ -464,6 +465,36 @@ function seed() {
       q.run(major, question, JSON.stringify(options), answer);
     }
   }
+
+  // --- Seeded hire ledger ---------------------------------------------------
+  // Without this, matches is empty on a fresh install: hires reads 0 and the
+  // ledger has nothing to show.
+  //
+  // These MIRROR ALL THREE WRITES that hire() performs in server/index.js —
+  // insert the match, increment jobs.filled, and close the posting once it is
+  // full. Seeding only the INSERT would leave open_jobs at 10 while the ledger
+  // claims those postings were filled, which is exactly the ghost-posting
+  // problem this product exists to solve, on the landing page, in the demo.
+  //
+  // Dates are relative so the ledger still reads as recent whenever the
+  // database is next reseeded.
+  const seedHire = (title, daysAgo) => {
+    const job = db.prepare('SELECT * FROM jobs WHERE title=? ORDER BY id LIMIT 1').get(title);
+    if (!job || job.filled >= job.positions) return;
+    db.prepare(`INSERT INTO matches (job_id, student_id, hired_at) VALUES (?,?,datetime('now', ?))`)
+      .run(job.id, studentId, `-${daysAgo} days`);
+    const filled = job.filled + 1;
+    db.prepare('UPDATE jobs SET filled=?, status=? WHERE id=?')
+      .run(filled, filled >= job.positions ? 'closed' : 'open', job.id);
+  };
+
+  // Each of these postings has positions = 1, so one hire closes it. Three are
+  // faculty-verified and one is not, so the ledger's gold star is visibly
+  // conditional rather than decorative.
+  seedHire('Junior Software Engineer', 54);
+  seedHire('Embedded Systems Intern', 37);
+  seedHire('Data Science Intern', 19);
+  seedHire('Legal Research Assistant', 6);
 
   console.log('Seeded database with University of Debrecen, demo accounts, and jobs.');
 }
