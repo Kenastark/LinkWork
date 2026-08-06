@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
 import { useI18n } from '../i18n.jsx';
+import LedgerRecord from '../components/LedgerRecord.jsx';
 
 const BRAND_PALETTE = [
-  { bg: '#e3f3ec', fg: '#147d5b' }, // verify
+  { bg: '#eff5fc', fg: '#003b7a' }, // brand blue (--blue-50 / --blue-700)
   { bg: '#fbf3dd', fg: '#7c5a00' }, // gold
   { bg: '#e6ecf7', fg: '#2b4a8c' }, // blue
   { bg: '#f3e8f5', fg: '#7a3d8c' }, // plum
@@ -114,7 +115,7 @@ const CARD_ICONS = {
 
 function FeatureRow({ tone, icon, title, body, ctaTo, ctaLabel, art, reverse }) {
   return (
-    <section className={`feature-row feature-${tone}${reverse ? ' reverse' : ''}`}>
+    <section className={`feature-row reveal feature-${tone}${reverse ? ' reverse' : ''}`}>
       <div className="container feature-grid">
         <div className="feature-copy">
           <span className="feature-badge">{icon}</span>
@@ -131,7 +132,7 @@ function FeatureRow({ tone, icon, title, body, ctaTo, ctaLabel, art, reverse }) 
 // Product-preview mockups — real LinkWork content, echoing the reference's panel + card + floating tags.
 function TrackArt({ t }) {
   return (
-    <div className="feature-panel panel-purple">
+    <div className="feature-panel panel-purple" aria-hidden="true">
       <div className="mock-card">
         <span className="mock-mono">JOB-0042</span>
         <h4>{t('mock.trackRole')}</h4>
@@ -150,7 +151,7 @@ function TrackArt({ t }) {
 }
 function OffersArt({ t }) {
   return (
-    <div className="feature-panel panel-blue">
+    <div className="feature-panel panel-blue" aria-hidden="true">
       <div className="mock-card">
         <span className="mock-mono">JOB-0037</span>
         <h4>{t('mock.offersRole')}</h4>
@@ -169,7 +170,7 @@ function OffersArt({ t }) {
 }
 function TransparentArt({ t }) {
   return (
-    <div className="feature-panel panel-green">
+    <div className="feature-panel panel-green" aria-hidden="true">
       <div className="mock-card">
         <span className="mock-mono">GreenField AgroTech Zrt.</span>
         <h4 style={{ marginTop: 6 }}>{t('mock.whatToExpect')}</h4>
@@ -210,7 +211,7 @@ function HowItWorks() {
   }, []);
 
   return (
-    <section className="how">
+    <section className="how reveal">
       <div className="container">
         <span className="eyebrow">{t('how.eyebrow')}</span>
         <h2>{t('how.title')}</h2>
@@ -229,15 +230,253 @@ function HowItWorks() {
   );
 }
 
+// The ledger intro plays once per page load, not once per mount. React
+// StrictMode double-mounts in development, and Landing remounts on every
+// client-side return to "/". The flag is therefore set when the sequence
+// FINISHES: StrictMode's remount happens within milliseconds and still plays,
+// while a genuine navigation back seconds later finds it already set.
+const LEDGER_STAGGER = 400;
+const LEDGER_DURATION = 320;
+let ledgerIntroPlayed = false;
+
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined'
+  && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+// Counts 0 -> value once the element is scrolled into view. Under reduced
+// motion it renders the final value immediately and never observes anything.
+// min-width is reserved from the final digit count so the surrounding layout
+// cannot shift as the number grows.
+function CountUp({ value, duration = 1200 }) {
+  const ref = useRef(null);
+  const [shown, setShown] = useState(() => (prefersReducedMotion() ? value : 0));
+
+  useEffect(() => {
+    if (prefersReducedMotion()) { setShown(value); return; }
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === 'undefined') { setShown(value); return; }
+    let raf = 0;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      observer.disconnect();
+      const start = performance.now();
+      const tick = (now) => {
+        const p = Math.min((now - start) / duration, 1);
+        // --ease-out is cubic-bezier(0.22, 1, 0.36, 1); this is its shape.
+        const eased = 1 - Math.pow(1 - p, 3);
+        setShown(Math.round(value * eased));
+        if (p < 1) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    }, { threshold: 0.4 });
+    observer.observe(el);
+    return () => { observer.disconnect(); cancelAnimationFrame(raf); };
+  }, [value, duration]);
+
+  return (
+    <b ref={ref} className="tabular" style={{ display: 'inline-block', minWidth: `${String(value).length}ch` }}>
+      {shown}
+    </b>
+  );
+}
+
+// Section reveals. One observer set for the whole page: each target is armed
+// from JS (never from markup) so a script failure cannot leave a section
+// invisible, and reduced motion arms nothing at all.
+function useSectionReveals(deps) {
+  useEffect(() => {
+    if (prefersReducedMotion() || typeof IntersectionObserver === 'undefined') return;
+    const els = Array.from(document.querySelectorAll('.reveal'));
+    els.forEach(el => el.classList.add('reveal-armed'));
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-revealed');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, deps);
+}
+
+function ProblemSection() {
+  const { t } = useI18n();
+  const cards = [
+    ['problem.card1Title', 'problem.card1Body'],
+    ['problem.card2Title', 'problem.card2Body'],
+    ['problem.card3Title', 'problem.card3Body'],
+  ];
+  return (
+    <section className="problem reveal">
+      <div className="container">
+        <span className="eyebrow">{t('problem.eyebrow')}</span>
+        <h2>{t('problem.title')}</h2>
+        <div className="problem-grid">
+          {cards.map(([title, body]) => (
+            <div className="card problem-card" key={title}>
+              <h3>{t(title)}</h3>
+              <p className="muted">{t(body)}</p>
+            </div>
+          ))}
+        </div>
+        <p className="problem-punch">{t('problem.punch')}</p>
+      </div>
+    </section>
+  );
+}
+
+function TrustChain() {
+  const { t } = useI18n();
+  const nodes = ['n1', 'n2', 'n3', 'n4'];
+  return (
+    <section className="trust reveal">
+      <div className="container">
+        <span className="eyebrow">{t('trust.eyebrow')}</span>
+        <h2>{t('trust.title')}</h2>
+        <ol className="trust-grid">
+          {nodes.map((n, i) => (
+            <li className="trust-node" key={n}>
+              <span className="trust-step" aria-hidden="true">{i + 1}</span>
+              <h3>{t(`trust.${n}Title`)}</h3>
+              <p className="muted">{t(`trust.${n}Body`)}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  );
+}
+
+function LedgerSection({ records, failed, hires }) {
+  const { t } = useI18n();
+  const empty = !records || records.length === 0;
+  const [play] = useState(() => !ledgerIntroPlayed && !prefersReducedMotion());
+
+  useEffect(() => {
+    if (!play) return;
+    const total = LEDGER_STAGGER * Math.max(records?.length || 0, 1) + LEDGER_DURATION;
+    const id = setTimeout(() => { ledgerIntroPlayed = true; }, total);
+    return () => clearTimeout(id);
+  }, [play, records]);
+  return (
+    <section className="ledger-section reveal">
+      <div className="container">
+        <span className="eyebrow">{t('ledgerSection.eyebrow')}</span>
+        <h2>{t('ledgerSection.title')}</h2>
+        <p className="muted ledger-section-body">{t('ledgerSection.body')}</p>
+        <div className={'card ruled ledger-sheet' + (play ? ' is-writing-in' : '')}>
+          <span className="eyebrow ledger-sheet-title">{t('ledger.panelTitle')}</span>
+          {failed || empty
+            ? <p className="muted">{failed ? t('ledger.unavailable') : t('ledger.empty')}</p>
+            : records.map((r, i) => (
+              <LedgerRecord
+                key={r.job_id}
+                style={play ? { animationDelay: `${i * LEDGER_STAGGER}ms` } : undefined}
+                jobId={r.job_id}
+                title={r.title}
+                company={r.company}
+                hiredAt={r.hired_at}
+                facultyVerified={!!r.faculty_verified}
+              />
+            ))}
+          <p className="ledger-mono tabular">
+            {hires == null ? t('ledger.monoNoCount') : t('ledger.mono', { n: hires })}
+          </p>
+        </div>
+        <p className="ledger-punch">{t('ledgerSection.punch')}</p>
+      </div>
+    </section>
+  );
+}
+
+// Accordion, one open at a time. A <button aria-expanded> drives a
+// <div role="region">, so a screen reader is told the state and what it owns.
+function Faq() {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(null);
+  const items = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6'];
+  return (
+    <section className="faq reveal">
+      <div className="container">
+        <span className="eyebrow">{t('faq.eyebrow')}</span>
+        <h2>{t('faq.title')}</h2>
+        <div className="faq-list">
+          {items.map((q, i) => {
+            const isOpen = open === i;
+            return (
+              <div className={'faq-item' + (isOpen ? ' open' : '')} key={q}>
+                <h3>
+                  <button
+                    type="button"
+                    className="faq-q"
+                    aria-expanded={isOpen}
+                    aria-controls={`faq-a-${i}`}
+                    id={`faq-q-${i}`}
+                    onClick={() => setOpen(isOpen ? null : i)}
+                  >
+                    <span>{t(`faq.${q}`)}</span>
+                    <span className="faq-chevron" aria-hidden="true">⌄</span>
+                  </button>
+                </h3>
+                <div
+                  className="faq-a"
+                  id={`faq-a-${i}`}
+                  role="region"
+                  aria-labelledby={`faq-q-${i}`}
+                  hidden={!isOpen}
+                >
+                  <p className="muted">{t(`faq.a${i + 1}`)}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ClosingCta({ user }) {
+  const { t } = useI18n();
+  return (
+    <section className="closing-cta mesh reveal">
+      <div className="container">
+        <h2>{t('cta.title')}</h2>
+        <p>{t('cta.body')}</p>
+        <div className="closing-cta-actions">
+          <Link to={user ? '/student' : '/auth?mode=student'} className="btn closing-cta-btn">
+            {user ? t('cta.browse') : t('cta.student')}
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Landing() {
   const { user } = useAuth();
   const { t } = useI18n();
   const [stats, setStats] = useState(null);
+  // null = still loading, [] = genuinely empty, 'failed' = the route errored.
+  // The three are different states and the panel says something different for
+  // each; collapsing them would show "nothing hired yet" when the server is down.
+  const [ledger, setLedger] = useState(null);
 
   useEffect(() => { api.get('/api/stats').then(setStats).catch(() => {}); }, []);
+  useEffect(() => {
+    api.get('/api/ledger/recent')
+      .then(d => setLedger(Array.isArray(d?.records) ? d.records : []))
+      .catch(() => setLedger('failed'));
+  }, []);
+
+  useSectionReveals([stats, ledger]);
+
+  const ledgerFailed = ledger === 'failed';
+  const records = Array.isArray(ledger) ? ledger : [];
 
   return (
-    <>
+    <main>
       <section className="hero">
         <div className="container">
           <div>
@@ -280,18 +519,20 @@ export default function Landing() {
 
       {stats && (
         <div className="container">
-          <div className="overlap-band">
-            <div className="stat"><b>{stats.open_jobs}</b><span>{t('stats.openPostings')}</span></div>
-            <div className="stat"><b>{stats.hires}</b><span>{t('stats.hires')}</span></div>
-            <div className="stat"><b>{stats.approved_companies}</b><span>{t('stats.companies')}</span></div>
+          <div className="overlap-band reveal">
+            <div className="stat"><CountUp value={stats.open_jobs} /><span>{t('stats.openPostings')}</span></div>
+            <div className="stat"><CountUp value={stats.hires} /><span>{t('stats.hires')}</span></div>
+            <div className="stat"><CountUp value={stats.approved_companies} /><span>{t('stats.companies')}</span></div>
           </div>
         </div>
       )}
 
-      <section className="match-pitch">
+      <ProblemSection />
+
+      <section className="match-pitch reveal">
         <div className="container match-pitch-grid">
           <div>
-            <span className="eyebrow" style={{ color: 'var(--verify)' }}>{t('matchPitch.eyebrow')}</span>
+            <span className="eyebrow">{t('matchPitch.eyebrow')}</span>
             <h2>{t('matchPitch.title')}</h2>
             <h3 style={{ marginTop: 18, fontSize: 22 }}>{t('matchPitch.subtitle')}</h3>
             <p className="muted" style={{ marginTop: 10, fontSize: 16.5, maxWidth: '46ch' }}>{t('matchPitch.body')}</p>
@@ -335,7 +576,11 @@ export default function Landing() {
         art={<TransparentArt t={t} />}
       />
 
-      <section className="land-job">
+      <TrustChain />
+
+      <LedgerSection records={records} failed={ledgerFailed} hires={stats?.hires} />
+
+      <section className="land-job reveal">
         <div className="container">
           <h2 className="land-title"><span className="land-title-light">{t('landJob.titleLight')}</span><span className="land-title-bold">{t('landJob.titleBold')}</span></h2>
           <div className="land-grid">
@@ -345,7 +590,7 @@ export default function Landing() {
             </div>
             <div className="land-card action land-peri">
               <div className="land-card-top">
-                <h4>{t('landJob.card2Title')}</h4>
+                <h3>{t('landJob.card2Title')}</h3>
                 <span className="land-ic">{CARD_ICONS.doc}</span>
               </div>
               <Link to={user ? '/profile' : '/auth?mode=student'} className="btn dark">{t('landJob.card2Cta')}</Link>
@@ -356,7 +601,7 @@ export default function Landing() {
             </div>
             <div className="land-card action land-gold">
               <div className="land-card-top">
-                <h4>{t('landJob.card4Title')}</h4>
+                <h3>{t('landJob.card4Title')}</h3>
                 <span className="land-ic">{CARD_ICONS.bell}</span>
               </div>
               <Link to={user ? '/alerts' : '/auth?mode=student'} className="btn dark">{t('landJob.card4Cta')}</Link>
@@ -368,13 +613,13 @@ export default function Landing() {
       <HowItWorks />
 
       {/* Illustrative placeholder testimonials — replace with real student quotes before public launch. */}
-      <section className="testimonials">
+      <section className="testimonials reveal">
         <div className="container testimonials-grid">
           <div className="testimonials-photo">
             <img src="/images/students-testimonial.jpg" alt="A multicultural group of students studying together" />
           </div>
           <div>
-            <span className="eyebrow" style={{ color: 'var(--verify)' }}>{t('testimonials.eyebrow')}</span>
+            <span className="eyebrow">{t('testimonials.eyebrow')}</span>
             <h2 style={{ fontSize: 32, marginBottom: 24 }}>{t('testimonials.title')}</h2>
             <div className="notes-grid">
               <div className="note note-tint-a">
@@ -403,9 +648,9 @@ export default function Landing() {
       </section>
 
       {stats?.companies?.length > 0 && (
-        <section className="company-showcase">
+        <section className="company-showcase reveal">
           <div className="container">
-            <span className="eyebrow" style={{ color: 'var(--verify)' }}>{t('companyShowcase.eyebrow')}</span>
+            <span className="eyebrow">{t('companyShowcase.eyebrow')}</span>
             <h2>{t('companyShowcase.title')}</h2>
             <div className="logo-strip">
               {stats.companies.map(c => {
@@ -432,7 +677,9 @@ export default function Landing() {
         </section>
       )}
 
-      {/* TODO: hero image section — content pending user description */}
-    </>
+      <Faq />
+
+      <ClosingCta user={user} />
+    </main>
   );
 }

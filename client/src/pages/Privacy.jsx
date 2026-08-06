@@ -6,7 +6,7 @@ export default function Privacy() {
   return (
     <main className="container" style={{ maxWidth: 720 }}>
       <span className="id-tag">POLICY VERSION {POLICY_VERSION}</span>
-      <h2 style={{ fontSize: 30, margin: '8px 0 20px' }}>Privacy &amp; data retention policy</h2>
+      <h1 style={{ fontSize: 30, margin: '8px 0 20px' }}>Privacy &amp; data retention policy</h1>
 
       <div className="card">
         <h3>What we collect</h3>

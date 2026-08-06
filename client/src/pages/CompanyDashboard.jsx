@@ -82,10 +82,10 @@ export default function CompanyDashboard() {
 
   return (
     <main className="container">
-      <h2 style={{ fontSize: 30, marginBottom: 16 }}>Company dashboard</h2>
+      <h1 style={{ fontSize: 30, marginBottom: 16 }}>Company dashboard</h1>
       <RecruitmentSteps />
-      {error && <div className="alert error">{error}</div>}
-      {ok && <div className="alert ok">{ok}</div>}
+      {error && <div className="alert error" role="alert">{error}</div>}
+      {ok && <div className="alert ok" role="status">{ok}</div>}
 
       <div className="tabs">
         <button className={tab === 'jobs' ? 'active' : ''} onClick={() => setTab('jobs')}>My postings ({jobs.length})</button>
@@ -98,11 +98,11 @@ export default function CompanyDashboard() {
         jobs.length === 0
           ? <div className="card"><p className="muted">No postings yet. Publish your first opening — remember, posting on LinkWork means committing to hire from it.</p></div>
           : jobs.map(j => (
-            <div className="card" key={j.id}>
+            <div className="card job-card" key={j.id}>
+              <span className="id-tag">JOB-{String(j.id).padStart(4, '0')}</span>
               <div className="job-row">
                 <div>
-                  <span className="id-tag">JOB-{String(j.id).padStart(4, '0')}</span>
-                  <h3>{j.title}</h3>
+                  <h2 style={{ fontSize: 20 }}>{j.title}</h2>
                   <p className="muted">{j.filled} hired of {j.positions} position{j.positions > 1 ? 's' : ''}</p>
                   <div className="meta">
                     {j.faculty_verified ? <span className="badge faculty">★ Faculty partnership</span> : <span className="badge verified">✓ Platform-committed</span>}

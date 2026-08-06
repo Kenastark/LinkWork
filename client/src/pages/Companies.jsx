@@ -16,7 +16,7 @@ export default function Companies() {
 
   return (
     <main className="container">
-      <h2 style={{ fontSize: 30, marginBottom: 6 }}>Explore companies</h2>
+      <h1 style={{ fontSize: 30, marginBottom: 6 }}>Explore companies</h1>
       <p className="muted" style={{ marginBottom: 20 }}>Every company here has committed to hiring from LinkWork — approved by the platform admin.</p>
 
       {companies.length === 0 ? (

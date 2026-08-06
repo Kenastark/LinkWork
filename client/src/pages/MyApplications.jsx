@@ -24,13 +24,13 @@ function InterviewBlock({ applicationId }) {
 
   return (
     <div style={{ marginTop: 14, borderTop: '1px solid var(--line)', paddingTop: 14 }}>
-      {err && <div className="alert error">{err}</div>}
+      {err && <div className="alert error" role="alert">{err}</div>}
       {interviews.map(iv => (
         <div key={iv.id} style={{ marginBottom: 12 }}>
           <p style={{ fontWeight: 700, fontSize: 14.5 }}>{KIND_LABEL[iv.kind]}</p>
           {iv.status === 'scheduled' && iv.chosen_slot ? (
             <>
-              <p className="muted" style={{ margin: '6px 0' }}>Scheduled for <b style={{ color: 'var(--ink)' }}>{formatSlot(iv.chosen_slot.start_at, iv.chosen_slot.duration_min)}</b></p>
+              <p className="muted" style={{ margin: '6px 0' }}>Scheduled for <b style={{ color: 'var(--text-1)' }}>{formatSlot(iv.chosen_slot.start_at, iv.chosen_slot.duration_min)}</b></p>
               <Link to={`/meeting/${iv.id}`} className="btn sm">Join meeting</Link>
             </>
           ) : (
@@ -60,7 +60,7 @@ export default function MyApplications() {
 
   return (
     <main className="container">
-      <h2 style={{ fontSize: 30, marginBottom: 20 }}>My applications ({apps.length})</h2>
+      <h1 style={{ fontSize: 30, marginBottom: 20 }}>My applications ({apps.length})</h1>
 
       {apps.length === 0 ? (
         <div className="card"><p className="muted">You haven't applied to anything yet. Every opening you see is real — pick one and start the chain.</p></div>

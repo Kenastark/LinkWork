@@ -1,7 +1,7 @@
 export default function Resources() {
   return (
     <main className="container" style={{ maxWidth: 560 }}>
-      <h2 style={{ fontSize: 30, marginBottom: 12 }}>Resources</h2>
+      <h1 style={{ fontSize: 30, marginBottom: 12 }}>Resources</h1>
       <div className="card">
         <span className="badge pending">Coming soon</span>
         <p className="muted" style={{ marginTop: 12 }}>

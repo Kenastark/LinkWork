@@ -40,9 +40,9 @@ export default function Profile() {
 
   return (
     <main className="container" style={{ maxWidth: 560 }}>
-      <h2 style={{ fontSize: 30, marginBottom: 20 }}>Profile</h2>
-      {error && <div className="alert error">{error}</div>}
-      {ok && <div className="alert ok">{ok}</div>}
+      <h1 style={{ fontSize: 30, marginBottom: 20 }}>Profile</h1>
+      {error && <div className="alert error" role="alert">{error}</div>}
+      {ok && <div className="alert ok" role="status">{ok}</div>}
 
       <div className="card" style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
         {user.photo_path

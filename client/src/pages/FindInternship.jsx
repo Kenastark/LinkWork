@@ -67,13 +67,13 @@ export default function FindInternship() {
 
   return (
     <main className="container">
-      <h2 style={{ fontSize: 30, marginBottom: 4 }}>Find an internship</h2>
+      <h1 style={{ fontSize: 30, marginBottom: 4 }}>Find an internship</h1>
       <p className="muted" style={{ marginBottom: 20 }}>Openings for your university ({filtered.length} of {jobs.length})</p>
 
       <div className="filter-layout">
         <aside className="filter-sidebar">
           <div className="card filter-prefs">
-            <h3 style={{ fontSize: 17, marginBottom: 12 }}>Your preferences</h3>
+            <h2 style={{ fontSize: 17, marginBottom: 12 }}>Your preferences</h2>
             {activeChips.length === 0
               ? <p className="muted" style={{ fontSize: 13.5 }}>No filters applied — every open posting is shown.</p>
               : (
@@ -86,7 +86,7 @@ export default function FindInternship() {
           </div>
 
           <div className="card" style={{ marginTop: 16 }}>
-            <h3 style={{ fontSize: 15, marginBottom: 10 }}>Edit preferences</h3>
+            <h2 style={{ fontSize: 15, marginBottom: 10 }}>Edit preferences</h2>
 
             <FilterSection title="Role" icon="💼" open={!!openSections.role} onToggle={() => toggleSection('role')}>
               <input placeholder="Search by title…" value={keyword} onChange={e => setKeyword(e.target.value)} style={{ marginBottom: 12 }} />
@@ -141,10 +141,10 @@ export default function FindInternship() {
           {filtered.length === 0 ? (
             <div className="card"><p className="muted">No openings match your filters right now. Try clearing a filter or check back soon.</p></div>
           ) : filtered.map(j => (
-            <div className="card" key={j.id}>
+            <div className="card job-card" key={j.id}>
+              <span className="id-tag">JOB-{String(j.id).padStart(4, '0')}</span>
               <div className="job-row">
                 <div>
-                  <span className="id-tag">JOB-{String(j.id).padStart(4, '0')}</span>
                   <h3><Link to={`/jobs/${j.id}`} style={{ color: 'inherit' }}>{j.title}</Link></h3>
                   <p className="muted">{j.company_name} · {j.positions - j.filled} of {j.positions} position{j.positions > 1 ? 's' : ''} open</p>
                   <div className="meta">

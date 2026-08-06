@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import DateTimePicker from '../components/DateTimePicker.jsx';
 import { STAGE_LABEL, KIND_LABEL, reached, formatSlot } from '../stages.js';
+import useFocusTrap from '../useFocusTrap.js';
 
 const DETAIL_TABS = [
   { key: 'overview', label: 'Overview' },
@@ -61,8 +62,8 @@ function AiInterviewTab({ applicant, aiAnswers, onChange }) {
         {applicant.ai_score != null && <span className="badge verified">Section score: {applicant.ai_score}/100</span>}
       </div>
       <p className="muted" style={{ fontSize: 13, margin: '6px 0 4px' }}>Placeholder recorded answers — the live AI-graded video interview ships later. Rate each answer 0–10.</p>
-      {err && <div className="alert error">{err}</div>}
-      {saved && <div className="alert ok">{saved}</div>}
+      {err && <div className="alert error" role="alert">{err}</div>}
+      {saved && <div className="alert ok" role="status">{saved}</div>}
       {[1, 2].filter(round => aiAnswers.some(qa => qa.attempt === round)).map(round => (
         <div key={round}>
           {aiAnswers.some(qa => qa.attempt === 2) && <p className="id-tag" style={{ marginTop: 16 }}>ROUND {round}</p>}
@@ -135,8 +136,8 @@ function InterviewFeedback({ iv, onChange }) {
     <div style={{ marginTop: 14, borderTop: '1px solid var(--line)', paddingTop: 14 }}>
       <p className="filter-label">Interviewer assessment</p>
       <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>Score the candidate and note how they performed. You can save now and come back to advance or reject later.</p>
-      {err && <div className="alert error">{err}</div>}
-      {saved && <div className="alert ok">Assessment saved.</div>}
+      {err && <div className="alert error" role="alert">{err}</div>}
+      {saved && <div className="alert ok" role="status">Assessment saved.</div>}
       <label className="score-input">Score
         <input type="number" min="0" max="10" value={score} onChange={e => setScore(e.target.value)} />
         <span className="muted">/ 10</span>
@@ -244,10 +245,14 @@ function InterviewTab({ applicant, interviews, kind, onChange }) {
 
 // ---- reject confirmation modal ----
 function RejectModal({ name, role, onCancel, onConfirm, busy }) {
+  const ref = useRef(null);
+  useFocusTrap(true, ref, onCancel);
+
   return (
     <div className="modal-backdrop" onClick={onCancel}>
-      <div className="modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
-        <h3 style={{ fontSize: 20 }}>Reject this candidate?</h3>
+      <div className="modal" ref={ref} onClick={e => e.stopPropagation()}
+           role="dialog" aria-modal="true" aria-labelledby="reject-title">
+        <h3 id="reject-title" style={{ fontSize: 20 }}>Reject this candidate?</h3>
         <p style={{ marginTop: 10 }}>Are you sure you want to reject <b>{name}</b> for the <b>{role}</b> position?</p>
         <div className="alert error" style={{ marginTop: 14, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
           <span style={{ fontSize: 18, lineHeight: 1 }}>⚠️</span>
@@ -277,7 +282,7 @@ export default function ApplicantReview() {
     .catch(e => setError(e.message));
   useEffect(() => { load(true); /* eslint-disable-next-line */ }, [id]);
 
-  if (error) return <main className="container"><div className="alert error">{error}</div><Link to="/company" className="btn secondary" style={{ marginTop: 12 }}>Back to dashboard</Link></main>;
+  if (error) return <main className="container"><div className="alert error" role="alert">{error}</div><Link to="/company" className="btn secondary" style={{ marginTop: 12 }}>Back to dashboard</Link></main>;
   if (!detail) return <main className="container" />;
 
   const a = detail.applicant;
@@ -308,7 +313,7 @@ export default function ApplicantReview() {
       <div className="card">
         <div className="job-row">
           <div>
-            <h2 style={{ fontSize: 24 }}>{a.student_name}</h2>
+            <h1 style={{ fontSize: 24 }}>{a.student_name}</h1>
             <p className="muted">{a.title} · {a.student_email} · {a.major}</p>
           </div>
           <span className={'badge ' + (a.stage === 'hired' ? 'verified' : a.stage === 'rejected' ? 'danger' : 'pending')}>{STAGE_LABEL[a.stage]}</span>

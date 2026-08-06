@@ -19,10 +19,10 @@ export default function Alerts() {
 
   return (
     <main className="container" style={{ maxWidth: 640 }}>
-      <h2 style={{ fontSize: 30, marginBottom: 6 }}>Alerts</h2>
+      <h1 style={{ fontSize: 30, marginBottom: 6 }}>Alerts</h1>
       <p className="muted" style={{ marginBottom: 20 }}>Follow companies from their profile page to see their new openings here.</p>
 
-      {error && <div className="alert error">{error}</div>}
+      {error && <div className="alert error" role="alert">{error}</div>}
 
       {follows.length === 0 ? (
         <Card>

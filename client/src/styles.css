@@ -1,41 +1,438 @@
-/* ============ LinkWork design tokens ============ */
+/* ============================================================================
+   LinkWork Design Tokens  v2
+
+   This block is the canonical token layer. It was previously maintained as a
+   separate tokens.css at the repo root; that file was deleted in task 1 so
+   that there is exactly one definition to edit. Do not recreate it.
+
+   The token set is a SUPERSET. All 28 custom properties the pre-rebrand
+   stylesheet referenced are redefined in the COMPATIBILITY LAYER below, so
+   every rule that follows keeps working unchanged.
+
+   --ink is a fixed navy in both themes because it paints the dark plates
+   (.nav, footer.site, .hero, .meeting-stage, .btn.dark). Task 2 split it:
+   all 23 text uses moved to var(--text-1), and the 7 surviving uses are
+   backgrounds or the .btn.secondary border. Never reintroduce var(--ink)
+   in a color: declaration — that is what would break dark mode.
+   ========================================================================== */
+
 :root {
-  --ink: #16233f;          /* deep academic navy — headings, nav */
-  --ink-soft: #46526b;     /* secondary text */
-  --paper: #f5f7f4;        /* cool paper background */
-  --card: #ffffff;
-  --verify: #147d5b;       /* verification green — the brand */
-  --verify-bright: #1ca878;
-  --verify-tint: #e3f3ec;
-  --gold: #d99a06;         /* University of Debrecen gold — faculty badges ONLY */
-  --gold-tint: #fbf3dd;
-  --danger: #b3372f;
-  --danger-tint: #fbe9e7;
-  --line: #dfe4dc;
-  --radius: 14px;
-  --radius-sm: 10px;
-  --radius-lg: 18px;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --shadow-sm: 0 1px 2px rgba(22, 35, 63, 0.06), 0 1px 1px rgba(22, 35, 63, 0.04);
-  --shadow-md: 0 4px 16px rgba(22, 35, 63, 0.08), 0 2px 6px rgba(22, 35, 63, 0.05);
-  --shadow-lg: 0 12px 32px rgba(22, 35, 63, 0.14), 0 4px 12px rgba(22, 35, 63, 0.06);
-  --ease: cubic-bezier(0.2, 0.65, 0.3, 1);
-  --font-display: "Work Sans", system-ui, sans-serif;
-  --font-body: "Work Sans", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  color-scheme: light;
+
+  /* --- Brand: University of Debrecen blue ------------------------------- */
+  --blue-50:  #eff5fc;
+  --blue-100: #d8e7f7;
+  --blue-200: #b0cdef;
+  --blue-300: #7fade3;
+  --blue-400: #4f8ef7;  /* accent, interactive highlight, dark-mode primary */
+  --blue-500: #1f6bc4;
+  --blue-600: #00539f;
+  --blue-700: #003b7a;  /* PRIMARY */
+  --blue-800: #002855;  /* primary dark */
+  --blue-900: #001b3a;
+
+  /* --- Seal: University gold. Verification only. Never decorative. ------- */
+  --gold-100: #f7edd6;
+  --gold-300: #efd9a6;
+  --gold-500: #c89b3c;  /* THE gold */
+  --gold-700: #8a651f;
+
+  /* --- Neutrals --------------------------------------------------------- */
+  --n-0:   #ffffff;
+  --n-25:  #fbfcfe;
+  --n-50:  #f7f9fc;
+  --n-100: #eef2f8;
+  --n-200: #e1e8f0;
+  --n-300: #cbd5e1;
+  --n-400: #94a3b8;
+  --n-500: #64748b;
+  --n-600: #475569;
+  --n-700: #334155;
+  --n-800: #1e293b;
+  --n-900: #0f172a;
+  --n-950: #070d1a;
+
+  /* --- Status ----------------------------------------------------------- */
+  --success-50:  #e7f7f0;
+  --success-500: #17a673;
+  --success-600: #128b60;
+  --success-700: #0e7150;
+  --warning-50:  #fdf3e2;
+  --warning-500: #f2a93b;
+  --warning-700: #a86f14;
+  /* --warning-700 on --warning-50 is only 3.86:1, so it cannot carry badge or
+     body text. This darker step is the readable ink for warning surfaces:
+     5.38:1 on --warning-50, 5.91:1 on white. */
+  --warning-800: #8a5a10;
+  --danger-50:   #fbeceb;
+  --danger-500:  #d9534f;
+  --danger-700:  #9b312e;
+
+  /* --- Fixed dark surface. Same in both themes. ------------------------- */
+  /* The nav, footer, hero and meeting stage are dark plates in light mode
+     and stay dark in dark mode. This is the colour they are painted with. */
+  --surface-dark:       #0d1b31;
+  --surface-dark-hover: #08111f;
+  --on-dark:            #ffffff;
+  --on-dark-muted:      #a9b6cc;
+  --on-dark-faint:      #7d8aa3;
+
+  /* --- Semantic surfaces ------------------------------------------------ */
+  --bg-canvas:     var(--n-50);
+  --bg-sunken:     var(--n-100);
+  --surface:       var(--n-0);
+  --surface-alt:   var(--n-25);
+  --surface-hover: var(--n-50);
+  --border:        var(--n-200);
+  --border-strong: var(--n-300);
+  --border-hair:   rgba(0, 59, 122, 0.08);
+
+  /* --- Semantic text ---------------------------------------------------- */
+  --text-1: var(--n-900);
+  --text-2: var(--n-600);
+  --text-3: var(--n-500);
+  --text-on-brand: #ffffff;
+  --text-link: var(--blue-700);
+  --text-link-hover: var(--blue-500);
+
+  /* --- Semantic brand roles --------------------------------------------- */
+  --brand:           var(--blue-700);
+  --brand-hover:     var(--blue-600);
+  --brand-active:    var(--blue-800);
+  --brand-fg:        var(--blue-700);   /* fallback only: Landing.jsx sets
+                                           this inline per company logo */
+  --brand-subtle-bg: var(--blue-50);
+  --brand-subtle-fg: var(--blue-700);
+  --accent:          var(--blue-400);
+  --seal:            var(--gold-500);
+  --seal-fg:         var(--gold-700);
+  --seal-subtle-bg:  var(--gold-100);
+  --seal-border:     #e5cd95;
+
+  /* Decorative warm tints. NOT the seal. Used by .note-tint-b, .land-gold,
+     .mm-chip.gold and .pref-chip:hover so that var(--seal) resolves in
+     exactly two places after Task 2: .badge.faculty and the job card rule. */
+  --warm-100:        #fdf1d8;
+  --warm-300:        #f6dc9a;
+  --warm-fg:         #7c5a00;
+
+  /* --- Glass ------------------------------------------------------------ */
+  --glass-bg:     rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-blur:   saturate(180%) blur(16px);
+  /* The nav is a dark plate in both themes (see section 10), and all of its
+     chrome is white-on-dark. The white --glass-bg would composite to light
+     grey under that white text, so the nav frosts with its own surface. */
+  --glass-dark-bg: rgba(13, 27, 49, 0.82);
+
+  /* --- Elevation. Blue-tinted, never neutral black. --------------------- */
+  --shadow-0: none;
+  --shadow-1: 0 1px 2px rgba(0, 40, 85, 0.05), 0 1px 3px rgba(0, 40, 85, 0.04);
+  --shadow-2: 0 2px 4px rgba(0, 40, 85, 0.05), 0 6px 16px -4px rgba(0, 40, 85, 0.08);
+  --shadow-3: 0 4px 8px rgba(0, 40, 85, 0.06), 0 16px 32px -8px rgba(0, 40, 85, 0.12);
+  --shadow-4: 0 8px 16px rgba(0, 40, 85, 0.08), 0 32px 64px -16px rgba(0, 40, 85, 0.18);
+  --shadow-brand: 0 6px 20px -6px rgba(0, 59, 122, 0.45);
+  --shadow-seal:  0 4px 14px -4px rgba(200, 155, 60, 0.4);
+
+  /* --- Radius ----------------------------------------------------------- */
+  --r-xs:   6px;
+  --r-sm:   10px;
+  --r-md:   14px;
+  --r-lg:   20px;
+  --r-xl:   28px;
+  --r-2xl:  36px;
+  --r-pill: 999px;
+
+  /* --- Spacing. 4px base. ----------------------------------------------- */
+  --s-1:  4px;
+  --s-2:  8px;
+  --s-3:  12px;
+  --s-4:  16px;
+  --s-5:  20px;
+  --s-6:  24px;
+  --s-8:  32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+  --s-20: 80px;
+  --s-24: 96px;
+  --section-y: clamp(64px, 9vw, 128px);
+  --measure: 68ch;
+
+  /* --- Typography ------------------------------------------------------- */
+  --font-display-new: "Plus Jakarta Sans", "Work Sans", system-ui, sans-serif;
+  --font-body-new:    "Inter", "Work Sans", system-ui, sans-serif;
+  --font-mono-new:    "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --fs-micro: 0.6875rem;
+  --fs-xs:    0.75rem;
+  --fs-sm:    0.875rem;
+  --fs-base:  1rem;
+  --fs-md:    1.0625rem;
+  --fs-lg:    clamp(1.125rem, 0.4vw + 1.05rem, 1.25rem);
+  --fs-xl:    clamp(1.375rem, 0.8vw + 1.2rem, 1.625rem);
+  --fs-2xl:   clamp(1.75rem, 1.4vw + 1.4rem, 2.25rem);
+  --fs-3xl:   clamp(2.25rem, 2.4vw + 1.6rem, 3rem);
+  --fs-4xl:   clamp(2.75rem, 4vw + 1.6rem, 4.25rem);
+  --fs-5xl:   clamp(3.25rem, 6vw + 1.4rem, 5.5rem);
+
+  --lh-tight:   1.06;
+  --lh-snug:    1.22;
+  --lh-normal:  1.5;
+  --lh-relaxed: 1.65;
+
+  --ls-tightest: -0.035em;
+  --ls-tight:    -0.02em;
+  --ls-normal:   -0.011em;
+  --ls-wide:     0.08em;
+  --ls-widest:   0.16em;
+
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+  --fw-extra:    800;
+
+  /* --- Motion ----------------------------------------------------------- */
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --d-instant: 120ms;
+  --d-fast:    200ms;
+  --d-base:    320ms;
+  --d-slow:    560ms;
+  --d-ambient: 1200ms;
+
+  /* --- Focus and layering ----------------------------------------------- */
+  --focus-ring-color: var(--blue-400);
+  --z-sticky:   100;
+  --z-nav:      200;
+  --z-dropdown: 300;
+  --z-overlay:  400;
+  --z-modal:    500;
+  --z-toast:    600;
 }
+
+/* ============================================================================
+   COMPATIBILITY LAYER
+   Every custom property the pre-rebrand stylesheet used, remapped onto the new
+   scale, so that none of the rules further down this file had to change in
+   task 1.
+
+   Two deliberate behaviour changes, both intended:
+     1. --verify now resolves to BLUE. Primary actions become blue. The old
+        green survives as --success-500 and is used only for pass / verified
+        status after the Task 2 audit.
+     2. --paper moves from the warm #f5f7f4 to the cool #f7f9fc from the brief.
+
+   Delete a line from this block only once nothing references that name.
+   ========================================================================== */
+
+:root {
+  --ink:            var(--surface-dark);   /* SEE HEADER NOTE */
+  --ink-soft:       var(--text-2);
+  --paper:          var(--bg-canvas);
+  --card:           var(--surface);
+  --verify:         var(--brand);
+  --verify-bright:  var(--accent);
+  --verify-tint:    var(--brand-subtle-bg);
+  --danger:         var(--danger-500);
+  --danger-tint:    var(--danger-50);
+  --line:           var(--border);
+  --radius:         var(--r-md);
+  --radius-sm:      var(--r-sm);
+  --radius-lg:      var(--r-lg);
+  --space-1:        var(--s-1);
+  --space-2:        var(--s-2);
+  --space-3:        var(--s-3);
+  --space-4:        var(--s-4);
+  --space-5:        var(--s-6);
+  --space-6:        var(--s-8);
+  --shadow-sm:      var(--shadow-1);
+  --shadow-md:      var(--shadow-2);
+  --shadow-lg:      var(--shadow-3);
+  --ease:           var(--ease-out);
+  --font-display:   var(--font-display-new);
+  --font-body:      var(--font-body-new);
+  --font-mono:      var(--font-mono-new);
+}
+
+/* ============================================================================
+   DARK MODE — PRESENT BUT DELIBERATELY UNREACHABLE
+
+   These rules are correct and dormant. Nothing sets data-theme="dark" yet:
+   the resolver in client/index.html is pinned to 'light' precisely because
+   task 2 has not run. Until it does, --ink still resolves to --surface-dark,
+   so body text would render #0d1b31 on a #070d1a canvas.
+
+   Turning this on is task 9, and task 2 is its hard prerequisite. Do not
+   restore the 'system' default in index.html before then.
+   ========================================================================== */
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg-canvas:     var(--n-950);
+  --bg-sunken:     #04080f;
+  --surface:       #0f1a2e;
+  --surface-alt:   #16243d;
+  --surface-hover: #1b2b47;
+  --border:        rgba(148, 163, 184, 0.16);
+  --border-strong: rgba(148, 163, 184, 0.28);
+  --border-hair:   rgba(148, 163, 184, 0.10);
+
+  --text-1: #e8eef7;
+  --text-2: #b6c4d6;
+  --text-3: var(--n-400);
+  --text-on-brand: #04080f;
+  --text-link: var(--blue-300);
+  --text-link-hover: #a8ccf5;
+
+  /* #003b7a is unreadable on a dark canvas, so the accent carries the brand */
+  --brand:           var(--blue-400);
+  --brand-hover:     #6ba1f9;
+  --brand-active:    var(--blue-500);
+  --brand-fg:        var(--blue-300);
+  --brand-subtle-bg: rgba(79, 142, 247, 0.12);
+  --brand-subtle-fg: var(--blue-300);
+  --seal:            var(--gold-300);
+  --seal-fg:         var(--gold-300);
+  --seal-subtle-bg:  rgba(200, 155, 60, 0.14);
+  --seal-border:     rgba(200, 155, 60, 0.35);
+  --warm-100:        rgba(246, 220, 154, 0.13);
+  --warm-300:        rgba(246, 220, 154, 0.28);
+  --warm-fg:         #e3c583;
+
+  --success-50: rgba(23, 166, 115, 0.14);
+  --danger-50:  rgba(217, 83, 79, 0.14);
+  --warning-50: rgba(242, 169, 59, 0.14);
+  --danger-700: #f0918e;
+  --success-700: #5fd3aa;
+  --warning-700: #f5c377;
+  --warning-800: #f5c377;
+
+  --glass-bg:     rgba(15, 26, 46, 0.68);
+  --glass-border: rgba(148, 163, 184, 0.14);
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-2: 0 2px 4px rgba(0, 0, 0, 0.40), 0 6px 16px -4px rgba(0, 0, 0, 0.50);
+  --shadow-3: 0 4px 8px rgba(0, 0, 0, 0.45), 0 16px 32px -8px rgba(0, 0, 0, 0.55);
+  --shadow-4: 0 8px 16px rgba(0, 0, 0, 0.50), 0 32px 64px -16px rgba(0, 0, 0, 0.65);
+  --shadow-brand: 0 6px 24px -6px rgba(79, 142, 247, 0.50);
+
+  --focus-ring-color: var(--blue-300);
+}
+
+/* ============================================================================
+   ADDITIVE UTILITIES
+   Seven helpers, none of which existed before the rebrand and none of which
+   override a rule further down this file. They are consumed by later tasks.
+
+   There is deliberately no base .eyebrow rule here. Only .hero .eyebrow and
+   .how .eyebrow are styled; Landing.jsx also renders three bare .eyebrow
+   spans (match pitch, testimonials, company showcase) that inherit body size.
+   A base rule would silently shrink those three to 11px mono.
+   ========================================================================== */
+
+.glass {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass { background: var(--surface); }
+}
+
+/* Ambient brand mesh. Hero and closing CTA only. Never behind body copy. */
+.mesh {
+  background-image:
+    radial-gradient(60% 55% at 15% 0%,   rgba(79, 142, 247, 0.22), transparent 60%),
+    radial-gradient(50% 50% at 85% 10%,  rgba(0, 59, 122, 0.30),   transparent 60%),
+    radial-gradient(40% 40% at 50% 100%, rgba(200, 155, 60, 0.10), transparent 60%);
+}
+[data-theme="dark"] .mesh { opacity: 0.65; }
+
+/* Ruled-register texture. Ledger sections only. Two per page, maximum. */
+.ruled {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--border-hair) 0 1px,
+    transparent 1px 40px
+  );
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.skip-link {
+  position: absolute; left: var(--s-4); top: -60px; z-index: var(--z-toast);
+  background: var(--surface); color: var(--brand); font-weight: var(--fw-semibold);
+  padding: var(--s-3) var(--s-5); border-radius: var(--r-sm); box-shadow: var(--shadow-3);
+  transition: top var(--d-fast) var(--ease-out);
+}
+.skip-link:focus { top: var(--s-4); text-decoration: none; }
+
+/* A register reads as columns. Flex with `flex: 1` on the role let the seal's
+   width push the date left on starred rows only, so the date column came out
+   ragged. The seal column is now reserved whether or not a row has one. */
+.ledger-record {
+  display: grid; grid-template-columns: max-content 1fr max-content 1rem;
+  align-items: baseline; gap: var(--s-4);
+  padding: var(--s-3) 0;
+  border-bottom: 1px solid var(--border-hair);
+  font-size: var(--fs-sm);
+}
+.ledger-record .lr-seal { grid-column: 4; justify-self: center; }
+@media (max-width: 640px) {
+  .ledger-record { grid-template-columns: max-content 1fr; row-gap: 2px; }
+  .ledger-record .lr-role { grid-column: 1 / -1; grid-row: 2; }
+  .ledger-record .lr-date { grid-column: 2; grid-row: 1; justify-self: end; }
+  .ledger-record .lr-seal { grid-column: 2; grid-row: 2; justify-self: end; }
+}
+.ledger-record .lr-ids {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--ls-wide);
+  color: var(--brand);
+  white-space: nowrap;
+}
+.ledger-record .lr-role { color: var(--text-2); min-width: 0; text-align: left; }
+
+/* The signature. Mono is reserved for things that are on the record.
+   Scoped rules for .hero .eyebrow and .how .eyebrow still win on specificity;
+   this is the base every other eyebrow inherits. */
+.eyebrow {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-widest);
+  text-transform: uppercase;
+  color: var(--brand-subtle-fg);
+  margin-bottom: var(--space-2);
+}
+.ledger-record .lr-date {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  white-space: nowrap;
+}
+/* Gold star on a faculty-verified record. Decorative glyph only — the record
+   also carries the words, per the rule that colour never means anything alone. */
+.ledger-record .lr-seal { color: var(--seal); font-size: var(--fs-sm); line-height: 1; }
+
+/* Numbers that jitter while a counter animates look broken. */
+.tabular { font-variant-numeric: tabular-nums; }
 
 * { box-sizing: border-box; margin: 0; }
 html { scroll-behavior: smooth; }
 body {
   font-family: var(--font-body);
   background: var(--paper);
-  color: var(--ink);
+  color: var(--text-1);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
@@ -43,7 +440,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 800; line-height: 1.
 a { color: var(--verify); text-decoration: none; }
 a:hover { text-decoration: underline; }
 button { font-family: var(--font-body); cursor: pointer; }
-:focus-visible { outline: 2px solid var(--verify-bright); outline-offset: 2px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--focus-ring-color); outline-offset: 2px; border-radius: 4px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
@@ -52,12 +449,87 @@ button { font-family: var(--font-body); cursor: pointer; }
 .shell { min-height: 100vh; display: flex; flex-direction: column; }
 .container { width: min(1100px, 92vw); margin: 0 auto; }
 main.container { flex: 1; padding: 32px 0 72px; }
+/* The skip-link target. It has to carry the flex growth that main.container
+   expects, or wrapping <Routes> in it lets the footer ride up the page. */
+#content { flex: 1; display: flex; flex-direction: column; }
+#content:focus { outline: none; }
+/* The nav is sticky, so it occupies flow space and content begins below it.
+   A transparent nav would therefore reveal the page background rather than the
+   hero. On routes that have a hero, pull the content up by the bar's height so
+   the hero starts behind it. The hero's 128px top padding clears the 62px bar. */
+#content.under-nav { margin-top: -62px; }
+
+/* 404. A record that is not on the register. */
+.not-found { max-width: 620px; }
+.not-found .ledger-record { border-bottom: 0; padding-top: 0; }
+.not-found h1 { font-size: var(--fs-2xl); margin: var(--space-2) 0 var(--space-3); }
+.not-found-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-5); }
 
 /* ============ nav ============ */
 .nav {
-  background: var(--ink); color: #fff;
-  position: sticky; top: 0; z-index: 20;
-  box-shadow: var(--shadow-sm);
+  background: var(--surface-dark); color: #fff;
+  position: sticky; top: 0; z-index: var(--z-nav);
+  box-shadow: var(--shadow-1);
+  transition: background var(--d-base) var(--ease-out), box-shadow var(--d-base) var(--ease-out);
+}
+/* Only "/" has a hero behind the bar. Transparent at rest, frosted past 24px. */
+.nav.over-hero { background: transparent; box-shadow: none; }
+.nav.over-hero.scrolled {
+  background: var(--glass-dark-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-2);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .nav.over-hero.scrolled { background: var(--surface-dark); }
+}
+
+.nav-inner { position: relative; }
+.nav-group { display: flex; align-items: center; gap: 28px; }
+.nav-auth { gap: 18px; }
+
+/* Active-route underline. Width comes from scaleX on a 1px element so the slide
+   animates transform only, per the motion rule. */
+.nav-underline {
+  position: absolute; left: 0; bottom: 0; width: 1px; height: 2px;
+  background: #fff; transform-origin: left center; pointer-events: none;
+  transition: transform var(--d-fast) var(--ease-out), opacity var(--d-fast) var(--ease-out);
+}
+
+.nav-toggle {
+  display: none; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.06);
+  color: #fff; border-radius: var(--radius-sm); padding: 7px 12px; font-size: 15px; line-height: 1;
+}
+.nav-toggle:hover { background: rgba(255,255,255,0.14); }
+
+.nav-sheet-backdrop {
+  position: fixed; inset: 0; background: rgba(7, 13, 26, 0.5); z-index: var(--z-overlay);
+}
+/* Visibility is driven by .open, not by the hidden attribute: a class selector
+   outranks the UA's [hidden] { display: none }, so `display: flex` here would
+   keep the sheet rendered and its links focusable while it was "closed". */
+.nav-sheet { display: none; }
+.nav-sheet.open {
+  position: fixed; top: 62px; left: 0; right: 0; z-index: var(--z-modal);
+  background: var(--surface-dark); border-top: 1px solid rgba(255,255,255,0.12);
+  padding: var(--space-4); display: flex; flex-direction: column; gap: 4px;
+  box-shadow: var(--shadow-4);
+}
+.nav-sheet .navlink { padding: 12px 8px; font-size: 16px; border-radius: var(--radius-sm); }
+.nav-sheet .navlink:hover, .nav-sheet .navlink.active { background: rgba(255,255,255,0.08); }
+.nav-sheet .btn.secondary { margin-top: var(--space-3); color: #fff; border-color: rgba(255,255,255,0.4); }
+.nav-sheet .btn.secondary:hover:not(:disabled) { background: rgba(255,255,255,0.14); border-color: #fff; }
+
+@media (max-width: 860px) {
+  /* .nav-auth belongs here too: leaving Sign in and Register in the bar
+     alongside the toggle overflows the viewport at 375px, and worse in hu.
+     Both move into the sheet. */
+  .nav-primary, .nav-secondary, .nav-auth { display: none; }
+  .nav-toggle { display: inline-flex; }
+  .nav-underline { display: none; }
+}
+@media (min-width: 861px) {
+  .nav-sheet, .nav-sheet-backdrop { display: none; }
 }
 /* Nav uses a wider track than the page so the logo sits further left and the
    account/bell items further right. */
@@ -67,9 +539,39 @@ main.container { flex: 1; padding: 32px 0 72px; }
 .brand:hover { text-decoration: none; }
 .brand-mark {
   display: inline-grid; place-items: center; flex-shrink: 0; border-radius: 50%;
-  background: linear-gradient(150deg, var(--verify-bright) 0%, var(--verify) 65%, #0f5a41 100%);
+  background: linear-gradient(150deg, var(--accent) 0%, var(--brand) 65%, var(--blue-900) 100%);
   box-shadow: inset 0 1.5px 2px rgba(255,255,255,.45), inset 0 -3px 6px rgba(0,0,0,.25), 0 3px 10px rgba(0,0,0,.35);
 }
+
+/* Logo draw-in. One pass on first load: the two links draw from their outer
+   ends, then the notch strokes in. 760ms total.
+
+   The resting state below is FULLY DRAWN on purpose. The global
+   prefers-reduced-motion rule kills animations with `animation: none
+   !important`, so if the undrawn state lived here rather than inside the
+   keyframes, reduced-motion users would be left with a permanently blank
+   plate.
+
+   Each hook runs inner -> outer bend -> inner, so its outer end is the path
+   MIDPOINT, not an endpoint. A plain dashoffset sweep would draw from one inner
+   end. Instead the dash grows symmetrically out of the centre: with
+   `dasharray: L 1` and `dashoffset: L/2 - 0.5` the visible run stays centred on
+   the midpoint as L goes 0 -> 1. The connecting bar is a simple stroke from its
+   start, and follows once both hooks are drawn. */
+.brand-mark .lk-link-a,
+.brand-mark .lk-link-b { stroke-dasharray: 1 1; stroke-dashoffset: 0; }
+.brand-mark .lk-notch { stroke-dasharray: 1; stroke-dashoffset: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .brand-mark .lk-link-a,
+  .brand-mark .lk-link-b { animation: lk-link var(--d-slow) var(--ease-out) both; }
+  .brand-mark .lk-notch { animation: lk-notch var(--d-fast) var(--ease-out) var(--d-slow) both; }
+}
+@keyframes lk-link {
+  from { stroke-dasharray: 0 1; stroke-dashoffset: -0.5; }
+  to   { stroke-dasharray: 1 1; stroke-dashoffset: 0; }
+}
+@keyframes lk-notch { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 .nav a.navlink { color: #cfd6e4; font-weight: 500; font-size: 15px; transition: color .15s var(--ease); }
 .nav a.navlink:hover, .nav a.navlink.active { color: #fff; text-decoration: none; }
 .nav a.navlink-lg { font-size: 16.5px; font-weight: 600; }
@@ -82,7 +584,7 @@ main.container { flex: 1; padding: 32px 0 72px; }
 .avatar { border-radius: 50%; object-fit: cover; display: inline-block; flex: none; }
 .avatar-initials {
   display: inline-flex; align-items: center; justify-content: center;
-  background: linear-gradient(150deg, var(--verify-bright), var(--verify));
+  background: linear-gradient(150deg, var(--accent), var(--brand));
   color: #fff; font-family: var(--font-display); font-weight: 800;
 }
 /* avatar menu trigger in the nav */
@@ -102,21 +604,21 @@ main.container { flex: 1; padding: 32px 0 72px; }
 .account-chevron { font-size: 11px; color: #cfd6e4; }
 .account-menu {
   position: absolute; top: calc(100% + 10px); right: 0; z-index: 30;
-  min-width: 250px; background: var(--card); color: var(--ink);
+  min-width: 250px; background: var(--card); color: var(--text-1);
   border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-lg);
   padding: var(--space-2); animation: menu-in .14s var(--ease) both;
 }
 @keyframes menu-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .account-menu-head { display: flex; align-items: center; gap: 12px; padding: 10px 12px 12px; }
 .account-menu-id { min-width: 0; }
-.account-menu-name { font-family: var(--font-display); font-weight: 800; font-size: 15px; color: var(--ink); line-height: 1.2; }
+.account-menu-name { font-family: var(--font-display); font-weight: 800; font-size: 15px; color: var(--text-1); line-height: 1.2; }
 .account-menu-email {
   font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-soft); word-break: break-all; margin-top: 2px;
 }
 .account-menu-space { font-size: 12px; font-weight: 700; color: var(--verify); margin-top: 6px; }
 .account-menu-item {
   display: block; width: 100%; text-align: left; border: 0; background: none;
-  font-weight: 600; font-size: 14.5px; color: var(--ink); padding: 10px 12px;
+  font-weight: 600; font-size: 14.5px; color: var(--text-1); padding: 10px 12px;
   border-radius: var(--radius-sm); transition: background .12s var(--ease);
 }
 .account-menu-item:hover { background: var(--verify-tint); color: var(--verify); text-decoration: none; }
@@ -134,41 +636,104 @@ main.container { flex: 1; padding: 32px 0 72px; }
 .lang-menu { min-width: 160px; }
 
 /* ============ buttons & forms ============ */
+/* The base .btn IS the primary button. Every hover carries :not(:disabled) so a
+   disabled button never lifts or recolours, which also lets :disabled keep
+   cursor: not-allowed instead of needing pointer-events: none. */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0;
-  background: var(--verify); color: #fff; font-weight: 600; font-size: 15px;
-  padding: 11px 20px; border-radius: var(--radius-sm); box-shadow: var(--shadow-sm);
+  background: var(--brand); color: var(--text-on-brand); font-weight: 600; font-size: 15px;
+  /* Buttons do not inherit the body line-height - the UA stylesheet sets
+     `normal` on button - so without this the height depends on font metrics and
+     the size ladder drifts. Pinning it makes 36 / 44 / 52 fall out of padding. */
+  line-height: 1.2;
+  padding: 13px 20px; border-radius: var(--radius-sm); box-shadow: var(--shadow-1);
   white-space: nowrap; text-align: center;
-  transition: background .15s var(--ease), transform .1s var(--ease), box-shadow .15s var(--ease);
+  transition: background var(--d-fast) var(--ease-out), transform var(--d-instant) var(--ease-out),
+              box-shadow var(--d-fast) var(--ease-out), border-color var(--d-fast) var(--ease-out);
 }
-.btn:hover { background: var(--verify-bright); box-shadow: var(--shadow-md); transform: translateY(-1px); }
-.btn:active { transform: translateY(0); box-shadow: var(--shadow-sm); }
-.btn:disabled { background: #a9b6ad; cursor: not-allowed; box-shadow: none; transform: none; }
-.btn.secondary { background: transparent; color: var(--ink); border: 1.5px solid var(--ink); box-shadow: none; }
-.btn.secondary:hover { background: var(--ink); color: #fff; }
-.btn.danger { background: var(--danger); }
-.btn.ghost { background: transparent; color: var(--verify); padding: 8px 12px; box-shadow: none; }
-.btn.ghost:hover { background: var(--verify-tint); box-shadow: none; transform: none; }
-.btn.sm { padding: 7px 14px; font-size: 13.5px; }
+.btn:hover:not(:disabled) { background: var(--brand-hover); box-shadow: var(--shadow-2); transform: translateY(-1px); }
+.btn:active:not(:disabled) { background: var(--brand-active); transform: translateY(0); box-shadow: var(--shadow-1); }
+
+/* Disabled keeps its shape and its colour at 45%. The old #a9b6ad grey fill
+   read as broken rather than as temporarily unavailable. */
+.btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; transform: none; }
+
+.btn.secondary { background: transparent; color: var(--brand); border: 1.5px solid var(--border-strong); box-shadow: none; }
+.btn.secondary:hover:not(:disabled) { background: var(--brand-subtle-bg); border-color: var(--brand); box-shadow: none; }
+
+/* The hero's secondary CTAs carry inline white border and text over the dark
+   plate, so the pale-blue hover above would paint white on near-white. */
+.hero .cta-row .btn.secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14); border-color: #fff; color: #fff;
+}
+
+/* Section 7's table says --danger-500, but white on #d9534f is 3.96:1 and this
+   label is 15px/600, so it needs 4.5:1. Pre-rebrand --danger #b3372f passed at
+   5.99:1, making --danger-500 a regression rather than a pre-existing failure.
+   --danger-700 restores it at 7.31:1. Hover lifts without recolouring because
+   the palette has no danger step between 500 and 700 that also passes. */
+.btn.danger { background: var(--danger-700); }
+.btn.danger:hover:not(:disabled) { background: var(--danger-700); }
+
+.btn.ghost { background: transparent; color: var(--text-2); padding: 8px 12px; box-shadow: none; }
+.btn.ghost:hover:not(:disabled) { background: var(--surface-hover); color: var(--text-1); box-shadow: none; transform: none; }
+
+/* Faculty-verified filter only. No consumer yet: that filter is currently a
+   checkbox in FindInternship.jsx. One of the sanctioned var(--seal) uses. */
+.btn.seal { background: var(--seal-subtle-bg); color: var(--seal-fg); border: 1px solid var(--seal); box-shadow: none; }
+/* Hover deepens the border rather than the fill: --seal-fg on --warm-300 is
+   3.94:1, below the 4.55:1 the resting pairing already sits at. */
+.btn.seal:hover:not(:disabled) { border-color: var(--seal-fg); box-shadow: none; }
+
+/* Size ladder: 36 / 44 / 52. .sm here, base above, .hero .cta-row .btn below. */
+.btn.sm { padding: 10px 14px; font-size: 13.5px; }
 
 label.field { display: block; margin-bottom: var(--space-4); font-weight: 600; font-size: 14px; }
-label.field span.hint { font-weight: 400; color: var(--ink-soft); font-size: 13px; }
+label.field span.hint { font-weight: 400; color: var(--text-2); font-size: 13px; }
 .char-count { display: block; text-align: right; font-weight: 400; font-size: 12px; margin-top: 4px; }
+/* font-size stays at 15px or above: iOS Safari zooms the viewport on focus for
+   anything smaller. */
 input, select, textarea {
   width: 100%; margin-top: 6px; padding: 11px 13px; font: inherit; font-size: 15px;
-  border: 1.5px solid var(--line); border-radius: var(--radius-sm); background: #fff; color: var(--ink);
-  transition: border-color .15s var(--ease), box-shadow .15s var(--ease);
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-1);
+  transition: border-color var(--d-fast) var(--ease-out), box-shadow var(--d-fast) var(--ease-out);
 }
-input:focus, select:focus, textarea:focus { border-color: var(--verify-bright); outline: none; box-shadow: 0 0 0 3px var(--verify-tint); }
-input:disabled { background: #f3f4f1; color: var(--ink-soft); }
+input:focus, select:focus, textarea:focus {
+  border-color: var(--brand); outline: none; box-shadow: 0 0 0 3px var(--brand-subtle-bg);
+}
+input:disabled, select:disabled, textarea:disabled {
+  background: var(--bg-sunken); color: var(--text-3); cursor: not-allowed;
+}
 textarea { min-height: 110px; resize: vertical; }
+
+/* Per-field error state. Nothing sets aria-invalid today - errors surface as a
+   page-level .alert.error - but the state exists for when one is built. The
+   border never carries the meaning alone; .field-error supplies the message. */
+input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="true"] {
+  border-color: var(--danger-500);
+}
+input[aria-invalid="true"]:focus, select[aria-invalid="true"]:focus, textarea[aria-invalid="true"]:focus {
+  border-color: var(--danger-500); box-shadow: 0 0 0 3px var(--danger-50);
+}
+.field-error {
+  display: flex; align-items: flex-start; gap: var(--s-2); margin-top: var(--s-2);
+  font-size: var(--fs-sm); font-weight: 500; color: var(--danger-700);
+}
+.field-error svg { width: 14px; height: 14px; flex: none; margin-top: 2px; }
 
 /* ============ cards ============ */
 .card {
-  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
-  padding: var(--space-5); box-shadow: var(--shadow-sm);
-  transition: box-shadow .18s var(--ease), transform .18s var(--ease);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: var(--space-5); box-shadow: var(--shadow-1);
+  transition: box-shadow var(--d-base) var(--ease-out), transform var(--d-base) var(--ease-out);
 }
+/* Only a card that is actually a link moves. Nothing matches this yet; job
+   cards become links in task 6. A card that is not a link must not imply one.
+   The anchor needs display and colour resetting: .card never set either, which
+   was harmless while no card was a link, but an <a class="card"> would
+   otherwise lay out inline and inherit the link colour. */
+a.card, .card-link { display: block; color: inherit; }
+a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: translateY(-2px); text-decoration: none; }
 .card + .card { margin-top: var(--space-4); }
 .card h3 { margin-bottom: 6px; }
 .grid { display: grid; gap: var(--space-4); }
@@ -182,10 +747,19 @@ textarea { min-height: 110px; resize: vertical; }
   font-size: 12.5px; font-weight: 600; padding: 4px 11px; border-radius: 999px;
   transition: transform .12s var(--ease);
 }
-.badge.faculty { background: var(--gold-tint); color: #7c5a00; border: 1px solid #ecd9a4; }
-.badge.verified { background: var(--verify-tint); color: var(--verify); }
-.badge.pending { background: #eef0f5; color: var(--ink-soft); }
-.badge.danger { background: var(--danger-tint); color: var(--danger); }
+/* THE seal. One of only two rules allowed to reference var(--seal); the other
+   is the faculty-verified job card top rule, added in task 6. */
+.badge.faculty { background: var(--seal-subtle-bg); color: var(--seal-fg); border: 1px solid var(--seal); }
+.badge.verified { background: var(--success-50); color: var(--success-700); }
+/* .pending is a NEUTRAL metadata chip, not a warning. Section 7 moved it to the
+   warning ramp assuming it meant "pending review", but of its 17 uses almost
+   none are a status: job type, location, work mode, salary, applicant counts
+   and "Coming soon" placeholders. Warning-toning them made every job card's
+   metadata compete with the faculty seal for attention. It stays neutral.
+   Genuine warnings use .badge.warning. */
+.badge.pending { background: var(--bg-sunken); color: var(--text-2); }
+.badge.warning { background: var(--warning-50); color: var(--warning-800); }
+.badge.danger { background: var(--danger-50); color: var(--danger-700); }
 .badge.mono { font-family: var(--font-mono); font-weight: 500; }
 
 .id-tag { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-soft); letter-spacing: 0.02em; }
@@ -205,31 +779,82 @@ textarea { min-height: 110px; resize: vertical; }
 }
 .chain .node .dot {
   width: 34px; height: 34px; border-radius: 50%;
-  border: 2.5px solid var(--line); background: #fff; color: var(--ink-soft);
+  border: 2.5px solid var(--border); background: var(--surface); color: var(--text-2);
   display: grid; place-items: center; font-family: var(--font-mono); font-size: 13px; font-weight: 500;
-  transition: all .2s ease;
+  transition: border-color var(--d-fast) var(--ease-out), background var(--d-fast) var(--ease-out),
+              color var(--d-fast) var(--ease-out);
 }
-.chain .node.done .dot { border-color: var(--verify); background: var(--verify); color: #fff; }
-.chain .node.current .dot { border-color: var(--verify-bright); color: var(--verify); box-shadow: 0 0 0 5px var(--verify-tint); }
-.chain .node.failed .dot { border-color: var(--danger); background: var(--danger); color: #fff; }
-.chain .node small { font-size: 11.5px; font-weight: 600; color: var(--ink-soft); max-width: 90px; }
-.chain .node.done small, .chain .node.current small { color: var(--ink); }
-.chain .connector { flex: 1; min-width: 18px; height: 2.5px; background: var(--line); margin-bottom: 22px; }
-.chain .connector.done { background: var(--verify); }
+.chain .node.done .dot { border-color: var(--success-700); background: var(--success-700); color: #fff; }
+.chain .node.current .dot { border-color: var(--accent); color: var(--brand); box-shadow: 0 0 0 5px var(--brand-subtle-bg); }
+/* --danger-500 would put the ✕ at 3.96:1; --danger-700 is 7.31:1. */
+.chain .node.failed .dot { border-color: var(--danger-700); background: var(--danger-700); color: #fff; }
+.chain .node small { font-size: 11.5px; font-weight: 600; color: var(--text-2); max-width: 90px; }
+.chain .node.done small, .chain .node.current small { color: var(--text-1); }
+.chain .node.failed small { color: var(--danger-700); font-weight: 700; }
+
+/* The connector is the track; ::after is the fill that grows across it. This is
+   the moment a student learns they advanced, so it animates on mount rather
+   than only when the class flips — a returning student sees it fill too.
+
+   The fill RESTS at scale 1. The global reduced-motion rule kills animations
+   with `animation: none !important`, so a scale-0 resting state would leave
+   every completed connector permanently empty. Same trap as the logo draw-in. */
+.chain .connector {
+  position: relative; overflow: hidden;
+  flex: 1; min-width: 18px; height: 2.5px; background: var(--border); margin-bottom: 22px;
+}
+.chain .connector.done::after {
+  content: ''; position: absolute; inset: 0;
+  background: var(--success-700); transform: scaleX(1); transform-origin: left;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .chain .connector.done::after { animation: chain-fill-x var(--d-slow) var(--ease-out) both; }
+}
+@keyframes chain-fill-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* Rejected: the track goes quiet and the terminal failed node carries the
+   state. Nothing claims a failure point, because the data does not record one. */
+.chain.rejected .node:not(.failed),
+.chain.rejected .connector { opacity: .55; }
+
+/* Six nodes at min-width 86px need 516px plus connectors, so the row is an
+   unreadable tangle on a 375px screen. Below 640 it stacks. */
+@media (max-width: 640px) {
+  .chain { flex-direction: column; align-items: stretch; gap: 0; }
+  .chain .node { flex-direction: row; align-items: center; gap: 12px; min-width: 0; text-align: left; }
+  .chain .node small { max-width: none; font-size: 13px; }
+  .chain .connector {
+    flex: none; width: 2.5px; min-width: 0; height: 16px;
+    margin: 0 0 0 16px; align-self: flex-start;
+  }
+  .chain .connector.done::after { transform: scaleY(1); transform-origin: top; }
+}
+@media (max-width: 640px) and (prefers-reduced-motion: no-preference) {
+  .chain .connector.done::after { animation-name: chain-fill-y; }
+}
+@keyframes chain-fill-y { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 
 /* ============ landing hero ============ */
 .hero { background: var(--ink); color: #fff; padding: 128px 0 96px; overflow: hidden; }
 .hero .container { display: grid; grid-template-columns: 1.15fr 1fr; gap: 56px; align-items: center; }
-@media (max-width: 860px) { .hero .container { grid-template-columns: 1fr; } }
+@media (max-width: 860px) {
+  .hero .container { grid-template-columns: 1fr; }
+  /* Grid items default to min-width: auto, so an unbreakable child sets the
+     column's floor. .btn is white-space: nowrap, and the longest CTA label —
+     "Rejoignez-nous avec votre e-mail universitaire" — then pushes the whole
+     hero past the viewport, hidden only because .hero clips. Let it wrap. */
+  .hero .container > * { min-width: 0; }
+  .hero .cta-row .btn { white-space: normal; }
+}
 .hero .eyebrow {
   font-family: var(--font-mono); font-size: 15px; color: var(--verify-bright);
   letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 20px;
 }
-.hero h1 { font-size: clamp(44px, 6.2vw, 74px); font-weight: 900; margin-bottom: 22px; }
+.hero h1 { font-size: clamp(44px, 6.2vw, 74px); font-weight: 800; margin-bottom: 22px; }
 .hero h1 em { font-style: normal; color: var(--verify-bright); }
 .hero p.lede { font-size: 21px; line-height: 1.5; color: #c4cddd; max-width: 54ch; margin-bottom: 32px; }
 .hero .cta-row { display: flex; gap: 14px; flex-wrap: wrap; }
-.hero .cta-row .btn { font-size: 17px; padding: 13px 24px; }
+.hero .cta-row .btn { font-size: 17px; padding: 16px 24px; }
 
 .hero-chain { display: flex; flex-direction: column; gap: 0; }
 .hero-chain .hnode {
@@ -239,9 +864,9 @@ textarea { min-height: 110px; resize: vertical; }
 }
 .hero-chain .hnode:nth-child(3) { animation-delay: .15s; }
 .hero-chain .hnode:nth-child(5) { animation-delay: .3s; }
-.hero-chain .hlink { width: 2.5px; height: 26px; background: var(--verify-bright); margin-left: 37px; }
+.hero-chain .hlink { width: 2.5px; height: 26px; background: var(--accent); margin-left: 37px; }
 .hero-chain .hicon {
-  width: 40px; height: 40px; border-radius: 12px; background: var(--verify);
+  width: 40px; height: 40px; border-radius: 12px; background: var(--brand);
   display: grid; place-items: center; flex-shrink: 0;
 }
 .hero-chain b { font-family: var(--font-display); font-size: 18px; font-weight: 700; display: block; }
@@ -265,33 +890,33 @@ textarea { min-height: 110px; resize: vertical; }
 /* peeking card behind the main one */
 .match-mock-panel::before {
   content: ""; position: absolute; inset: 22px 18px auto; height: 120px; top: 26px;
-  background: #fff; border-radius: 18px; transform: rotate(-3deg); box-shadow: var(--shadow-sm); opacity: .7;
+  background: var(--surface); border-radius: 18px; transform: rotate(-3deg); box-shadow: var(--shadow-sm); opacity: .7;
 }
 .match-mock-card {
-  position: relative; background: #fff; border-radius: 18px; padding: 20px;
+  position: relative; background: var(--surface); border-radius: 18px; padding: 20px;
   box-shadow: 0 18px 42px rgba(22,35,63,.16);
 }
 .match-mock-badge {
   position: absolute; top: -14px; right: -8px; transform: rotate(4deg);
-  background: var(--gold); color: #3a2c00; font-weight: 700; font-size: 12.5px;
-  padding: 7px 12px; border-radius: 10px; box-shadow: 0 8px 20px rgba(217,154,6,.4); white-space: nowrap;
+  background: var(--brand); color: var(--text-on-brand); font-weight: 700; font-size: 12.5px;
+  padding: 7px 12px; border-radius: 10px; box-shadow: var(--shadow-brand); white-space: nowrap;
 }
-.match-mock-badge b { background: #16233f; color: #fff; border-radius: 6px; padding: 1px 7px; margin-left: 4px; }
+.match-mock-badge b { background: var(--surface-dark); color: #fff; border-radius: 6px; padding: 1px 7px; margin-left: 4px; }
 .match-mock-head { display: flex; align-items: center; gap: 12px; }
 .match-mock-logo {
   width: 42px; height: 42px; border-radius: 12px; flex: none; display: grid; place-items: center;
-  background: var(--gold-tint); color: #7c5a00; font-family: var(--font-display); font-weight: 900; font-size: 18px;
+  background: var(--warm-100); color: var(--warm-fg); font-family: var(--font-display); font-weight: 800; font-size: 18px;
 }
 .match-mock-head h4 { font-size: 17px; letter-spacing: -0.01em; }
 .match-mock-head p { font-size: 13.5px; color: var(--ink-soft); }
 .match-mock-chips { display: flex; flex-wrap: wrap; gap: 7px; margin: 16px 0 18px; }
-.mm-chip { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); background: #eef0f5; border-radius: 999px; padding: 5px 11px; }
+.mm-chip { font-size: 12.5px; font-weight: 600; color: var(--text-2); background: var(--bg-sunken); border-radius: 999px; padding: 5px 11px; }
 .mm-chip.green { background: var(--verify-tint); color: var(--verify); }
-.mm-chip.gold { background: var(--gold-tint); color: #7c5a00; }
+.mm-chip.gold { background: var(--warm-100); color: var(--warm-fg); }
 .match-mock-actions { display: flex; gap: 10px; }
 .mm-btn { flex: 1; text-align: center; font-weight: 700; font-size: 14px; padding: 11px 0; border-radius: 10px; }
-.mm-btn.primary { background: var(--verify); color: #fff; }
-.mm-btn.ghost { border: 1.5px solid var(--line); color: var(--ink); }
+.mm-btn.primary { background: var(--brand); color: var(--text-on-brand); }
+.mm-btn.ghost { border: 1.5px solid var(--line); color: var(--text-1); }
 
 .how { padding: 96px 0 88px; }
 .how .eyebrow {
@@ -334,7 +959,7 @@ textarea { min-height: 110px; resize: vertical; }
   position: relative; z-index: 5;
 }
 .overlap-band .stat { text-align: center; padding: var(--space-3); }
-.overlap-band .stat b { display: block; font-family: var(--font-display); font-size: 44px; font-weight: 900; color: var(--verify); line-height: 1.1; }
+.overlap-band .stat b { display: block; font-family: var(--font-display); font-size: 44px; font-weight: 800; color: var(--verify); line-height: 1.1; }
 .overlap-band .stat span { display: block; margin-top: 6px; color: var(--ink-soft); font-size: 15px; }
 @media (max-width: 800px) { .overlap-band { grid-template-columns: 1fr; margin-top: -40px; } }
 
@@ -359,13 +984,13 @@ textarea { min-height: 110px; resize: vertical; }
 .note:nth-child(3) { transform: rotate(-1deg); }
 .note:nth-child(4) { transform: rotate(2deg); }
 .note:nth-child(5) { transform: rotate(-1.5deg); }
-.note p { font-size: 14.5px; font-style: italic; color: var(--ink); line-height: 1.5; }
+.note p { font-size: 14.5px; font-style: italic; color: var(--text-1); line-height: 1.5; }
 .note > span { display: block; margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--ink-soft); }
 .note-tint-a { background: var(--verify-tint); }
-.note-tint-b { background: var(--gold-tint); }
-.note-tint-c { background: #fff; border: 1.5px dashed var(--line); }
+.note-tint-b { background: var(--warm-100); }
+.note-tint-c { background: var(--surface); border: 1.5px dashed var(--border); }
 .note-stat { text-align: center; }
-.note-stat b { display: block; font-family: var(--font-display); font-weight: 900; font-size: 34px; color: var(--verify); }
+.note-stat b { display: block; font-family: var(--font-display); font-weight: 800; font-size: 34px; color: var(--verify); }
 .note-stat span { margin-top: 6px; font-weight: 600; color: var(--ink-soft); font-size: 13.5px; }
 
 .company-showcase { padding: 20px 0 88px; }
@@ -377,7 +1002,7 @@ textarea { min-height: 110px; resize: vertical; }
   gap: 30px 52px; padding: 8px 0;
 }
 .logo-lockup {
-  display: inline-flex; align-items: center; gap: 11px; color: var(--ink);
+  display: inline-flex; align-items: center; gap: 11px; color: var(--text-1);
   transition: transform .18s var(--ease), color .18s var(--ease); opacity: .82;
 }
 .logo-lockup:hover { color: var(--brand-fg); opacity: 1; transform: translateY(-2px); text-decoration: none; }
@@ -385,10 +1010,10 @@ textarea { min-height: 110px; resize: vertical; }
 .logo-mark svg { width: 30px; height: 30px; display: block; }
 .logo-mark-initial {
   width: 30px; height: 30px; border-radius: 8px; align-items: center; justify-content: center;
-  border: 2px solid currentColor; font-family: var(--font-display); font-weight: 900; font-size: 15px;
+  border: 2px solid currentColor; font-family: var(--font-display); font-weight: 800; font-size: 15px;
 }
 .logo-word { display: inline-flex; flex-direction: column; line-height: 1.05; }
-.logo-word b { font-family: var(--font-display); font-weight: 900; font-size: 21px; letter-spacing: -0.02em; }
+.logo-word b { font-family: var(--font-display); font-weight: 800; font-size: 21px; letter-spacing: -0.02em; }
 .logo-word i { font-style: normal; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); }
 .logo-lockup:hover .logo-word i { color: var(--brand-fg); opacity: .8; }
 @media (max-width: 700px) { .logo-strip { gap: 24px 32px; } .logo-word b { font-size: 18px; } }
@@ -411,7 +1036,9 @@ textarea { min-height: 110px; resize: vertical; }
 .feature-copy p { color: var(--ink-soft); font-size: 18px; line-height: 1.55; margin: 14px 0 26px; max-width: 40ch; }
 .feature-purple .feature-badge { background: #ece7fb; color: #6b4fd8; }
 .feature-blue .feature-badge { background: #e2e9fb; color: #3a63c9; }
-.feature-green .feature-badge { background: #e0f1e7; color: var(--verify); }
+/* Class name kept for now; Landing.jsx passes tone="green". Renamed in task 8
+   with its call site. The pastel is repainted because green is status-only. */
+.feature-green .feature-badge { background: var(--brand-subtle-bg); color: var(--verify); }
 
 .feature-art-wrap { display: flex; justify-content: center; }
 .feature-panel {
@@ -422,27 +1049,27 @@ textarea { min-height: 110px; resize: vertical; }
 .panel-blue { background: linear-gradient(160deg, #e9effc, #d8e4fb); }
 .panel-green { background: linear-gradient(160deg, #e7f5ec, #d5eddd); }
 
-.mock-card { width: 100%; background: #fff; border-radius: 18px; box-shadow: 0 18px 42px rgba(22,35,63,.16); padding: 20px; }
+.mock-card { width: 100%; background: var(--surface); border-radius: 18px; box-shadow: 0 18px 42px rgba(22,35,63,.16); padding: 20px; }
 .mock-card .mock-mono { font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); }
 .mock-card h4 { font-size: 18px; margin: 6px 0 2px; letter-spacing: -0.01em; }
 .mock-card > p { font-size: 13.5px; color: var(--ink-soft); }
 .mock-track { list-style: none; margin: 16px 0 0; padding: 0; }
 .mock-track li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-soft); padding: 6px 0; }
-.mock-track li .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); background: #fff; flex: none; }
-.mock-track li.done { color: var(--ink); }
-.mock-track li.done .dot { background: var(--verify); border-color: var(--verify); }
-.mock-track li.current { color: var(--ink); font-weight: 700; }
+.mock-track li .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border); background: var(--surface); flex: none; }
+.mock-track li.done { color: var(--text-1); }
+.mock-track li.done .dot { background: var(--success-500); border-color: var(--success-500); }
+.mock-track li.current { color: var(--text-1); font-weight: 700; }
 .mock-track li.current .dot { border-color: var(--verify-bright); box-shadow: 0 0 0 4px var(--verify-tint); }
 .mock-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-.mock-chip { font-size: 13px; font-weight: 600; color: var(--ink-soft); background: #eef0f5; border-radius: 999px; padding: 6px 12px; }
+.mock-chip { font-size: 13px; font-weight: 600; color: var(--text-2); background: var(--bg-sunken); border-radius: 999px; padding: 6px 12px; }
 .mock-chip.strong { background: var(--verify-tint); color: var(--verify); }
 .mock-facts { list-style: none; margin: 14px 0 0; padding: 0; }
 .mock-facts li { font-size: 14px; color: var(--ink-soft); padding: 8px 0; border-bottom: 1px solid var(--line); }
 .mock-facts li:last-child { border-bottom: 0; }
-.mock-facts b { color: var(--ink); }
+.mock-facts b { color: var(--text-1); }
 .feature-tag {
-  position: absolute; background: #fff; border-radius: 12px; padding: 9px 14px;
-  font-size: 13.5px; font-weight: 700; color: var(--ink);
+  position: absolute; background: var(--surface); border-radius: 12px; padding: 9px 14px;
+  font-size: 13.5px; font-weight: 700; color: var(--text-1);
   box-shadow: 0 10px 26px rgba(22,35,63,.18); white-space: nowrap;
 }
 .feature-tag.tag-a { top: 22px; right: 14px; transform: rotate(4deg); }
@@ -458,30 +1085,48 @@ textarea { min-height: 110px; resize: vertical; }
 @media (max-width: 900px) { .land-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 520px) { .land-grid { grid-template-columns: 1fr; } }
 .land-card { border-radius: 10px; padding: 26px; min-height: 250px; display: flex; flex-direction: column; }
-.land-card.stat b { font-family: var(--font-display); font-weight: 900; font-size: 46px; line-height: 1; letter-spacing: -0.02em; color: var(--ink); }
-.land-card.stat p { margin-top: auto; font-size: 15px; line-height: 1.5; color: var(--ink); }
+.land-card.stat b { font-family: var(--font-display); font-weight: 800; font-size: 46px; line-height: 1; letter-spacing: -0.02em; color: var(--text-1); }
+.land-card.stat p { margin-top: auto; font-size: 15px; line-height: 1.5; color: var(--text-1); }
 .land-card.stat p b { font-family: var(--font-body, inherit); font-size: inherit; font-weight: 800; letter-spacing: normal; }
 .land-card-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 18px; }
 .land-card-top h4 { font-size: 15px; letter-spacing: 0.01em; text-transform: uppercase; max-width: 13ch; line-height: 1.3; }
-.land-ic { flex: none; width: 46px; height: 46px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: var(--ink); }
+.land-ic { flex: none; width: 46px; height: 46px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--text-1); }
 .land-peri .land-ic { color: #2f6fed; }
 .land-card.action .btn { margin-top: auto; align-self: flex-start; }
 .land-lav { background: #eef0fb; }
 .land-peri { background: #cdd9f4; }
 .land-cream { background: #f5efe0; }
-.land-gold { background: #f2c94c; }
-.btn.dark { background: var(--ink); color: #fff; }
-.btn.dark:hover { background: #0e1830; color: #fff; }
+.land-gold { background: var(--warm-300); }
+.btn.dark { background: var(--surface-dark); color: var(--on-dark); }
+.btn.dark:hover:not(:disabled) { background: var(--surface-dark-hover); color: var(--on-dark); }
 
 /* ============ misc ============ */
 .alert { border-radius: var(--radius-sm); padding: 12px 16px; font-size: 14.5px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
 .alert.error { background: var(--danger-tint); color: var(--danger); }
-.alert.ok { background: var(--verify-tint); color: var(--verify); }
-.alert.info { background: var(--gold-tint); color: #7c5a00; }
+.alert.ok { background: var(--success-50); color: var(--success-700); }
+.alert.info { background: var(--brand-subtle-bg); color: var(--brand-subtle-fg); }
 
 .job-row { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; }
 .job-row .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .job-row > .btn { flex-shrink: 0; align-self: center; }
+
+/* Job card. .job-row on its own is a generic two-column layout used for
+   applicant-review section headers too, so anything job-specific hangs off
+   .card.job-card instead. The id tag sits top right, out of the flow, and the
+   row reserves space so a long title never runs under it. */
+.card.job-card { position: relative; }
+.card.job-card > .id-tag { position: absolute; top: var(--space-5); right: var(--space-5); }
+.card.job-card > .job-row { padding-right: 92px; }
+
+/* No gold rule on the card. Section 7 specified a --seal top border here, but
+   with the metadata chips back to neutral the .badge.faculty pill is the only
+   gold on a job card and carries the distinction on its own. Gold on both the
+   badge and the card edge was doubling the same signal. */
+
+@media (max-width: 560px) {
+  .card.job-card > .job-row { padding-right: 0; }
+  .card.job-card > .id-tag { position: static; display: block; margin-bottom: 6px; }
+}
 
 /* ============ Find an internship — left filter sidebar ============ */
 .filter-layout { display: grid; grid-template-columns: 300px 1fr; gap: 20px; align-items: start; }
@@ -491,15 +1136,15 @@ textarea { min-height: 110px; resize: vertical; }
 .filter-prefs { background: var(--verify-tint); border-color: var(--verify-tint); }
 .pref-chip {
   display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 999px;
-  background: #fff; color: var(--ink); font-size: 12.5px; font-weight: 600; cursor: pointer;
-  border: 1px solid rgba(20,125,91,0.2); transition: background .15s var(--ease);
+  background: var(--surface); color: var(--text-1); font-size: 12.5px; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--border-strong); transition: background .15s var(--ease);
 }
-.pref-chip:hover { background: var(--gold-tint); }
+.pref-chip:hover { background: var(--brand-subtle-bg); }
 .filter-section { border-bottom: 1px solid var(--line); padding: 4px 0; }
 .filter-section:last-child { border-bottom: none; }
 .filter-section-head {
   width: 100%; display: flex; justify-content: space-between; align-items: center;
-  background: none; border: 0; padding: 12px 2px; font-weight: 700; font-size: 14.5px; color: var(--ink);
+  background: none; border: 0; padding: 12px 2px; font-weight: 700; font-size: 14.5px; color: var(--text-1);
 }
 .filter-chevron { transition: transform .2s var(--ease); color: var(--ink-soft); }
 .filter-chevron.open { transform: rotate(180deg); }
@@ -521,7 +1166,7 @@ table.ledger .match-ids { font-family: var(--font-mono); font-size: 13px; color:
   color: var(--ink-soft); border-bottom: 2.5px solid transparent; margin-bottom: -2px;
   transition: color .15s var(--ease), border-color .15s var(--ease);
 }
-.tabs button:hover { color: var(--ink); }
+.tabs button:hover { color: var(--text-1); }
 .tabs button.active { color: var(--verify); border-color: var(--verify); }
 
 footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font-size: 13.5px; }
@@ -547,15 +1192,15 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 
 /* ============ date/time picker (interview scheduling) ============ */
 .dtp { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
-.dtp-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 16px; }
+.dtp-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 16px; }
 .dtp-calendar { width: 288px; }
 .dtp-time { width: 240px; display: flex; flex-direction: column; gap: 12px; }
 .dtp-cal-head { display: flex; align-items: center; justify-content: space-between; font-weight: 700; font-size: 15px; margin-bottom: 12px; }
-.dtp-nav { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: #fff; color: var(--ink); font-size: 16px; line-height: 1; }
+.dtp-nav { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text-1); font-size: 16px; line-height: 1; }
 .dtp-nav:hover { background: var(--verify-tint); border-color: var(--verify); color: var(--verify); }
 .dtp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
 .dtp-dow span { text-align: center; font-size: 12px; font-weight: 600; color: var(--ink-soft); padding: 4px 0; }
-.dtp-day { aspect-ratio: 1; border: 0; background: none; border-radius: 8px; font-size: 13.5px; color: var(--ink); cursor: pointer; }
+.dtp-day { aspect-ratio: 1; border: 0; background: none; border-radius: 8px; font-size: 13.5px; color: var(--text-1); cursor: pointer; }
 .dtp-day:hover:not(:disabled) { background: var(--verify-tint); }
 .dtp-day:disabled { color: #c7cdd4; cursor: not-allowed; }
 .dtp-day.today { font-weight: 800; color: var(--verify); }
@@ -564,12 +1209,12 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 .dtp-time-title { text-align: center; font-weight: 700; font-size: 15px; }
 .dtp-steppers { display: flex; gap: 10px; justify-content: center; }
 .dtp-stepper { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.dtp-arrow { width: 52px; height: 26px; border: 1px solid var(--line); background: #fff; border-radius: 8px; color: var(--ink-soft); font-size: 13px; line-height: 1; }
+.dtp-arrow { width: 52px; height: 26px; border: 1px solid var(--border); background: var(--surface); border-radius: 8px; color: var(--ink-soft); font-size: 13px; line-height: 1; }
 .dtp-arrow:hover { background: var(--verify-tint); border-color: var(--verify); color: var(--verify); }
 .dtp-stepper-val { font-family: var(--font-mono); font-size: 22px; font-weight: 500; }
 .dtp-stepper-label { font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.05em; }
 .dtp-ampm { display: flex; gap: 6px; justify-content: center; }
-.dtp-ampm-btn { padding: 6px 16px; border: 1px solid var(--line); background: #fff; border-radius: 999px; font-weight: 600; font-size: 13.5px; color: var(--ink-soft); }
+.dtp-ampm-btn { padding: 6px 16px; border: 1px solid var(--border); background: var(--surface); border-radius: 999px; font-weight: 600; font-size: 13.5px; color: var(--ink-soft); }
 .dtp-ampm-btn.active { background: var(--verify); color: #fff; border-color: var(--verify); }
 .dtp-preview { text-align: center; font-family: var(--font-mono); font-size: 14px; color: var(--ink-soft); }
 .dtp-duration { display: block; font-weight: 600; font-size: 13px; }
@@ -577,7 +1222,7 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 
 /* proposed / chosen interview slots */
 .slot-list { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
-.slot-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: #fff; }
+.slot-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
 .slot-row.pickable { cursor: pointer; }
 .slot-row.pickable:hover { border-color: var(--verify); background: var(--verify-tint); }
 .slot-row.chosen { border-color: var(--verify); background: var(--verify-tint); }
@@ -594,10 +1239,10 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 .meeting-stage .badge { font-size: 13px; }
 
 /* notifications */
-.notif-item { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 10px; background: #fff; cursor: pointer; transition: background .12s var(--ease); }
-.notif-item:hover { background: #fafbfa; }
+.notif-item { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 10px; background: var(--surface); cursor: pointer; transition: background .12s var(--ease); }
+.notif-item:hover { background: var(--surface-hover); }
 .notif-item.unread { border-left: 3px solid var(--verify); background: var(--verify-tint); }
-.notif-item.unread:hover { background: #dcefe5; }
+.notif-item.unread:hover { background: var(--blue-100); }
 .notif-subject { font-weight: 700; font-size: 14.5px; display: flex; align-items: center; gap: 8px; }
 .notif-unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--verify); flex: none; }
 
@@ -605,7 +1250,7 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 .score-input input { width: 70px; margin-top: 0; text-align: center; }
 
 .modal-backdrop { position: fixed; inset: 0; background: rgba(22,35,63,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-.modal { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 26px; width: min(460px, 100%); animation: menu-in .14s var(--ease) both; }
+.modal { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 26px; width: min(460px, 100%); animation: menu-in .14s var(--ease) both; }
 
 /* recruitment-steps reminder strip (company dashboard) */
 .rec-steps { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 22px; box-shadow: var(--shadow-sm); }
@@ -614,7 +1259,7 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 .rec-step { display: inline-flex; align-items: center; gap: 8px; }
 .rec-step:not(:last-child)::after { content: "→"; color: var(--line); margin: 0 10px; font-size: 14px; }
 .rec-step-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--verify-tint); color: var(--verify); font-weight: 700; font-size: 12.5px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
-.rec-step-name { font-size: 13.5px; font-weight: 600; color: var(--ink); white-space: nowrap; }
+.rec-step-name { font-size: 13.5px; font-weight: 600; color: var(--text-1); white-space: nowrap; }
 @media (max-width: 720px) { .rec-step-name { display: none; } .rec-step:not(:last-child)::after { margin: 0 4px; } }
 
 /* applicants tab search + sort */
@@ -627,3 +1272,230 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 .nav-bell { position: relative; color: #cfd6e4; display: inline-flex; align-items: center; }
 .nav-bell:hover { color: #fff; }
 .nav-bell .dot { position: absolute; top: -3px; right: -4px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: var(--verify-bright); color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+/* ============ task 8b: hero ledger + five new landing sections ============ */
+
+/* Hero ledger panel. Replaces the three-node .hero-chain. Designed at n = 0
+   first: the ruled register and the mono line are always present, so an empty
+   ledger reads as a promise rather than a missing component. */
+.hero-ledger {
+  border-radius: var(--radius); padding: var(--space-5);
+  display: flex; flex-direction: column; gap: var(--space-3);
+  /* background-COLOR, not the shorthand: `background:` resets background-image
+     and would wipe the .ruled register hairlines this panel is built around. */
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  /* .ruled draws with --border-hair, which is a dark blue meant for light
+     surfaces. On the dark hero plate it needs to be a light hairline. */
+  --border-hair: rgba(255, 255, 255, 0.10);
+  min-height: 260px;
+}
+.hero-ledger .hero-ledger-title { color: var(--accent); margin-bottom: 0; }
+.hero-ledger-note { color: #c4cddd; font-size: 15px; line-height: 1.5; margin: auto 0; }
+.hero-ledger-rows { display: flex; flex-direction: column; margin: auto 0; width: 100%; }
+.hero-ledger .ledger-record { border-bottom-color: rgba(255, 255, 255, 0.12); }
+.hero-ledger .ledger-record:last-child { border-bottom: 0; }
+.hero-ledger .lr-ids { color: #fff; }
+.hero-ledger .lr-role { color: #c4cddd; }
+.hero-ledger .lr-date { color: #9aa7bf; }
+.hero-ledger-mono {
+  font-family: var(--font-mono); font-size: var(--fs-xs); color: #9aa7bf;
+  border-top: 1px solid rgba(255, 255, 255, 0.12); padding-top: var(--space-3); margin-top: auto;
+}
+
+/* The problem */
+.problem { padding: 88px 0 24px; }
+.problem h2 { font-size: var(--fs-2xl); margin-bottom: var(--space-6); max-width: 22ch; }
+.problem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+.problem-card h3 { font-size: 17px; margin-bottom: 6px; }
+.problem-card p { font-size: 14.5px; line-height: 1.55; }
+.problem-punch {
+  margin-top: var(--space-6); font-family: var(--font-display);
+  font-size: var(--fs-xl); font-weight: 700; letter-spacing: var(--ls-tight);
+  max-width: 30ch;
+}
+@media (max-width: 860px) { .problem-grid { grid-template-columns: 1fr; } }
+
+/* Trust chain */
+.trust { padding: 72px 0; }
+.trust h2 { font-size: var(--fs-2xl); margin-bottom: var(--space-6); max-width: 24ch; }
+.trust-grid {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-5);
+}
+.trust-node { position: relative; padding-top: var(--space-4); border-top: 2px solid var(--border); }
+.trust-node h3 { font-size: 16px; margin: var(--space-3) 0 6px; }
+.trust-node p { font-size: 14.5px; line-height: 1.55; }
+.trust-step {
+  display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--brand); color: var(--text-on-brand);
+  font-family: var(--font-mono); font-size: 13px; font-weight: 500;
+}
+@media (max-width: 900px) { .trust-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .trust-grid { grid-template-columns: 1fr; } }
+
+/* Ledger section */
+.ledger-section { padding: 40px 0 72px; }
+.ledger-section h2 { font-size: var(--fs-2xl); margin-bottom: var(--space-3); }
+.ledger-section-body { max-width: 62ch; margin-bottom: var(--space-5); font-size: 16px; }
+.ledger-sheet { padding: var(--space-3) var(--space-5); }
+/* One point up from the --fs-micro eyebrow base, and bold: this is the sheet's
+   heading, not a section label. */
+.ledger-sheet-title { color: var(--brand-subtle-fg); margin-bottom: var(--space-2); font-size: var(--fs-xs); font-weight: 700; }
+.ledger-sheet .ledger-record:last-child { border-bottom: 0; }
+/* The claim the hero panel carried before the chain took its place. */
+.ledger-mono {
+  font-family: var(--font-mono); font-size: 13px; color: var(--text-3);
+  border-top: 1px solid var(--border); padding-top: var(--space-3); margin-top: var(--space-3);
+}
+.ledger-punch {
+  margin-top: var(--space-5); font-family: var(--font-display);
+  font-size: var(--fs-xl); font-weight: 700; letter-spacing: var(--ls-tight); max-width: 32ch;
+}
+
+/* FAQ */
+.faq { padding: 72px 0; }
+.faq h2 { font-size: var(--fs-2xl); margin-bottom: var(--space-6); }
+.faq-list { border-top: 1px solid var(--border); max-width: 780px; }
+.faq-item { border-bottom: 1px solid var(--border); }
+.faq-item h3 { margin: 0; font-size: inherit; font-weight: inherit; line-height: inherit; letter-spacing: normal; font-family: var(--font-body); }
+.faq-q {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: var(--space-4);
+  background: none; border: 0; padding: var(--space-4) 2px; text-align: left;
+  font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--text-1);
+}
+.faq-q:hover { color: var(--brand); }
+.faq-chevron { color: var(--text-3); transition: transform var(--d-fast) var(--ease-out); flex: none; }
+.faq-item.open .faq-chevron { transform: rotate(180deg); }
+.faq-a { padding: 0 2px var(--space-4); }
+.faq-a p { max-width: 68ch; font-size: 15px; line-height: 1.6; }
+
+/* Closing CTA */
+.closing-cta { background: var(--blue-800); color: #fff; padding: 88px 0; text-align: center; }
+.closing-cta h2 { font-size: var(--fs-3xl); max-width: 20ch; margin: 0 auto var(--space-4); }
+.closing-cta p { color: #c4cddd; font-size: 17px; max-width: 52ch; margin: 0 auto; }
+.closing-cta-actions { margin-top: var(--space-6); display: flex; justify-content: center; }
+.closing-cta-btn { background: #fff; color: var(--blue-700); font-size: 16px; }
+.closing-cta-btn:hover:not(:disabled) { background: var(--blue-50); color: var(--blue-800); }
+
+/* ============ task 8c: motion ============ */
+
+/* Ledger rows write themselves in, one every 400ms.
+
+   The RESTING state is the finished one. The global reduced-motion rule kills
+   animations with `animation: none !important`, so an opacity-0 resting state
+   would leave every record permanently invisible — the same trap as the logo
+   draw-in and the chain connectors. Transform and opacity only; the rows never
+   move in the layout. */
+@media (prefers-reduced-motion: no-preference) {
+  .ledger-sheet.is-writing-in .ledger-record {
+    animation: lr-write-in var(--d-slow) var(--ease-out) both;
+  }
+}
+@keyframes lr-write-in {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Section reveals: 16px of travel, 320ms, on entry, once.
+
+   The hiding state lives on .reveal-armed, which only JavaScript ever adds —
+   so if the script fails, nothing is left invisible. And the whole block sits
+   inside no-preference, so reduced motion never sees a hidden state at all. */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-armed { opacity: 0; transform: translateY(16px); }
+  .reveal-armed.is-revealed {
+    opacity: 1; transform: none;
+    transition: opacity var(--d-base) var(--ease-out), transform var(--d-base) var(--ease-out);
+  }
+}
+
+/* ============ task 9: dark variants for the hard-coded pastels ============
+
+   Everything that only ever meant "the card colour" was retokened to
+   --surface / --bg-sunken and inverts on its own. What remains here is the
+   decorative palette: panels, badge plates and the "land your job" cards,
+   which are deliberately varied hues rather than surfaces.
+
+   Each keeps its hue but is expressed as a translucent tint over the dark
+   canvas, so it reads as the same colour family without being a light slab in
+   a dark page. The nav, hero, footer and meeting stage are NOT here: they are
+   dark plates in both themes, and their #fff text is correct in both. */
+
+[data-theme="dark"] .panel-purple { background: linear-gradient(160deg, rgba(107, 79, 216, 0.22), rgba(107, 79, 216, 0.10)); }
+[data-theme="dark"] .panel-blue   { background: linear-gradient(160deg, rgba(58, 99, 201, 0.22), rgba(58, 99, 201, 0.10)); }
+[data-theme="dark"] .panel-green  { background: linear-gradient(160deg, rgba(23, 166, 115, 0.20), rgba(23, 166, 115, 0.09)); }
+
+[data-theme="dark"] .feature-purple .feature-badge { background: rgba(107, 79, 216, 0.24); color: #bcaaf7; }
+[data-theme="dark"] .feature-blue .feature-badge   { background: rgba(58, 99, 201, 0.24); color: #a3c0f8; }
+
+[data-theme="dark"] .land-lav   { background: rgba(107, 79, 216, 0.18); }
+[data-theme="dark"] .land-peri  { background: rgba(58, 99, 201, 0.28); }
+[data-theme="dark"] .land-cream { background: rgba(246, 220, 154, 0.14); }
+[data-theme="dark"] .land-peri .land-ic { color: #a3c0f8; }
+
+/* The decorative job-card mockup. Its gradient still fades a green literal into
+   --verify-tint; that pairing is on the task 8 deferral list either way. */
+[data-theme="dark"] .match-mock-panel {
+  background: linear-gradient(155deg, rgba(23, 166, 115, 0.18), rgba(79, 142, 247, 0.14));
+}
+[data-theme="dark"] .match-mock-badge b { background: var(--bg-sunken); color: var(--text-1); }
+
+/* Shadows tuned for light surfaces read as smudges on dark ones. */
+[data-theme="dark"] .mock-card,
+[data-theme="dark"] .match-mock-card { box-shadow: var(--shadow-3); }
+[data-theme="dark"] .feature-tag { box-shadow: var(--shadow-2); }
+
+
+/* ============ task 10: touch targets ============
+   WCAG 2.2 target size. Growing the painted box would break the date picker's
+   grid and the nav's height, so the visible control keeps its size and an
+   invisible ::after extends the hit area to 44x44 around its centre. */
+.dtp-nav, .dtp-arrow, .nav-toggle, .lang-trigger, .btn.ghost, .filter-chevron { position: relative; }
+/* .btn.sm is 36px by design (section 7's 36/44/52 ladder) and .tabs buttons
+   and .logo-lockup are similarly sized on purpose. Rather than break those,
+   the visible control keeps its height and the hit area is extended. */
+.nav-bell, .account-trigger, .brand, .btn.sm, .tabs button, .logo-lockup { position: relative; }
+.dtp-nav::after, .dtp-arrow::after, .nav-toggle::after,
+.lang-trigger::after, .btn.ghost::after,
+.nav-bell::after, .account-trigger::after, .brand::after,
+.btn.sm::after, .tabs button::after, .logo-lockup::after,
+.job-card h2 a::after, .job-card h3 a::after {
+  content: ''; position: absolute; left: 50%; top: 50%;
+  width: max(100%, 44px); height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+}
+
+
+/* ============ task 10: the nav at 320-560px ============
+   Signed in, the bar carries brand + bell + language + account + menu toggle.
+   At 28px gaps with the account name visible that totals ~592px, so it
+   overflowed a 320px viewport. Earlier checks missed it because they ran
+   signed out, where there is no account trigger. */
+@media (max-width: 560px) {
+  .nav-inner { gap: 10px; }
+  .nav .brand { font-size: 17px; gap: 8px; }
+  .nav .brand-mark { width: 32px !important; height: 32px !important; }
+  .nav .brand-mark svg { width: 18px; height: 18px; }
+  .account-trigger-name, .account-chevron { display: none; }
+  .account-trigger { max-width: none; padding: 3px; }
+  .lang-trigger.btn.ghost { padding: 6px 8px; font-size: 12.5px; }
+}
+@media (max-width: 400px) {
+  .brand-word { display: none; }
+}
+
+/* Footer links were 22px tall in a 10px-gapped column. Padding rather than a
+   ::after hit area, because overlapping invisible targets on adjacent links is
+   worse than a small one — a tap would land on an unpredictable neighbour. */
+.footer-col { gap: 0; }
+.footer-col a { padding: 12px 0; }
+.footer-social-icons a { padding: 11px; margin: -11px; }
+
+/* A standalone URL link, not inline in a sentence, so the 2.5.8 inline
+   exception does not cover it. */
+.ext-link { display: inline-block; padding: 12px 0; }
+/* Job-title links wrap to one or two lines depending on the title and the
+   viewport, so padding cannot satisfy both — 2px clears a two-line title and
+   leaves a one-line one at 24px. The hit area handles either. */
+.job-card h2 a, .job-card h3 a { position: relative; display: inline-block; }

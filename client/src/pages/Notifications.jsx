@@ -36,7 +36,7 @@ export default function Notifications() {
 
   return (
     <main className="container" style={{ maxWidth: 720 }}>
-      <h2 style={{ fontSize: 30, marginBottom: 16 }}>Inbox</h2>
+      <h1 style={{ fontSize: 30, marginBottom: 16 }}>Inbox</h1>
 
       <div className="tabs">
         <button className={tab === 'notifications' ? 'active' : ''} onClick={() => setTab('notifications')}>

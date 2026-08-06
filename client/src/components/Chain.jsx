@@ -1,35 +1,77 @@
-// The signature pipeline visual: connected chain of hiring stages
-const LABELS = {
-  applied: 'Applied',
-  skill_test: 'Skill test',
-  ai_interview: 'AI interview',
-  company_test: 'Company test',
-  hr_interview: 'HR interview',
-  tech_interview: 'Technical',
-  hired: 'Hired',
-};
-const ORDER = ['applied', 'skill_test', 'ai_interview', 'company_test', 'hr_interview', 'tech_interview', 'hired'];
+import { Fragment } from 'react';
+import { CHAIN_STAGES } from '../stages.js';
+import { useI18n } from '../i18n.jsx';
 
+// The signature pipeline visual: connected chain of hiring stages.
+//
+// Labels and order come from stages.js. This component used to carry its own
+// LABELS and ORDER, which had drifted: it spelled tech_interview "Technical"
+// while the rest of the app says "Technical interview".
+//
+// A rejected application cannot show WHERE it failed. All three rejection paths
+// run `UPDATE applications SET stage='rejected'`, overwriting the previous
+// stage, and there is no history table — so the failure point is unrecoverable
+// on the client. Rather than invent one, the whole track goes muted and a
+// terminal failed node is appended. See BRANDING.md section 7.
 export default function Chain({ stage }) {
+  const { t } = useI18n();
+
   const rejected = stage === 'rejected';
-  const idx = rejected ? -1 : ORDER.indexOf(stage);
+  // 'applied' is the column default but no row is ever created at it. If one
+  // somehow is, treat it as the first real stage rather than rendering nothing.
+  const effective = stage === 'applied' ? 'skill_test' : stage;
+  const idx = rejected ? -1 : CHAIN_STAGES.indexOf(effective);
+  const total = CHAIN_STAGES.length;
+
+  const announce = (i, label, state) =>
+    t('chain.position', { n: i + 1, total, label, state: t(state) });
+
   return (
-    <div className="chain" role="list" aria-label="Hiring progress">
-      {ORDER.map((s, i) => {
-        const done = !rejected && i < idx;
-        const current = !rejected && i === idx;
-        const hiredFinal = s === 'hired' && stage === 'hired';
+    <div
+      className={'chain' + (rejected ? ' rejected' : '')}
+      role="list"
+      aria-label={t('chain.label')}
+    >
+      {CHAIN_STAGES.map((s, i) => {
+        const hiredFinal = s === 'hired' && effective === 'hired';
+        const done = (!rejected && i < idx) || hiredFinal;
+        const current = !rejected && i === idx && !hiredFinal;
+        const label = t(`stage.${s}`);
         return (
-          <span key={s} style={{ display: 'contents' }}>
-            {i > 0 && <span className={'connector' + (done || current || hiredFinal ? ' done' : '')} />}
-            <span role="listitem" className={'node' + (done || hiredFinal ? ' done' : current ? ' current' : '')}>
-              <span className="dot">{done || hiredFinal ? '✓' : i + 1}</span>
-              <small>{LABELS[s]}</small>
+          <Fragment key={s}>
+            {i > 0 && (
+              <span
+                className={'connector' + (done || current ? ' done' : '')}
+                aria-hidden="true"
+              />
+            )}
+            <span
+              role="listitem"
+              className={'node' + (done ? ' done' : current ? ' current' : '')}
+              {...(current ? { 'aria-current': 'step' } : {})}
+            >
+              <span className="dot" aria-hidden="true">{done ? '✓' : i + 1}</span>
+              <small>{label}</small>
+              {(current || hiredFinal) && (
+                <span className="sr-only">
+                  {announce(i, label, current ? 'chain.stateCurrent' : 'chain.stateDone')}
+                </span>
+              )}
             </span>
-          </span>
+          </Fragment>
         );
       })}
-      {rejected && <span className="badge danger" style={{ marginLeft: 12 }}>Not selected</span>}
+
+      {rejected && (
+        <>
+          <span className="connector" aria-hidden="true" />
+          <span role="listitem" className="node failed">
+            <span className="dot" aria-hidden="true">✕</span>
+            <small>{t('stage.rejected')}</small>
+            <span className="sr-only">{t('chain.stateFailed')}</span>
+          </span>
+        </>
+      )}
     </div>
   );
 }
