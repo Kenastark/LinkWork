@@ -232,6 +232,10 @@ app.get('/api/stats', (req, res) => {
 // student_id is selected, so none can leave the server. A job title, a company
 // and a date identify a real person at pilot scale, where there is one demo
 // student and ten postings.
+//
+// Publishing the STU-XXXX pairing was tried and reverted. It is a legitimate
+// future option, but it is gated on consent work: see BRANDING.md section 8,
+// "Publishing the student ID".
 app.get('/api/ledger/recent', (req, res) => {
   res.json({
     records: db.prepare(`

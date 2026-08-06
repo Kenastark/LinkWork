@@ -476,7 +476,17 @@ Every part of that is correct. The resolution is three changes, not deletion.
 
 **On the privacy collapse.** The public hero does not need the `⟷` pairing. Show the filled posting: `JOB-0042 · Junior Data Engineer · DataTech · 14 May` with the seal where applicable. That is a record of a real posting that is gone because it was filled, it makes the same argument, and it is nothing like the 404's null pairing. `STU-0007` stays on the private ledger where the student and the hiring company can see it. This resolves the privacy question and the visual collision in one move, and it means the public route never returns a student ID at all.
 
-If you would rather not touch `db.js`, cutting the ledger panel and keeping the existing three-node `.hero-chain` is a legitimate fallback. It costs the identity its signature, and the section 8 ledger section then has to carry it alone.
+**Settled: the hero keeps the three-node chain, and the ledger lives in its own section.** The panel described above was built, reviewed against two alternatives, and replaced.
+
+Three layouts were built and compared:
+
+1. Ledger panel in the hero, with the trust chain lower down restyled to wear the old chain's icon plates and connectors.
+2. **Chosen.** The original three-node `.hero-chain` back in the hero, with the ledger consolidated into the §8 ledger section as its only home.
+3. Both in the hero — chain in the right column, ledger as a full-width strip beneath.
+
+Option 3 was rejected on measurement rather than taste: it pushed the hero to **1130px**, so on a 1440×800 laptop the ledger strip sat below the fold and the receipts argument was not made at first paint. Options 1 and 3 both left the records rendered twice on one page, in the hero and again in the ledger section.
+
+So the fallback this section previously offered as a compromise is the shipped design. It does not cost the identity its signature the way the earlier note feared, because the ledger section carries it in full — see item 4.
 
 Keep the existing `.overlap-band` stats. Move the numbers to mono per §7.
 
@@ -484,9 +494,17 @@ Keep the existing `.overlap-band` stats. Move the numbers to mono per §7.
 
 This is the strongest argument the product has and the page does not currently make it.
 
-**3. Trust chain.** Promote the hero's three nodes into their own section with four nodes, and say what is actually checked at each: the faculty coordinator negotiates the partnership directly, the company is reviewed by an admin before it can post, the posting exists because the company committed to hire, the student is verified once against an official university email.
+**3. Trust chain.** A section of four nodes saying what is actually checked at each: the faculty coordinator negotiates the partnership directly, the company is reviewed by an admin before it can post, the posting exists because the company committed to hire, the student is verified once against an official university email.
 
-**4. Ledger section.** New, with `.ruled`. Two sentences on the mechanism, real `LedgerRecord` rows, then: "When a posting is filled, it comes down. That is why the list is short."
+This section no longer *promotes* the hero's three nodes, because the hero kept them. It is a numbered four-column grid, deliberately a different object from the chain above it. Restyling it to wear the hero chain's icon plates and connectors was built and rejected: with the chain still in the hero, two chain-shaped things on one page read as a duplicate rather than a progression.
+
+**4. Ledger section.** New, with `.ruled`. **This is the only home for hire records** — the hero shows the chain, not the receipts, so everything the hero panel used to carry lives here:
+
+- The sheet is titled "The hire ledger" (`ledger.panelTitle`), one point above the eyebrow base and bold, so it reads as the sheet's heading rather than another section label.
+- Real `LedgerRecord` rows, de-identified — `JOB-0009` with no `⟷ STU-` pairing. See "Publishing the student ID" above.
+- The mono claim line beneath them (`ledger.mono`): `Hires recorded: 4 · Postings unaccounted for: 0`, reading `hires` from `/api/stats` and never hard-coded. It falls back to `ledger.monoNoCount`, dropping the count clause entirely, when `/api/stats` is unavailable — asserting a count the server did not give us is the same failure as hard-coding one.
+- The empty state uses the full promise sentence (`ledger.empty`), not the terser `ledgerSection.empty`, because with no hero panel this is the only place that argument gets made.
+- Then: "When a posting is filled, it comes down. That is why the list is short."
 
 **5. FAQ.** New, before the footer. Six items: who can join, what verification involves, what the gold star means, what it costs, whether other universities are coming, what happens to your data. Accordion, one open at a time, `<button aria-expanded>` driving a `<div role="region">`. Two-sentence answers.
 
@@ -712,11 +730,32 @@ Split into three commits.
 
   Sample row: `{job_id: 1, hired_at: "2026-06-14 10:00:00", title: "Software Engineering Intern", faculty_verified: 1, company: "DataTech Hungary Kft."}`. No `student_id` leaves the server.
 
+  #### Publishing the student ID — deferred, not rejected
+
+  Showing the full `JOB-0009 ⟷ STU-0003` pairing on the public ledger was built and reverted. It is a legitimate future change and the ledger arguably reads better with it: the `⟷` pairing is the product's signature, and half of it is currently missing in public.
+
+  **It is gated on consent work, not on engineering.** The engineering is one line — add `m.student_id` to the `SELECT` and pass it through to `LedgerRecord`, which already accepts and renders it. What is missing is the basis for publishing it:
+
+  1. **A consent line in `Privacy.jsx`** saying that a hire is recorded on a public ledger together with the student's platform ID.
+  2. **A `POLICY_VERSION` bump.** It is currently `'2026-07-21'` and is stamped onto every user at registration in `server/index.js`. Existing students consented to a policy that says nothing about a public ledger of their hires, so publishing their IDs would exceed what they agreed to.
+  3. **More seeded students,** or the demo undercuts the point: `seed()` creates one demo student and all four seeded hires are hers, so every row reads `STU-0003` and a register meant to show many people reads as one person hired four times.
+
+  Until all three are done, the route stays de-identified. Section 5's argument still holds either way: at pilot scale a job title plus a company plus a date already narrows to a real person, and the ID removes the last ambiguity rather than creating a new exposure.
+
   **The seeded matches must mirror what a real hire does**, or the ledger will show filled postings still sitting open on `/student`. `server/index.js` lines 785 to 788 insert the match, increment `jobs.filled`, and set `status='closed'` once `filled >= positions`. Seed the same three writes per row, not just the `INSERT`. Otherwise `open_jobs` stays at 10 while the ledger claims three of them were filled, which is precisely the ghost-posting problem the product exists to solve.
 
   `seed()` only runs when `universities` is empty, so existing databases are unaffected. Delete `server/linkwork.db*` to see it.
-- **8b:** the five new sections (problem, trust chain, ledger, FAQ, CTA), the hero ledger panel built empty-state first, and the base `.eyebrow` rule together with fixes to the three bare spans at `Landing.jsx` 294, 377 and 408 that currently carry inline `color: var(--verify)`. All strings in `en`, `hu` and `fr`. No animation yet.
-- **8c:** motion. Hero records writing in at 400ms intervals, stat counters over 1200ms on scroll into view, section reveals at 16px and 320ms. Transform and opacity only.
+- **8b — DONE.** The five new sections (problem, trust chain, ledger, FAQ, CTA), plus the base `.eyebrow` rule and the three bare spans in `Landing.jsx` that carried inline `color: var(--verify)` — the inline colour beat any class rule, so it was stripped and they now render at 11px mono instead of inherited 16px. 47 new strings across `en`, `hu` and `fr`, parity at 179 keys per locale. No animation; that is 8c.
+
+  The hero ledger panel was built empty-state first, as specified, then **replaced by the three-node chain** after review — see item 1. Its empty-state design was not wasted: the ledger section inherited the ruled register, the promise sentence and the mono line.
+
+  `MatchIllustration`, the three `FeatureRow` art panels, `HowItWorks`, the testimonial and the `.logo-strip` were not touched.
+
+  **Three bugs and one silent layout failure were found by verifying rather than by looking.** The mono line asserted `Hires recorded: 0` above four visible records when `/api/stats` was down. `.hero-ledger` used the `background` shorthand, which resets `background-image` and had silently wiped `.ruled`'s hairlines. `.nav-auth` was not hidden below 860px alongside the other nav groups, overflowing the viewport at 375px. And the French CTA — "Rejoignez-nous avec votre e-mail universitaire" — pushed the hero 70px past the viewport at 375px, invisible because `.hero` clips: `.btn` is `white-space: nowrap` and grid items default to `min-width: auto`, so an unbreakable button sets the column's floor. There was no scrollbar and no visual break; it was caught by measuring every element's right edge.
+
+  **Verified:** the empty state by clearing `matches` and restoring it. All three failure modes by blocking the routes over CDP. Nine locale-by-breakpoint combinations at 375, 768 and 1440 across `en`, `hu` and `fr` — zero elements past the viewport in any. Rendered body text scanned against English markers in `hu` and `fr`, zero hits.
+
+- **8c:** motion. Stat counters over 1200ms on scroll into view, section reveals at 16px and 320ms. Transform and opacity only. **Note the hero records writing in at 400ms intervals no longer applies** — the hero shows the chain, so there are no hero records to animate. The ledger section's rows are the remaining candidate.
 
 **Done when:** every section renders at 375, 768 and 1440; the page works with both endpoints returning 500 **and** with `/api/ledger/recent` returning an empty array; `hu` and `fr` are complete with no layout break; the three eyebrow spans render at their intended size; and with reduced motion on, all records are visible immediately with final stat values.
 

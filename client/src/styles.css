@@ -853,9 +853,9 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 }
 .hero-chain .hnode:nth-child(3) { animation-delay: .15s; }
 .hero-chain .hnode:nth-child(5) { animation-delay: .3s; }
-.hero-chain .hlink { width: 2.5px; height: 26px; background: var(--verify-bright); margin-left: 37px; }
+.hero-chain .hlink { width: 2.5px; height: 26px; background: var(--accent); margin-left: 37px; }
 .hero-chain .hicon {
-  width: 40px; height: 40px; border-radius: 12px; background: var(--verify);
+  width: 40px; height: 40px; border-radius: 12px; background: var(--brand);
   display: grid; place-items: center; flex-shrink: 0;
 }
 .hero-chain b { font-family: var(--font-display); font-size: 18px; font-weight: 700; display: block; }
@@ -1328,7 +1328,15 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 .ledger-section h2 { font-size: var(--fs-2xl); margin-bottom: var(--space-3); }
 .ledger-section-body { max-width: 62ch; margin-bottom: var(--space-5); font-size: 16px; }
 .ledger-sheet { padding: var(--space-3) var(--space-5); }
+/* One point up from the --fs-micro eyebrow base, and bold: this is the sheet's
+   heading, not a section label. */
+.ledger-sheet-title { color: var(--brand-subtle-fg); margin-bottom: var(--space-2); font-size: var(--fs-xs); font-weight: 700; }
 .ledger-sheet .ledger-record:last-child { border-bottom: 0; }
+/* The claim the hero panel carried before the chain took its place. */
+.ledger-mono {
+  font-family: var(--font-mono); font-size: 13px; color: var(--text-3);
+  border-top: 1px solid var(--border); padding-top: var(--space-3); margin-top: var(--space-3);
+}
 .ledger-punch {
   margin-top: var(--space-5); font-family: var(--font-display);
   font-size: var(--fs-xl); font-weight: 700; letter-spacing: var(--ls-tight); max-width: 32ch;

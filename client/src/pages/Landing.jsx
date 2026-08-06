@@ -230,45 +230,6 @@ function HowItWorks() {
   );
 }
 
-// The hero's ledger panel. Designed at n = 0 first: an empty register has to
-// read as a promise, not a bug, because that is what a brand-new university
-// partner sees. The mono line never hard-codes a count — it reads whatever
-// /api/stats reports, so it is true at any n, including zero.
-function HeroLedger({ records, hires, failed }) {
-  const { t } = useI18n();
-  const empty = !records || records.length === 0;
-  return (
-    <div className="hero-ledger glass ruled">
-      <span className="eyebrow hero-ledger-title">{t('ledger.panelTitle')}</span>
-
-      {failed ? (
-        <p className="hero-ledger-note">{t('ledger.unavailable')}</p>
-      ) : empty ? (
-        <p className="hero-ledger-note">{t('ledger.empty')}</p>
-      ) : (
-        <div className="hero-ledger-rows">
-          {records.map(r => (
-            <LedgerRecord
-              key={r.job_id}
-              jobId={r.job_id}
-              title={r.title}
-              company={r.company}
-              hiredAt={r.hired_at}
-              facultyVerified={!!r.faculty_verified}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Never assert a count /api/stats did not give us: showing "0 hires"
-          beside four visible records would be a lie, not a fallback. */}
-      <p className="hero-ledger-mono tabular">
-        {hires == null ? t('ledger.monoNoCount') : t('ledger.mono', { n: hires })}
-      </p>
-    </div>
-  );
-}
-
 function ProblemSection() {
   const { t } = useI18n();
   const cards = [
@@ -317,7 +278,7 @@ function TrustChain() {
   );
 }
 
-function LedgerSection({ records, failed }) {
+function LedgerSection({ records, failed, hires }) {
   const { t } = useI18n();
   const empty = !records || records.length === 0;
   return (
@@ -327,8 +288,9 @@ function LedgerSection({ records, failed }) {
         <h2>{t('ledgerSection.title')}</h2>
         <p className="muted ledger-section-body">{t('ledgerSection.body')}</p>
         <div className="card ruled ledger-sheet">
+          <span className="eyebrow ledger-sheet-title">{t('ledger.panelTitle')}</span>
           {failed || empty
-            ? <p className="muted">{failed ? t('ledger.unavailable') : t('ledgerSection.empty')}</p>
+            ? <p className="muted">{failed ? t('ledger.unavailable') : t('ledger.empty')}</p>
             : records.map(r => (
               <LedgerRecord
                 key={r.job_id}
@@ -339,6 +301,9 @@ function LedgerSection({ records, failed }) {
                 facultyVerified={!!r.faculty_verified}
               />
             ))}
+          <p className="ledger-mono tabular">
+            {hires == null ? t('ledger.monoNoCount') : t('ledger.mono', { n: hires })}
+          </p>
         </div>
         <p className="ledger-punch">{t('ledgerSection.punch')}</p>
       </div>
@@ -452,7 +417,22 @@ export default function Landing() {
             </div>
           </div>
 
-          <HeroLedger records={records} hires={stats?.hires} failed={ledgerFailed} />
+          <div className="hero-chain" aria-label="How verification flows">
+            <div className="hnode">
+              <div className="hicon"><Icon d="M12 3 2 8l10 5 10-5-10-5Zm-6 7.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-5.5" /></div>
+              <div><b>{t('hero.chainFacultyTitle')}</b><span>{t('hero.chainFacultyBody')}</span></div>
+            </div>
+            <div className="hlink" />
+            <div className="hnode">
+              <div className="hicon"><Icon d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6" /></div>
+              <div><b>{t('hero.chainCompanyTitle')}</b><span>{t('hero.chainCompanyBody')}</span></div>
+            </div>
+            <div className="hlink" />
+            <div className="hnode">
+              <div className="hicon"><Icon d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" /></div>
+              <div><b>{t('hero.chainYouTitle')}</b><span>{t('hero.chainYouBody')}</span></div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -517,7 +497,7 @@ export default function Landing() {
 
       <TrustChain />
 
-      <LedgerSection records={records} failed={ledgerFailed} />
+      <LedgerSection records={records} failed={ledgerFailed} hires={stats?.hires} />
 
       <section className="land-job">
         <div className="container">
