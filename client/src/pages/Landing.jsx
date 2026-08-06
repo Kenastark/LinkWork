@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
 import { useI18n } from '../i18n.jsx';
+import LedgerRecord from '../components/LedgerRecord.jsx';
 
 const BRAND_PALETTE = [
   { bg: '#eff5fc', fg: '#003b7a' }, // brand blue (--blue-50 / --blue-700)
@@ -229,12 +230,204 @@ function HowItWorks() {
   );
 }
 
+// The hero's ledger panel. Designed at n = 0 first: an empty register has to
+// read as a promise, not a bug, because that is what a brand-new university
+// partner sees. The mono line never hard-codes a count — it reads whatever
+// /api/stats reports, so it is true at any n, including zero.
+function HeroLedger({ records, hires, failed }) {
+  const { t } = useI18n();
+  const empty = !records || records.length === 0;
+  return (
+    <div className="hero-ledger glass ruled">
+      <span className="eyebrow hero-ledger-title">{t('ledger.panelTitle')}</span>
+
+      {failed ? (
+        <p className="hero-ledger-note">{t('ledger.unavailable')}</p>
+      ) : empty ? (
+        <p className="hero-ledger-note">{t('ledger.empty')}</p>
+      ) : (
+        <div className="hero-ledger-rows">
+          {records.map(r => (
+            <LedgerRecord
+              key={r.job_id}
+              jobId={r.job_id}
+              title={r.title}
+              company={r.company}
+              hiredAt={r.hired_at}
+              facultyVerified={!!r.faculty_verified}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Never assert a count /api/stats did not give us: showing "0 hires"
+          beside four visible records would be a lie, not a fallback. */}
+      <p className="hero-ledger-mono tabular">
+        {hires == null ? t('ledger.monoNoCount') : t('ledger.mono', { n: hires })}
+      </p>
+    </div>
+  );
+}
+
+function ProblemSection() {
+  const { t } = useI18n();
+  const cards = [
+    ['problem.card1Title', 'problem.card1Body'],
+    ['problem.card2Title', 'problem.card2Body'],
+    ['problem.card3Title', 'problem.card3Body'],
+  ];
+  return (
+    <section className="problem">
+      <div className="container">
+        <span className="eyebrow">{t('problem.eyebrow')}</span>
+        <h2>{t('problem.title')}</h2>
+        <div className="problem-grid">
+          {cards.map(([title, body]) => (
+            <div className="card problem-card" key={title}>
+              <h3>{t(title)}</h3>
+              <p className="muted">{t(body)}</p>
+            </div>
+          ))}
+        </div>
+        <p className="problem-punch">{t('problem.punch')}</p>
+      </div>
+    </section>
+  );
+}
+
+function TrustChain() {
+  const { t } = useI18n();
+  const nodes = ['n1', 'n2', 'n3', 'n4'];
+  return (
+    <section className="trust">
+      <div className="container">
+        <span className="eyebrow">{t('trust.eyebrow')}</span>
+        <h2>{t('trust.title')}</h2>
+        <ol className="trust-grid">
+          {nodes.map((n, i) => (
+            <li className="trust-node" key={n}>
+              <span className="trust-step" aria-hidden="true">{i + 1}</span>
+              <h3>{t(`trust.${n}Title`)}</h3>
+              <p className="muted">{t(`trust.${n}Body`)}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  );
+}
+
+function LedgerSection({ records, failed }) {
+  const { t } = useI18n();
+  const empty = !records || records.length === 0;
+  return (
+    <section className="ledger-section">
+      <div className="container">
+        <span className="eyebrow">{t('ledgerSection.eyebrow')}</span>
+        <h2>{t('ledgerSection.title')}</h2>
+        <p className="muted ledger-section-body">{t('ledgerSection.body')}</p>
+        <div className="card ruled ledger-sheet">
+          {failed || empty
+            ? <p className="muted">{failed ? t('ledger.unavailable') : t('ledgerSection.empty')}</p>
+            : records.map(r => (
+              <LedgerRecord
+                key={r.job_id}
+                jobId={r.job_id}
+                title={r.title}
+                company={r.company}
+                hiredAt={r.hired_at}
+                facultyVerified={!!r.faculty_verified}
+              />
+            ))}
+        </div>
+        <p className="ledger-punch">{t('ledgerSection.punch')}</p>
+      </div>
+    </section>
+  );
+}
+
+// Accordion, one open at a time. A <button aria-expanded> drives a
+// <div role="region">, so a screen reader is told the state and what it owns.
+function Faq() {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(null);
+  const items = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6'];
+  return (
+    <section className="faq">
+      <div className="container">
+        <span className="eyebrow">{t('faq.eyebrow')}</span>
+        <h2>{t('faq.title')}</h2>
+        <div className="faq-list">
+          {items.map((q, i) => {
+            const isOpen = open === i;
+            return (
+              <div className={'faq-item' + (isOpen ? ' open' : '')} key={q}>
+                <h3>
+                  <button
+                    type="button"
+                    className="faq-q"
+                    aria-expanded={isOpen}
+                    aria-controls={`faq-a-${i}`}
+                    id={`faq-q-${i}`}
+                    onClick={() => setOpen(isOpen ? null : i)}
+                  >
+                    <span>{t(`faq.${q}`)}</span>
+                    <span className="faq-chevron" aria-hidden="true">⌄</span>
+                  </button>
+                </h3>
+                <div
+                  className="faq-a"
+                  id={`faq-a-${i}`}
+                  role="region"
+                  aria-labelledby={`faq-q-${i}`}
+                  hidden={!isOpen}
+                >
+                  <p className="muted">{t(`faq.a${i + 1}`)}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ClosingCta({ user }) {
+  const { t } = useI18n();
+  return (
+    <section className="closing-cta mesh">
+      <div className="container">
+        <h2>{t('cta.title')}</h2>
+        <p>{t('cta.body')}</p>
+        <div className="closing-cta-actions">
+          <Link to={user ? '/student' : '/auth?mode=student'} className="btn closing-cta-btn">
+            {user ? t('cta.browse') : t('cta.student')}
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Landing() {
   const { user } = useAuth();
   const { t } = useI18n();
   const [stats, setStats] = useState(null);
+  // null = still loading, [] = genuinely empty, 'failed' = the route errored.
+  // The three are different states and the panel says something different for
+  // each; collapsing them would show "nothing hired yet" when the server is down.
+  const [ledger, setLedger] = useState(null);
 
   useEffect(() => { api.get('/api/stats').then(setStats).catch(() => {}); }, []);
+  useEffect(() => {
+    api.get('/api/ledger/recent')
+      .then(d => setLedger(Array.isArray(d?.records) ? d.records : []))
+      .catch(() => setLedger('failed'));
+  }, []);
+
+  const ledgerFailed = ledger === 'failed';
+  const records = Array.isArray(ledger) ? ledger : [];
 
   return (
     <>
@@ -259,22 +452,7 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="hero-chain" aria-label="How verification flows">
-            <div className="hnode">
-              <div className="hicon"><Icon d="M12 3 2 8l10 5 10-5-10-5Zm-6 7.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-5.5" /></div>
-              <div><b>{t('hero.chainFacultyTitle')}</b><span>{t('hero.chainFacultyBody')}</span></div>
-            </div>
-            <div className="hlink" />
-            <div className="hnode">
-              <div className="hicon"><Icon d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6" /></div>
-              <div><b>{t('hero.chainCompanyTitle')}</b><span>{t('hero.chainCompanyBody')}</span></div>
-            </div>
-            <div className="hlink" />
-            <div className="hnode">
-              <div className="hicon"><Icon d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" /></div>
-              <div><b>{t('hero.chainYouTitle')}</b><span>{t('hero.chainYouBody')}</span></div>
-            </div>
-          </div>
+          <HeroLedger records={records} hires={stats?.hires} failed={ledgerFailed} />
         </div>
       </section>
 
@@ -288,10 +466,12 @@ export default function Landing() {
         </div>
       )}
 
+      <ProblemSection />
+
       <section className="match-pitch">
         <div className="container match-pitch-grid">
           <div>
-            <span className="eyebrow" style={{ color: 'var(--verify)' }}>{t('matchPitch.eyebrow')}</span>
+            <span className="eyebrow">{t('matchPitch.eyebrow')}</span>
             <h2>{t('matchPitch.title')}</h2>
             <h3 style={{ marginTop: 18, fontSize: 22 }}>{t('matchPitch.subtitle')}</h3>
             <p className="muted" style={{ marginTop: 10, fontSize: 16.5, maxWidth: '46ch' }}>{t('matchPitch.body')}</p>
@@ -335,6 +515,10 @@ export default function Landing() {
         art={<TransparentArt t={t} />}
       />
 
+      <TrustChain />
+
+      <LedgerSection records={records} failed={ledgerFailed} />
+
       <section className="land-job">
         <div className="container">
           <h2 className="land-title"><span className="land-title-light">{t('landJob.titleLight')}</span><span className="land-title-bold">{t('landJob.titleBold')}</span></h2>
@@ -374,7 +558,7 @@ export default function Landing() {
             <img src="/images/students-testimonial.jpg" alt="A multicultural group of students studying together" />
           </div>
           <div>
-            <span className="eyebrow" style={{ color: 'var(--verify)' }}>{t('testimonials.eyebrow')}</span>
+            <span className="eyebrow">{t('testimonials.eyebrow')}</span>
             <h2 style={{ fontSize: 32, marginBottom: 24 }}>{t('testimonials.title')}</h2>
             <div className="notes-grid">
               <div className="note note-tint-a">
@@ -405,7 +589,7 @@ export default function Landing() {
       {stats?.companies?.length > 0 && (
         <section className="company-showcase">
           <div className="container">
-            <span className="eyebrow" style={{ color: 'var(--verify)' }}>{t('companyShowcase.eyebrow')}</span>
+            <span className="eyebrow">{t('companyShowcase.eyebrow')}</span>
             <h2>{t('companyShowcase.title')}</h2>
             <div className="logo-strip">
               {stats.companies.map(c => {
@@ -432,7 +616,9 @@ export default function Landing() {
         </section>
       )}
 
-      {/* TODO: hero image section — content pending user description */}
+      <Faq />
+
+      <ClosingCta user={user} />
     </>
   );
 }

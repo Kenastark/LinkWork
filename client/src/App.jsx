@@ -357,7 +357,11 @@ function AppShell({ user, setUser, logout }) {
             {[...primary, ...secondary].map((i, n) => (
               <NavLink key={`${i.to}-${n}`} className="navlink" to={i.to}>{i.label}</NavLink>
             ))}
-            {!user && <NavLink className="navlink" to="/auth">{t('nav.signIn')}</NavLink>}
+            {!user && <>
+              <NavLink className="navlink" to="/auth">{t('nav.signIn')}</NavLink>
+              <NavLink className="navlink" to="/auth?mode=student">{t('nav.joinAsStudent')}</NavLink>
+              <NavLink className="navlink" to="/auth?mode=company">{t('nav.joinAsCompany')}</NavLink>
+            </>}
             <button className="btn secondary" onClick={closeSheet}>{t('nav.closeMenu')}</button>
           </div>
         </nav>

@@ -389,6 +389,19 @@
   white-space: nowrap;
 }
 .ledger-record .lr-role { color: var(--text-2); flex: 1; min-width: 12ch; }
+
+/* The signature. Mono is reserved for things that are on the record.
+   Scoped rules for .hero .eyebrow and .how .eyebrow still win on specificity;
+   this is the base every other eyebrow inherits. */
+.eyebrow {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-widest);
+  text-transform: uppercase;
+  color: var(--brand-subtle-fg);
+  margin-bottom: var(--space-2);
+}
 .ledger-record .lr-date {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
@@ -497,7 +510,10 @@ main.container { flex: 1; padding: 32px 0 72px; }
 .nav-sheet .btn.secondary:hover:not(:disabled) { background: rgba(255,255,255,0.14); border-color: #fff; }
 
 @media (max-width: 860px) {
-  .nav-primary, .nav-secondary { display: none; }
+  /* .nav-auth belongs here too: leaving Sign in and Register in the bar
+     alongside the toggle overflows the viewport at 375px, and worse in hu.
+     Both move into the sheet. */
+  .nav-primary, .nav-secondary, .nav-auth { display: none; }
   .nav-toggle { display: inline-flex; }
   .nav-underline { display: none; }
 }
@@ -810,7 +826,15 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 /* ============ landing hero ============ */
 .hero { background: var(--ink); color: #fff; padding: 128px 0 96px; overflow: hidden; }
 .hero .container { display: grid; grid-template-columns: 1.15fr 1fr; gap: 56px; align-items: center; }
-@media (max-width: 860px) { .hero .container { grid-template-columns: 1fr; } }
+@media (max-width: 860px) {
+  .hero .container { grid-template-columns: 1fr; }
+  /* Grid items default to min-width: auto, so an unbreakable child sets the
+     column's floor. .btn is white-space: nowrap, and the longest CTA label —
+     "Rejoignez-nous avec votre e-mail universitaire" — then pushes the whole
+     hero past the viewport, hidden only because .hero clips. Let it wrap. */
+  .hero .container > * { min-width: 0; }
+  .hero .cta-row .btn { white-space: normal; }
+}
 .hero .eyebrow {
   font-family: var(--font-mono); font-size: 15px; color: var(--verify-bright);
   letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 20px;
@@ -1237,3 +1261,100 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 .nav-bell { position: relative; color: #cfd6e4; display: inline-flex; align-items: center; }
 .nav-bell:hover { color: #fff; }
 .nav-bell .dot { position: absolute; top: -3px; right: -4px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: var(--verify-bright); color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+/* ============ task 8b: hero ledger + five new landing sections ============ */
+
+/* Hero ledger panel. Replaces the three-node .hero-chain. Designed at n = 0
+   first: the ruled register and the mono line are always present, so an empty
+   ledger reads as a promise rather than a missing component. */
+.hero-ledger {
+  border-radius: var(--radius); padding: var(--space-5);
+  display: flex; flex-direction: column; gap: var(--space-3);
+  /* background-COLOR, not the shorthand: `background:` resets background-image
+     and would wipe the .ruled register hairlines this panel is built around. */
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  /* .ruled draws with --border-hair, which is a dark blue meant for light
+     surfaces. On the dark hero plate it needs to be a light hairline. */
+  --border-hair: rgba(255, 255, 255, 0.10);
+  min-height: 260px;
+}
+.hero-ledger .hero-ledger-title { color: var(--accent); margin-bottom: 0; }
+.hero-ledger-note { color: #c4cddd; font-size: 15px; line-height: 1.5; margin: auto 0; }
+.hero-ledger-rows { display: flex; flex-direction: column; margin: auto 0; width: 100%; }
+.hero-ledger .ledger-record { border-bottom-color: rgba(255, 255, 255, 0.12); }
+.hero-ledger .ledger-record:last-child { border-bottom: 0; }
+.hero-ledger .lr-ids { color: #fff; }
+.hero-ledger .lr-role { color: #c4cddd; }
+.hero-ledger .lr-date { color: #9aa7bf; }
+.hero-ledger-mono {
+  font-family: var(--font-mono); font-size: var(--fs-xs); color: #9aa7bf;
+  border-top: 1px solid rgba(255, 255, 255, 0.12); padding-top: var(--space-3); margin-top: auto;
+}
+
+/* The problem */
+.problem { padding: 88px 0 24px; }
+.problem h2 { font-size: var(--fs-2xl); margin-bottom: var(--space-6); max-width: 22ch; }
+.problem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+.problem-card h3 { font-size: 17px; margin-bottom: 6px; }
+.problem-card p { font-size: 14.5px; line-height: 1.55; }
+.problem-punch {
+  margin-top: var(--space-6); font-family: var(--font-display);
+  font-size: var(--fs-xl); font-weight: 700; letter-spacing: var(--ls-tight);
+  max-width: 30ch;
+}
+@media (max-width: 860px) { .problem-grid { grid-template-columns: 1fr; } }
+
+/* Trust chain */
+.trust { padding: 72px 0; }
+.trust h2 { font-size: var(--fs-2xl); margin-bottom: var(--space-6); max-width: 24ch; }
+.trust-grid {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-5);
+}
+.trust-node { position: relative; padding-top: var(--space-4); border-top: 2px solid var(--border); }
+.trust-node h3 { font-size: 16px; margin: var(--space-3) 0 6px; }
+.trust-node p { font-size: 14.5px; line-height: 1.55; }
+.trust-step {
+  display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--brand); color: var(--text-on-brand);
+  font-family: var(--font-mono); font-size: 13px; font-weight: 500;
+}
+@media (max-width: 900px) { .trust-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .trust-grid { grid-template-columns: 1fr; } }
+
+/* Ledger section */
+.ledger-section { padding: 40px 0 72px; }
+.ledger-section h2 { font-size: var(--fs-2xl); margin-bottom: var(--space-3); }
+.ledger-section-body { max-width: 62ch; margin-bottom: var(--space-5); font-size: 16px; }
+.ledger-sheet { padding: var(--space-3) var(--space-5); }
+.ledger-sheet .ledger-record:last-child { border-bottom: 0; }
+.ledger-punch {
+  margin-top: var(--space-5); font-family: var(--font-display);
+  font-size: var(--fs-xl); font-weight: 700; letter-spacing: var(--ls-tight); max-width: 32ch;
+}
+
+/* FAQ */
+.faq { padding: 72px 0; }
+.faq h2 { font-size: var(--fs-2xl); margin-bottom: var(--space-6); }
+.faq-list { border-top: 1px solid var(--border); max-width: 780px; }
+.faq-item { border-bottom: 1px solid var(--border); }
+.faq-item h3 { margin: 0; font-size: inherit; font-weight: inherit; line-height: inherit; letter-spacing: normal; font-family: var(--font-body); }
+.faq-q {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: var(--space-4);
+  background: none; border: 0; padding: var(--space-4) 2px; text-align: left;
+  font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--text-1);
+}
+.faq-q:hover { color: var(--brand); }
+.faq-chevron { color: var(--text-3); transition: transform var(--d-fast) var(--ease-out); flex: none; }
+.faq-item.open .faq-chevron { transform: rotate(180deg); }
+.faq-a { padding: 0 2px var(--space-4); }
+.faq-a p { max-width: 68ch; font-size: 15px; line-height: 1.6; }
+
+/* Closing CTA */
+.closing-cta { background: var(--blue-800); color: #fff; padding: 88px 0; text-align: center; }
+.closing-cta h2 { font-size: var(--fs-3xl); max-width: 20ch; margin: 0 auto var(--space-4); }
+.closing-cta p { color: #c4cddd; font-size: 17px; max-width: 52ch; margin: 0 auto; }
+.closing-cta-actions { margin-top: var(--space-6); display: flex; justify-content: center; }
+.closing-cta-btn { background: #fff; color: var(--brand); font-size: 16px; }
+.closing-cta-btn:hover:not(:disabled) { background: var(--blue-50); color: var(--brand-active); }
