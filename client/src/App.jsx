@@ -23,7 +23,7 @@ import Meeting from './pages/Meeting.jsx';
 import Notifications from './pages/Notifications.jsx';
 import ApplicantReview from './pages/ApplicantReview.jsx';
 import NotFound from './pages/NotFound.jsx';
-import { ACCOUNT_MENU } from './menuConfig.js';
+import { ACCOUNT_MENU, THEMES, THEME_STORAGE_KEY } from './menuConfig.js';
 import { I18nProvider, useI18n, LANGUAGES } from './i18n.jsx';
 
 // Social brand glyphs (single-path SVG, 24x24). Links point to a placeholder until real accounts exist.
@@ -132,6 +132,54 @@ function navItemsFor(user, t) {
   };
 }
 
+
+// Theme. Three states: light, dark, and system, which follows the OS.
+// The resolved value is written to <html data-theme>, matching what the
+// anti-flash script in index.html sets before React mounts — so the class the
+// script picked is never contradicted after hydration.
+function applyTheme(pref) {
+  const dark = pref === 'dark'
+    || (pref === 'system' && window.matchMedia?.('(prefers-color-scheme: dark)').matches);
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+}
+
+function useTheme() {
+  const [theme, setTheme] = useState(() => {
+    try { return localStorage.getItem(THEME_STORAGE_KEY) || 'system'; } catch { return 'system'; }
+  });
+
+  useEffect(() => {
+    applyTheme(theme);
+    try { localStorage.setItem(THEME_STORAGE_KEY, theme); } catch { /* private mode */ }
+  }, [theme]);
+
+  // Follow the OS while the preference is "system".
+  useEffect(() => {
+    if (theme !== 'system') return;
+    const mq = window.matchMedia?.('(prefers-color-scheme: dark)');
+    if (!mq) return;
+    const onChange = () => applyTheme('system');
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, [theme]);
+
+  const cycle = useCallback(() => {
+    setTheme(t => THEMES[(THEMES.indexOf(t) + 1) % THEMES.length]);
+  }, []);
+
+  return { theme, cycle };
+}
+
+// One entry from ACCOUNT_MENU rendered as a button. Actions are not routes.
+function ThemeButton({ theme, cycle, className }) {
+  const { t } = useI18n();
+  return (
+    <button type="button" className={className} role="menuitem" onClick={cycle}>
+      {t('theme.label')}: {t(`theme.${theme}`)}
+    </button>
+  );
+}
+
 function Avatar({ user, size = 34 }) {
   const initial = (user.name || user.email || '?').trim().charAt(0).toUpperCase();
   return user.photo_path
@@ -139,7 +187,7 @@ function Avatar({ user, size = 34 }) {
     : <span className="avatar avatar-initials" style={{ width: size, height: size, fontSize: Math.round(size * 0.42) }}>{initial}</span>;
 }
 
-function AccountMenu({ user, onSignOut }) {
+function AccountMenu({ user, onSignOut, theme, cycle }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useCloseOnOutsideOrRoute(open, setOpen);
@@ -171,9 +219,11 @@ function AccountMenu({ user, onSignOut }) {
           </div>
           <div className="account-menu-divider" />
           {items.map(i => (
-            <NavLink key={i.path} to={i.path} className="account-menu-item" role="menuitem">
-              {i.label}
-            </NavLink>
+            i.action === 'theme'
+              ? <ThemeButton key="theme" theme={theme} cycle={cycle} className="account-menu-item" />
+              : <NavLink key={i.path} to={i.path} className="account-menu-item" role="menuitem">
+                  {i.label}
+                </NavLink>
           ))}
           <div className="account-menu-divider" />
           <button className="account-menu-item danger" role="menuitem" onClick={onSignOut}>{t('nav.signOut')}</button>
@@ -258,6 +308,7 @@ function AppShell({ user, setUser, logout }) {
   const { t } = useI18n();
   const location = useLocation();
   const { primary, secondary } = navItemsFor(user, t);
+  const { theme, cycle } = useTheme();
 
   // Transparent only where there is a hero behind the bar. Companies and admins
   // are redirected away from "/", so the landing is not what they see there.
@@ -316,8 +367,9 @@ function AppShell({ user, setUser, logout }) {
 
             {user && <NavBell />}
             <LanguageSwitcher />
+            {!user && <ThemeButton theme={theme} cycle={cycle} className="btn sm ghost lang-trigger nav-theme" />}
             {user ? (
-              <AccountMenu user={user} onSignOut={logout} />
+              <AccountMenu user={user} onSignOut={logout} theme={theme} cycle={cycle} />
             ) : (
               <div className="nav-group nav-auth">
                 <NavLink className="navlink" to="/auth">{t('nav.signIn')}</NavLink>

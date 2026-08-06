@@ -28,6 +28,10 @@ const translations = {
     'nav.openMenu': `Open menu`,
     'nav.closeMenu': `Close menu`,
     'nav.menu': `Menu`,
+    'theme.label': `Theme`,
+    'theme.light': `Light`,
+    'theme.dark': `Dark`,
+    'theme.system': `System`,
 
     'footer.forStudents': `For students`,
     'footer.hireTalent': `Hire the right talent`,
@@ -229,6 +233,10 @@ const translations = {
     'nav.openMenu': `Menü megnyitása`,
     'nav.closeMenu': `Menü bezárása`,
     'nav.menu': `Menü`,
+    'theme.label': `Téma`,
+    'theme.light': `Világos`,
+    'theme.dark': `Sötét`,
+    'theme.system': `Rendszer`,
 
     'footer.forStudents': `Hallgatóknak`,
     'footer.hireTalent': `Találd meg a megfelelő tehetséget`,
@@ -429,6 +437,10 @@ const translations = {
     'nav.openMenu': `Ouvrir le menu`,
     'nav.closeMenu': `Fermer le menu`,
     'nav.menu': `Menu`,
+    'theme.label': `Thème`,
+    'theme.light': `Clair`,
+    'theme.dark': `Sombre`,
+    'theme.system': `Système`,
 
     'footer.forStudents': `Pour les étudiants`,
     'footer.hireTalent': `Recruter les bons talents`,

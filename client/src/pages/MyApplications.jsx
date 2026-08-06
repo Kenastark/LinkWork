@@ -30,7 +30,7 @@ function InterviewBlock({ applicationId }) {
           <p style={{ fontWeight: 700, fontSize: 14.5 }}>{KIND_LABEL[iv.kind]}</p>
           {iv.status === 'scheduled' && iv.chosen_slot ? (
             <>
-              <p className="muted" style={{ margin: '6px 0' }}>Scheduled for <b style={{ color: 'var(--ink)' }}>{formatSlot(iv.chosen_slot.start_at, iv.chosen_slot.duration_min)}</b></p>
+              <p className="muted" style={{ margin: '6px 0' }}>Scheduled for <b style={{ color: 'var(--text-1)' }}>{formatSlot(iv.chosen_slot.start_at, iv.chosen_slot.duration_min)}</b></p>
               <Link to={`/meeting/${iv.id}`} className="btn sm">Join meeting</Link>
             </>
           ) : (

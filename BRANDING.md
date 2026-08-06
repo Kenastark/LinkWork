@@ -540,7 +540,7 @@ Every new string needs `en`, `hu` and `fr` entries in `i18n.jsx`. The file is or
 
 ## 10. Dark mode
 
-Gated behind Task 2. Until text uses of `--ink` migrate to `--text-1`, headings stay navy on a navy canvas.
+**Shipped in Task 9.** It was gated behind Task 2: until text uses of `--ink` migrated to `--text-1`, headings would have stayed navy on a navy canvas.
 
 `data-theme` on `<html>`, three states: `light`, `dark`, `system`. Persist under `linkwork-theme`. Read it in an inline script in `client/index.html` **before** React mounts, otherwise the page flashes light on every load.
 
@@ -563,11 +563,30 @@ Notes that matter here:
 - Gold moves to `--gold-300` so the seal does not vanish.
 - Shadows become neutral black. Blue-tinted shadows are invisible on dark.
 - Surfaces get lighter as they get closer: `--bg-canvas` → `--surface` → `--surface-alt`.
-- The 44 `#fff` literals are on dark plates and are correct in both themes. Leave them.
+- The `#fff` literals on dark plates are correct in both themes. Leave them. There are 31 now, not the 44 originally counted — Tasks 4 and 7 retokened several to `--on-dark` and `--text-on-brand` along the way.
 - The nav, footer and hero stay dark in both themes. That is what `--surface-dark` is for.
 - `.mesh` opacity drops in dark, already handled.
 
-Toggle goes in `ACCOUNT_MENU` in `menuConfig.js`, available signed out too. Note `ACCOUNT_MENU` entries are all `{ label, path, roles }`; a toggle is an action, not a route, so the shape needs an optional `action` field and `App.jsx` needs to render those as buttons.
+Toggle lives in `ACCOUNT_MENU` in `menuConfig.js`. Entries are either a route (`{ label, path, roles }`) or an action (`{ labelKey, action, roles }`); `App.jsx` renders routes as `NavLink` and actions as buttons.
+
+**"Available signed out too" has a wrinkle: there is no account menu when signed out.** `AccountMenu` only renders for an authenticated user. So `roles` gained a `'guest'` pseudo-role, and guest-visible actions surface in the nav bar instead of the dropdown. That is the right home anyway — the theme is a display preference like the language switcher beside it, not something you should need an account to change.
+
+`useTheme()` in `App.jsx` and the inline script in `index.html` must stay in sync: both resolve `system` against `prefers-color-scheme` and write the same `data-theme` value. While the preference is `system` a `matchMedia` listener follows the OS live, so changing the OS setting flips the page without a reload.
+
+### The failure mode this task is actually about
+
+**A token that inverts, used on a surface that does not.** Every dark-mode bug found in Task 9 was this, and none of them are visible in light mode:
+
+| Rule | Dark contrast | Why |
+|---|---|---|
+| `.btn.dark` | **1.16:1** | `--text-on-brand` flips to near-black, but the plate is `--surface-dark`, fixed in both themes |
+| `.mm-btn.primary` | 3.21:1 | white on `--brand`, which becomes light blue |
+| `.closing-cta-btn` | 3.21:1 | `--brand` label on a button that stays white in both themes |
+| `MyApplications.jsx:33` | **1.01:1** | inline `color: var(--ink)` — `--ink` is fixed navy by design |
+
+The rule: **if a surface is fixed across themes, its text must be fixed too.** `--on-dark` and the raw `--blue-*` scale are the fixed values; `--text-on-brand`, `--brand` and `--text-1` all invert.
+
+That last row is worth its own note. Task 2 audited `styles.css` and reported all 23 text uses of `--ink` migrated — but inline JSX styles were never in that scope, and one survived there for seven tasks. **Audits are only as wide as their glob.**
 
 ---
 
@@ -777,11 +796,23 @@ Split into three commits.
 
 **Verified across all three commits.** Reduced motion was toggled through the browser's emulated media feature — what the OS setting drives — rather than by reading the media query: zero sections armed, zero invisible, ledger rows at `opacity: 1` / `transform: none`, stats at final values, nothing counting. With motion allowed, 14 sections armed and 14 revealed with none left hidden, and counters observed stepping `0/0/0 → 1/1/2 → … → 6/4/7` without restarting on a second pass. Layout held constant through the count: band `1100×150`, digit `31px`, page height `8155`, identical mid-count and settled. Nine locale-by-breakpoint combinations, scrolled to the bottom so every reveal fires, zero elements past the viewport.
 
-### Task 9: Dark mode
+### Task 9: Dark mode — DONE
 
-**Files:** `client/index.html`, `App.jsx`, `menuConfig.js`, `styles.css`
+**Files:** `client/index.html`, `App.jsx`, `menuConfig.js`, `i18n.jsx`, `styles.css`, `pages/MyApplications.jsx`
 
-Only after Task 2. Add the toggle, extend `ACCOUNT_MENU` to support actions, then walk every page in dark and fix what breaks. Expect the `.feature-panel` gradients, `.land-*` card fills, `.note-tint-*` and the `.mm-chip` colours to need dark variants; they are hard-coded pastels.
+The `'system'` default was restored in `index.html`, where Task 1 had pinned it to `'light'` precisely until this task. `ACCOUNT_MENU` gained the action shape and a `'guest'` role; see §10.
+
+**The dark pass split into two kinds of fix, and the split matters.** 18 declarations were only ever saying "the card colour" — `#fff`, `#eef0f5`, `--line`. Those were **retokened** to `--surface`, `--bg-sunken` and `--border`, and now invert with no dark override at all. Only the genuinely decorative palette needed `[data-theme="dark"]` rules: the three `.feature-panel` gradients, both feature badges, `.land-lav`/`.land-peri`/`.land-cream`, and `.match-mock-panel`. Each keeps its hue as a translucent tint over the dark canvas rather than becoming a light slab. `.note-tint-*` and `.mm-chip` needed no dark variants in the end — they were already on tokens or were retokened.
+
+Prefer retokening to overriding. An override is a second thing to maintain; a token is one.
+
+**Four contrast bugs found, all the same root cause** — a token that inverts on a surface that does not. Table in §10.
+
+**Verified:** every route in both themes — 6 public plus 17 authenticated across student, company and admin — with a contrast scanner applying the correct AA floor per text size. All clean in light and dark.
+
+**The scanner had to composite alpha to be worth anything.** Its first version reported white-on-white for the nav and the hero chain, because it treated `rgba(255,255,255,0.06)` as an opaque background instead of blending it over the dark plate beneath. Six false positives, and the four real bugs were in the same list. A dark theme is mostly translucent tints over dark plates; a checker that ignores alpha cannot read one.
+
+**No flash, measured rather than assumed.** The resolved theme was sampled at document-start, at each `readystatechange`, and at the first `requestAnimationFrame`. At the first rAF — the earliest paint opportunity — `data-theme` is already correct and the canvas is already `rgb(7, 13, 26)`. The built `index.html` shows why: the inline script precedes both the module script and the stylesheet.
 
 **Done when:** every page is legible in dark, the theme survives a hard reload with no flash, and no element renders dark-on-dark or light-on-light.
 

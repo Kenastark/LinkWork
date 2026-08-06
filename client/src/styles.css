@@ -890,10 +890,10 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 /* peeking card behind the main one */
 .match-mock-panel::before {
   content: ""; position: absolute; inset: 22px 18px auto; height: 120px; top: 26px;
-  background: #fff; border-radius: 18px; transform: rotate(-3deg); box-shadow: var(--shadow-sm); opacity: .7;
+  background: var(--surface); border-radius: 18px; transform: rotate(-3deg); box-shadow: var(--shadow-sm); opacity: .7;
 }
 .match-mock-card {
-  position: relative; background: #fff; border-radius: 18px; padding: 20px;
+  position: relative; background: var(--surface); border-radius: 18px; padding: 20px;
   box-shadow: 0 18px 42px rgba(22,35,63,.16);
 }
 .match-mock-badge {
@@ -910,12 +910,12 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 .match-mock-head h4 { font-size: 17px; letter-spacing: -0.01em; }
 .match-mock-head p { font-size: 13.5px; color: var(--ink-soft); }
 .match-mock-chips { display: flex; flex-wrap: wrap; gap: 7px; margin: 16px 0 18px; }
-.mm-chip { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); background: #eef0f5; border-radius: 999px; padding: 5px 11px; }
+.mm-chip { font-size: 12.5px; font-weight: 600; color: var(--text-2); background: var(--bg-sunken); border-radius: 999px; padding: 5px 11px; }
 .mm-chip.green { background: var(--verify-tint); color: var(--verify); }
 .mm-chip.gold { background: var(--warm-100); color: var(--warm-fg); }
 .match-mock-actions { display: flex; gap: 10px; }
 .mm-btn { flex: 1; text-align: center; font-weight: 700; font-size: 14px; padding: 11px 0; border-radius: 10px; }
-.mm-btn.primary { background: var(--verify); color: #fff; }
+.mm-btn.primary { background: var(--brand); color: var(--text-on-brand); }
 .mm-btn.ghost { border: 1.5px solid var(--line); color: var(--text-1); }
 
 .how { padding: 96px 0 88px; }
@@ -988,7 +988,7 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 .note > span { display: block; margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--ink-soft); }
 .note-tint-a { background: var(--verify-tint); }
 .note-tint-b { background: var(--warm-100); }
-.note-tint-c { background: #fff; border: 1.5px dashed var(--line); }
+.note-tint-c { background: var(--surface); border: 1.5px dashed var(--border); }
 .note-stat { text-align: center; }
 .note-stat b { display: block; font-family: var(--font-display); font-weight: 800; font-size: 34px; color: var(--verify); }
 .note-stat span { margin-top: 6px; font-weight: 600; color: var(--ink-soft); font-size: 13.5px; }
@@ -1049,26 +1049,26 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 .panel-blue { background: linear-gradient(160deg, #e9effc, #d8e4fb); }
 .panel-green { background: linear-gradient(160deg, #e7f5ec, #d5eddd); }
 
-.mock-card { width: 100%; background: #fff; border-radius: 18px; box-shadow: 0 18px 42px rgba(22,35,63,.16); padding: 20px; }
+.mock-card { width: 100%; background: var(--surface); border-radius: 18px; box-shadow: 0 18px 42px rgba(22,35,63,.16); padding: 20px; }
 .mock-card .mock-mono { font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); }
 .mock-card h4 { font-size: 18px; margin: 6px 0 2px; letter-spacing: -0.01em; }
 .mock-card > p { font-size: 13.5px; color: var(--ink-soft); }
 .mock-track { list-style: none; margin: 16px 0 0; padding: 0; }
 .mock-track li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-soft); padding: 6px 0; }
-.mock-track li .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); background: #fff; flex: none; }
+.mock-track li .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border); background: var(--surface); flex: none; }
 .mock-track li.done { color: var(--text-1); }
 .mock-track li.done .dot { background: var(--success-500); border-color: var(--success-500); }
 .mock-track li.current { color: var(--text-1); font-weight: 700; }
 .mock-track li.current .dot { border-color: var(--verify-bright); box-shadow: 0 0 0 4px var(--verify-tint); }
 .mock-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-.mock-chip { font-size: 13px; font-weight: 600; color: var(--ink-soft); background: #eef0f5; border-radius: 999px; padding: 6px 12px; }
+.mock-chip { font-size: 13px; font-weight: 600; color: var(--text-2); background: var(--bg-sunken); border-radius: 999px; padding: 6px 12px; }
 .mock-chip.strong { background: var(--verify-tint); color: var(--verify); }
 .mock-facts { list-style: none; margin: 14px 0 0; padding: 0; }
 .mock-facts li { font-size: 14px; color: var(--ink-soft); padding: 8px 0; border-bottom: 1px solid var(--line); }
 .mock-facts li:last-child { border-bottom: 0; }
 .mock-facts b { color: var(--text-1); }
 .feature-tag {
-  position: absolute; background: #fff; border-radius: 12px; padding: 9px 14px;
+  position: absolute; background: var(--surface); border-radius: 12px; padding: 9px 14px;
   font-size: 13.5px; font-weight: 700; color: var(--text-1);
   box-shadow: 0 10px 26px rgba(22,35,63,.18); white-space: nowrap;
 }
@@ -1090,15 +1090,15 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 .land-card.stat p b { font-family: var(--font-body, inherit); font-size: inherit; font-weight: 800; letter-spacing: normal; }
 .land-card-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 18px; }
 .land-card-top h4 { font-size: 15px; letter-spacing: 0.01em; text-transform: uppercase; max-width: 13ch; line-height: 1.3; }
-.land-ic { flex: none; width: 46px; height: 46px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: var(--text-1); }
+.land-ic { flex: none; width: 46px; height: 46px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--text-1); }
 .land-peri .land-ic { color: #2f6fed; }
 .land-card.action .btn { margin-top: auto; align-self: flex-start; }
 .land-lav { background: #eef0fb; }
 .land-peri { background: #cdd9f4; }
 .land-cream { background: #f5efe0; }
 .land-gold { background: var(--warm-300); }
-.btn.dark { background: var(--surface-dark); color: var(--text-on-brand); }
-.btn.dark:hover:not(:disabled) { background: var(--surface-dark-hover); color: var(--text-on-brand); }
+.btn.dark { background: var(--surface-dark); color: var(--on-dark); }
+.btn.dark:hover:not(:disabled) { background: var(--surface-dark-hover); color: var(--on-dark); }
 
 /* ============ misc ============ */
 .alert { border-radius: var(--radius-sm); padding: 12px 16px; font-size: 14.5px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
@@ -1136,7 +1136,7 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 .filter-prefs { background: var(--verify-tint); border-color: var(--verify-tint); }
 .pref-chip {
   display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 999px;
-  background: #fff; color: var(--text-1); font-size: 12.5px; font-weight: 600; cursor: pointer;
+  background: var(--surface); color: var(--text-1); font-size: 12.5px; font-weight: 600; cursor: pointer;
   border: 1px solid var(--border-strong); transition: background .15s var(--ease);
 }
 .pref-chip:hover { background: var(--brand-subtle-bg); }
@@ -1192,11 +1192,11 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 
 /* ============ date/time picker (interview scheduling) ============ */
 .dtp { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
-.dtp-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 16px; }
+.dtp-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 16px; }
 .dtp-calendar { width: 288px; }
 .dtp-time { width: 240px; display: flex; flex-direction: column; gap: 12px; }
 .dtp-cal-head { display: flex; align-items: center; justify-content: space-between; font-weight: 700; font-size: 15px; margin-bottom: 12px; }
-.dtp-nav { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: #fff; color: var(--text-1); font-size: 16px; line-height: 1; }
+.dtp-nav { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text-1); font-size: 16px; line-height: 1; }
 .dtp-nav:hover { background: var(--verify-tint); border-color: var(--verify); color: var(--verify); }
 .dtp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
 .dtp-dow span { text-align: center; font-size: 12px; font-weight: 600; color: var(--ink-soft); padding: 4px 0; }
@@ -1209,12 +1209,12 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 .dtp-time-title { text-align: center; font-weight: 700; font-size: 15px; }
 .dtp-steppers { display: flex; gap: 10px; justify-content: center; }
 .dtp-stepper { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.dtp-arrow { width: 52px; height: 26px; border: 1px solid var(--line); background: #fff; border-radius: 8px; color: var(--ink-soft); font-size: 13px; line-height: 1; }
+.dtp-arrow { width: 52px; height: 26px; border: 1px solid var(--border); background: var(--surface); border-radius: 8px; color: var(--ink-soft); font-size: 13px; line-height: 1; }
 .dtp-arrow:hover { background: var(--verify-tint); border-color: var(--verify); color: var(--verify); }
 .dtp-stepper-val { font-family: var(--font-mono); font-size: 22px; font-weight: 500; }
 .dtp-stepper-label { font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.05em; }
 .dtp-ampm { display: flex; gap: 6px; justify-content: center; }
-.dtp-ampm-btn { padding: 6px 16px; border: 1px solid var(--line); background: #fff; border-radius: 999px; font-weight: 600; font-size: 13.5px; color: var(--ink-soft); }
+.dtp-ampm-btn { padding: 6px 16px; border: 1px solid var(--border); background: var(--surface); border-radius: 999px; font-weight: 600; font-size: 13.5px; color: var(--ink-soft); }
 .dtp-ampm-btn.active { background: var(--verify); color: #fff; border-color: var(--verify); }
 .dtp-preview { text-align: center; font-family: var(--font-mono); font-size: 14px; color: var(--ink-soft); }
 .dtp-duration { display: block; font-weight: 600; font-size: 13px; }
@@ -1222,7 +1222,7 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 
 /* proposed / chosen interview slots */
 .slot-list { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
-.slot-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: #fff; }
+.slot-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
 .slot-row.pickable { cursor: pointer; }
 .slot-row.pickable:hover { border-color: var(--verify); background: var(--verify-tint); }
 .slot-row.chosen { border-color: var(--verify); background: var(--verify-tint); }
@@ -1239,8 +1239,8 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 .meeting-stage .badge { font-size: 13px; }
 
 /* notifications */
-.notif-item { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 10px; background: #fff; cursor: pointer; transition: background .12s var(--ease); }
-.notif-item:hover { background: #fafbfa; }
+.notif-item { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 10px; background: var(--surface); cursor: pointer; transition: background .12s var(--ease); }
+.notif-item:hover { background: var(--surface-hover); }
 .notif-item.unread { border-left: 3px solid var(--verify); background: var(--verify-tint); }
 .notif-item.unread:hover { background: var(--blue-100); }
 .notif-subject { font-weight: 700; font-size: 14.5px; display: flex; align-items: center; gap: 8px; }
@@ -1250,7 +1250,7 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 .score-input input { width: 70px; margin-top: 0; text-align: center; }
 
 .modal-backdrop { position: fixed; inset: 0; background: rgba(22,35,63,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-.modal { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 26px; width: min(460px, 100%); animation: menu-in .14s var(--ease) both; }
+.modal { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 26px; width: min(460px, 100%); animation: menu-in .14s var(--ease) both; }
 
 /* recruitment-steps reminder strip (company dashboard) */
 .rec-steps { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 22px; box-shadow: var(--shadow-sm); }
@@ -1375,8 +1375,8 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 .closing-cta h2 { font-size: var(--fs-3xl); max-width: 20ch; margin: 0 auto var(--space-4); }
 .closing-cta p { color: #c4cddd; font-size: 17px; max-width: 52ch; margin: 0 auto; }
 .closing-cta-actions { margin-top: var(--space-6); display: flex; justify-content: center; }
-.closing-cta-btn { background: #fff; color: var(--brand); font-size: 16px; }
-.closing-cta-btn:hover:not(:disabled) { background: var(--blue-50); color: var(--brand-active); }
+.closing-cta-btn { background: #fff; color: var(--blue-700); font-size: 16px; }
+.closing-cta-btn:hover:not(:disabled) { background: var(--blue-50); color: var(--blue-800); }
 
 /* ============ task 8c: motion ============ */
 
@@ -1409,3 +1409,39 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
     transition: opacity var(--d-base) var(--ease-out), transform var(--d-base) var(--ease-out);
   }
 }
+
+/* ============ task 9: dark variants for the hard-coded pastels ============
+
+   Everything that only ever meant "the card colour" was retokened to
+   --surface / --bg-sunken and inverts on its own. What remains here is the
+   decorative palette: panels, badge plates and the "land your job" cards,
+   which are deliberately varied hues rather than surfaces.
+
+   Each keeps its hue but is expressed as a translucent tint over the dark
+   canvas, so it reads as the same colour family without being a light slab in
+   a dark page. The nav, hero, footer and meeting stage are NOT here: they are
+   dark plates in both themes, and their #fff text is correct in both. */
+
+[data-theme="dark"] .panel-purple { background: linear-gradient(160deg, rgba(107, 79, 216, 0.22), rgba(107, 79, 216, 0.10)); }
+[data-theme="dark"] .panel-blue   { background: linear-gradient(160deg, rgba(58, 99, 201, 0.22), rgba(58, 99, 201, 0.10)); }
+[data-theme="dark"] .panel-green  { background: linear-gradient(160deg, rgba(23, 166, 115, 0.20), rgba(23, 166, 115, 0.09)); }
+
+[data-theme="dark"] .feature-purple .feature-badge { background: rgba(107, 79, 216, 0.24); color: #bcaaf7; }
+[data-theme="dark"] .feature-blue .feature-badge   { background: rgba(58, 99, 201, 0.24); color: #a3c0f8; }
+
+[data-theme="dark"] .land-lav   { background: rgba(107, 79, 216, 0.18); }
+[data-theme="dark"] .land-peri  { background: rgba(58, 99, 201, 0.28); }
+[data-theme="dark"] .land-cream { background: rgba(246, 220, 154, 0.14); }
+[data-theme="dark"] .land-peri .land-ic { color: #a3c0f8; }
+
+/* The decorative job-card mockup. Its gradient still fades a green literal into
+   --verify-tint; that pairing is on the task 8 deferral list either way. */
+[data-theme="dark"] .match-mock-panel {
+  background: linear-gradient(155deg, rgba(23, 166, 115, 0.18), rgba(79, 142, 247, 0.14));
+}
+[data-theme="dark"] .match-mock-badge b { background: var(--bg-sunken); color: var(--text-1); }
+
+/* Shadows tuned for light surfaces read as smudges on dark ones. */
+[data-theme="dark"] .mock-card,
+[data-theme="dark"] .match-mock-card { box-shadow: var(--shadow-3); }
+[data-theme="dark"] .feature-tag { box-shadow: var(--shadow-2); }

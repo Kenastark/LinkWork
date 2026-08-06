@@ -8,17 +8,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-    <!-- Anti-flash theme resolution. Must run before React mounts.
-         The default is pinned to 'light' until BRANDING.md task 9: the dark
-         palette is already in styles.css, but task 2 has not yet migrated the
-         text uses of --ink to --text-1, so --ink still resolves to the dark
-         plate colour and body text would render #0d1b31 on #070d1a. There is
-         no theme toggle yet, so nothing can have written this key. Restore the
-         'system' default in task 9, once the toggle ships. -->
+    <!-- Anti-flash theme resolution. Must run before React mounts, or the page
+         paints light and then flips. Kept in sync with useTheme() in App.jsx:
+         both resolve 'system' against prefers-color-scheme and write the same
+         data-theme attribute. -->
     <script>
       (function () {
         try {
-          var t = localStorage.getItem('linkwork-theme') || 'light';
+          var t = localStorage.getItem('linkwork-theme') || 'system';
           var d = t === 'dark' || (t === 'system' &&
             matchMedia('(prefers-color-scheme: dark)').matches);
           document.documentElement.setAttribute('data-theme', d ? 'dark' : 'light');
