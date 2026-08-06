@@ -11,12 +11,12 @@ export default function AdminDashboard() {
   const setCompany = async (id, status) => { await api.post(`/api/admin/companies/${id}/status`, { status }); load(); };
   const setDocs = async (id, status) => { await api.post(`/api/admin/students/${id}/doc-status`, { status }); load(); };
 
-  if (error) return <main className="container"><div className="alert error">{error}</div></main>;
+  if (error) return <main className="container"><div className="alert error" role="alert">{error}</div></main>;
   if (!data) return <main className="container" />;
 
   return (
     <main className="container">
-      <h2 style={{ fontSize: 30, marginBottom: 20 }}>Platform admin</h2>
+      <h1 style={{ fontSize: 30, marginBottom: 20 }}>Platform admin</h1>
 
       <div className="grid cols-3" style={{ marginBottom: 24 }}>
         <div className="card"><span className="id-tag">OPEN POSTINGS</span><h3 style={{ fontSize: 34 }}>{data.stats.open_jobs}</h3></div>

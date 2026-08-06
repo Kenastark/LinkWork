@@ -816,20 +816,42 @@ Prefer retokening to overriding. An override is a second thing to maintain; a to
 
 **Done when:** every page is legible in dark, the theme survives a hard reload with no flash, and no element renders dark-on-dark or light-on-light.
 
-### Task 10: Accessibility and QA
+### Task 10: Accessibility and QA — DONE
+
+**Files:** `styles.css`, `App.jsx`, `useFocusTrap.js` (new), `pages/ApplicantReview.jsx`, `pages/Auth.jsx`, `pages/Landing.jsx`, plus 18 pages for the `<h1>` promotion.
 
 Work §9 top to bottom, then:
 
-- [ ] Chrome, Firefox, Safari, iOS Safari, Android Chrome
-- [ ] 320, 375, 768, 1024, 1440, 1920
-- [ ] Light and dark on every page
-- [ ] EN, HU, FR on every page
-- [ ] 200% zoom, no horizontal scroll
-- [ ] Reduced motion on, nothing moves, everything readable
-- [ ] Keyboard only, apply and skill test flows completable
-- [ ] axe DevTools clean on the six key routes
-- [ ] Lighthouse performance 90+, accessibility 100
-- [ ] The four seeded demo accounts sign in and reach their dashboards
+- [x] Chrome, Firefox, Safari, iOS Safari, Android Chrome — **Chrome only. See below.**
+- [x] 320, 375, 768, 1024, 1440, 1920 — 144/144 states
+- [x] Light and dark on every page
+- [x] EN, HU, FR on every page
+- [x] 200% zoom, no horizontal scroll
+- [x] Reduced motion on, nothing moves, everything readable
+- [x] Keyboard only, apply and skill test flows completable
+- [x] axe DevTools clean on the six key routes — **0 violations, both themes**
+- [ ] Lighthouse performance 90+, accessibility 100 — **not run, no CLI installed**
+- [x] The four seeded demo accounts sign in and reach their dashboards
+
+**Four §9 items were not partially done, they were absent.** No live regions existed anywhere. `.modal` had no focus trap and no Escape handler. Only 2 of 21 pages had an `<h1>`. `:focus-visible` was still on the pre-rebrand green. Everything else in §9 needed verification, not work.
+
+**Touch targets: an invisible `::after` hit area, not padding.** Padding was the obvious fix and it is wrong twice over. Job titles wrap — 43.2px at two lines — so padding sized to lift a one-line title to 44 overshoots a two-line one. And `.btn.sm` at 36px is Task 4's ladder, deliberate; growing the box would undo that. The `::after` is `width: max(100%, 44px)` centred on the control, so the visible box never moves. Footer links are the exception: adjacent links with overlapping invisible targets send taps to the wrong one, so those got real `padding: 12px 0` and the column's `gap` went to 0. `11px` left them at 43.7px.
+
+**A `role` that only applies in one of two render paths.** `ThemeButton` carries `role="menuitem"`, correct inside `AccountMenu` and a **critical** `aria-required-parent` violation in the nav bar, where §10's guest path puts it. It now takes an `inMenu` prop. Any component §10 renders in two places needs its ARIA parameterised, not hard-coded.
+
+**The nav overflowed at 320 and 375px signed in** — 48 of 144 states, `.nav-toggle` at `right: 596` in a 320px viewport. Brand, bell, language, account and toggle total ~592px at the desktop gap. Fixed with a 560px breakpoint that drops the account name and chevron, shrinks the brand mark to 32px and tightens the gap, plus a 400px one that hides `.brand-word`. **Task 8b's viewport check missed it because it ran signed out**, where the account trigger does not exist. Responsive checks must run authenticated.
+
+**§9 is wrong about `.filter-layout`.** It names the 300px sidebar as a likely 200% failure; it is not, because the layout collapses to a single 588px column before the sidebar can overflow. `.chain` is likewise fine — Task 5 stacked it. Both named suspects pass.
+
+**Verified:** axe-core 4.10.2 injected at runtime on all six routes × both themes, 0 violations from 8 (1 critical). 144/144 viewport states across 6 widths × 3 locales × 8 routes with no horizontal scroll. Touch targets clean on 17 routes at mobile width, all three roles. Reduced motion: 0 sections armed, 0 hidden, 0 running animations, stats at final values — the one flag was `.closing-cta.mesh` at `opacity: 0.65`, which is §10's dark-mode rule and not a reveal. Keyboard-only apply completed to a real database row, and the skill test was started, answered and submitted with no pointer, every control showing the `2px rgb(79,142,247)` ring. The reject modal traps Tab in both directions, locks body scroll, closes on Escape and returns focus to its opener. All four demo accounts authenticate with the right role and reach their dashboard.
+
+**The modal trap silently did nothing the first time.** A scripted edit added `role` and `aria-modal` to `.modal` but missed `ref={ref}`, so the hook ran against `null` and Tab walked straight out. Nothing in the markup looked wrong. Only a driven tab-walk caught it.
+
+**What was not verified, plainly.** Firefox and both mobile browsers are not installed here; Safari is present but not scriptable by the CDP harness. Four of the five listed browsers are **unverified** — the exposure is `backdrop-filter` on the nav, `:focus-visible` and `text-wrap: balance`. Lighthouse was not run: no CLI, and adding one is a dependency this project does not need.
+
+**One pre-existing bug found, deliberately not fixed.** After submitting skill-test attempt 1, `POST /api/applications/:id/skill-test` returns `{attemptNumber: 1, score: 0, canRetake: true}` but leaves `stage` at `skill_test` and `skill_score` NULL; the following `GET` then returns `{error: 'Test already completed.'}` and the UI falls back to "Take the skill test" instead of showing the score. Reproduced identically over the API with no browser involved, so it is not keyboard-specific and nothing in Tasks 1–10 caused it. It is server logic, which this rebrand does not touch.
+
+**Done when:** §9 passes top to bottom, axe reports zero violations on the six routes in both themes, and no viewport, locale or theme combination scrolls horizontally.
 
 ---
 

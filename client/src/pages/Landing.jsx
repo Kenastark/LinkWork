@@ -132,7 +132,7 @@ function FeatureRow({ tone, icon, title, body, ctaTo, ctaLabel, art, reverse }) 
 // Product-preview mockups — real LinkWork content, echoing the reference's panel + card + floating tags.
 function TrackArt({ t }) {
   return (
-    <div className="feature-panel panel-purple">
+    <div className="feature-panel panel-purple" aria-hidden="true">
       <div className="mock-card">
         <span className="mock-mono">JOB-0042</span>
         <h4>{t('mock.trackRole')}</h4>
@@ -151,7 +151,7 @@ function TrackArt({ t }) {
 }
 function OffersArt({ t }) {
   return (
-    <div className="feature-panel panel-blue">
+    <div className="feature-panel panel-blue" aria-hidden="true">
       <div className="mock-card">
         <span className="mock-mono">JOB-0037</span>
         <h4>{t('mock.offersRole')}</h4>
@@ -170,7 +170,7 @@ function OffersArt({ t }) {
 }
 function TransparentArt({ t }) {
   return (
-    <div className="feature-panel panel-green">
+    <div className="feature-panel panel-green" aria-hidden="true">
       <div className="mock-card">
         <span className="mock-mono">GreenField AgroTech Zrt.</span>
         <h4 style={{ marginTop: 6 }}>{t('mock.whatToExpect')}</h4>
@@ -476,7 +476,7 @@ export default function Landing() {
   const records = Array.isArray(ledger) ? ledger : [];
 
   return (
-    <>
+    <main>
       <section className="hero">
         <div className="container">
           <div>
@@ -590,7 +590,7 @@ export default function Landing() {
             </div>
             <div className="land-card action land-peri">
               <div className="land-card-top">
-                <h4>{t('landJob.card2Title')}</h4>
+                <h3>{t('landJob.card2Title')}</h3>
                 <span className="land-ic">{CARD_ICONS.doc}</span>
               </div>
               <Link to={user ? '/profile' : '/auth?mode=student'} className="btn dark">{t('landJob.card2Cta')}</Link>
@@ -601,7 +601,7 @@ export default function Landing() {
             </div>
             <div className="land-card action land-gold">
               <div className="land-card-top">
-                <h4>{t('landJob.card4Title')}</h4>
+                <h3>{t('landJob.card4Title')}</h3>
                 <span className="land-ic">{CARD_ICONS.bell}</span>
               </div>
               <Link to={user ? '/alerts' : '/auth?mode=student'} className="btn dark">{t('landJob.card4Cta')}</Link>
@@ -680,6 +680,6 @@ export default function Landing() {
       <Faq />
 
       <ClosingCta user={user} />
-    </>
+    </main>
   );
 }

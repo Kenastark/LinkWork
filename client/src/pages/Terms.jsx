@@ -4,7 +4,7 @@ export default function Terms() {
   return (
     <main className="container" style={{ maxWidth: 720 }}>
       <span className="id-tag">POLICY VERSION {POLICY_VERSION}</span>
-      <h2 style={{ fontSize: 30, margin: '8px 0 20px' }}>Terms of service</h2>
+      <h1 style={{ fontSize: 30, margin: '8px 0 20px' }}>Terms of service</h1>
 
       <div className="card">
         <h3>Eligibility</h3>

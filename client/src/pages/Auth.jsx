@@ -3,6 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
 
+const MODE_TITLE = { login: 'Sign in', student: 'Student sign-up', company: 'Company sign-up' };
+
 export default function Auth() {
   const [params] = useSearchParams();
   const [mode, setMode] = useState(params.get('mode') || 'login');
@@ -48,19 +50,22 @@ export default function Auth() {
 
   return (
     <main className="container" style={{ maxWidth: 560 }}>
+      {/* The visible headings live inside the card and change with the tab, so
+          the page needs its own h1 for structure. */}
+      <h1 className="sr-only">{MODE_TITLE[mode]}</h1>
       <div className="tabs">
         <button className={mode === 'login' ? 'active' : ''} onClick={() => setMode('login')}>Sign in</button>
         <button className={mode === 'student' ? 'active' : ''} onClick={() => setMode('student')}>Student sign-up</button>
         <button className={mode === 'company' ? 'active' : ''} onClick={() => setMode('company')}>Company sign-up</button>
       </div>
 
-      {error && <div className="alert error">{error}</div>}
+      {error && <div className="alert error" role="alert">{error}</div>}
       {notice && <div className="alert info">{notice}</div>}
 
       <form className="card" onSubmit={submit}>
         {mode === 'login' && (
           <>
-            <h3>Welcome back</h3>
+            <h2>Welcome back</h2>
             <p className="muted" style={{ marginBottom: 18 }}>Demo accounts — student: demo.student@mailbox.unideb.hu / student1234 · company: hr@datatech.hu / company1234 · admin: admin@linkwork.app / admin1234</p>
             <label className="field">Email<input name="email" type="email" required autoComplete="email" /></label>
             <label className="field">Password<input name="password" type="password" required autoComplete="current-password" /></label>

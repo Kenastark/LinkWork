@@ -24,6 +24,7 @@ import Notifications from './pages/Notifications.jsx';
 import ApplicantReview from './pages/ApplicantReview.jsx';
 import NotFound from './pages/NotFound.jsx';
 import { ACCOUNT_MENU, THEMES, THEME_STORAGE_KEY } from './menuConfig.js';
+import useFocusTrap from './useFocusTrap.js';
 import { I18nProvider, useI18n, LANGUAGES } from './i18n.jsx';
 
 // Social brand glyphs (single-path SVG, 24x24). Links point to a placeholder until real accounts exist.
@@ -73,40 +74,6 @@ function useScrolledPast(threshold) {
     return () => window.removeEventListener('scroll', onScroll);
   }, [threshold]);
   return past;
-}
-
-// Traps Tab inside the container while active, closes on Escape, and returns
-// focus to whatever opened it. Hand-rolled: no dependency is worth adding for
-// one sheet.
-function useFocusTrap(active, containerRef, onClose) {
-  useEffect(() => {
-    if (!active) return;
-    const el = containerRef.current;
-    if (!el) return;
-    const opener = document.activeElement;
-    const SEL = 'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
-    const focusables = () => Array.from(el.querySelectorAll(SEL)).filter(n => n.offsetParent !== null);
-
-    focusables()[0]?.focus();
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    const onKey = (e) => {
-      if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
-      if (e.key !== 'Tab') return;
-      const f = focusables();
-      if (!f.length) return;
-      const i = f.indexOf(document.activeElement);
-      if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
-      else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
-    };
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
-      if (opener instanceof HTMLElement) opener.focus();
-    };
-  }, [active, containerRef, onClose]);
 }
 
 // Role-aware nav items, shared by the desktop bar and the mobile sheet so the
@@ -171,10 +138,10 @@ function useTheme() {
 }
 
 // One entry from ACCOUNT_MENU rendered as a button. Actions are not routes.
-function ThemeButton({ theme, cycle, className }) {
+function ThemeButton({ theme, cycle, className, inMenu = false }) {
   const { t } = useI18n();
   return (
-    <button type="button" className={className} role="menuitem" onClick={cycle}>
+    <button type="button" className={className} {...(inMenu ? { role: 'menuitem' } : {})} onClick={cycle}>
       {t('theme.label')}: {t(`theme.${theme}`)}
     </button>
   );
@@ -220,7 +187,7 @@ function AccountMenu({ user, onSignOut, theme, cycle }) {
           <div className="account-menu-divider" />
           {items.map(i => (
             i.action === 'theme'
-              ? <ThemeButton key="theme" theme={theme} cycle={cycle} className="account-menu-item" />
+              ? <ThemeButton key="theme" theme={theme} cycle={cycle} className="account-menu-item" inMenu />
               : <NavLink key={i.path} to={i.path} className="account-menu-item" role="menuitem">
                   {i.label}
                 </NavLink>
@@ -244,7 +211,10 @@ function NavBell() {
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" />
       </svg>
-      {unread > 0 && <span className="dot">{unread > 9 ? '9+' : unread}</span>}
+      {unread > 0 && <span className="dot" aria-hidden="true">{unread > 9 ? '9+' : unread}</span>}
+      {/* The badge is decorative; the count is announced here instead, so a
+          change is spoken rather than silently repainted. */}
+      <span className="sr-only" aria-live="polite">{unread > 0 ? `${unread} unread` : ''}</span>
     </NavLink>
   );
 }
@@ -351,7 +321,7 @@ function AppShell({ user, setUser, logout }) {
 
         <nav className={navClass}>
           <div className="container nav-inner" ref={navInnerRef}>
-            <Link to={homeFor(user)} className="brand"><LinkMark /> LinkWork</Link>
+            <Link to={homeFor(user)} className="brand"><LinkMark /> <span className="brand-word">LinkWork</span></Link>
 
             <div className="nav-group nav-primary">
               {primary.map((i, n) => (
@@ -449,14 +419,14 @@ function AppShell({ user, setUser, logout }) {
           <div className="container">
             <div className="footer-cols">
               <div className="footer-col">
-                <h4>{t('footer.forStudents')}</h4>
+                <h2 className="footer-head">{t('footer.forStudents')}</h2>
                 <Link to="/student">{t('nav.findInternship')}</Link>
                 <Link to="/companies">{t('nav.exploreCompanies')}</Link>
                 <Link to="/resources">{t('nav.resources')}</Link>
                 {!user && <Link to="/auth">{t('nav.signIn')}</Link>}
               </div>
               <div className="footer-col">
-                <h4>{t('footer.hireTalent')}</h4>
+                <h2 className="footer-head">{t('footer.hireTalent')}</h2>
                 <Link to="/coming-soon?feature=Welcome Hiring Suite">{t('footer.welcomeHiringSuite')}</Link>
                 <Link to="/coming-soon?feature=Employer branding">{t('footer.employerBranding')}</Link>
                 <Link to="/coming-soon?feature=Pricing">{t('footer.pricing')}</Link>
@@ -466,7 +436,7 @@ function AppShell({ user, setUser, logout }) {
                 <Link to="/auth?mode=company">{t('footer.haveAccount')}</Link>
               </div>
               <div className="footer-col">
-                <h4>{t('footer.about')}</h4>
+                <h2 className="footer-head">{t('footer.about')}</h2>
                 <Link to="/privacy">{t('footer.privacyPolicy')}</Link>
                 <Link to="/terms">{t('footer.termsOfService')}</Link>
               </div>

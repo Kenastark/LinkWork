@@ -18,12 +18,12 @@ export default function Dashboard() {
 
   return (
     <main className="container">
-      <h2 style={{ fontSize: 30, marginBottom: 4 }}>Hello, {user.name.split(' ')[0]}</h2>
+      <h1 style={{ fontSize: 30, marginBottom: 4 }}>Hello, {user.name.split(' ')[0]}</h1>
       <p className="muted" style={{ marginBottom: 20 }}>
         <span className="id-tag">STU-{String(user.id).padStart(4, '0')}</span> · {user.major} · University of Debrecen
       </p>
 
-      {msg && <div className="alert ok">{msg}</div>}
+      {msg && <div className="alert ok" role="status">{msg}</div>}
 
       {user.doc_status === 'none' && (
         <div className="alert info">
@@ -32,8 +32,8 @@ export default function Dashboard() {
         </div>
       )}
       {user.doc_status === 'submitted' && <div className="alert info">Your documents are under review. You can browse openings meanwhile.</div>}
-      {user.doc_status === 'rejected' && <div className="alert error">Your documents were rejected. <button className="btn sm danger" style={{ marginLeft: 8 }} onClick={submitDocs}>Resubmit</button></div>}
-      {user.doc_status === 'verified' && <div className="alert ok">Identity verified <span className="badge verified">✓ Verified student</span></div>}
+      {user.doc_status === 'rejected' && <div className="alert error" role="alert">Your documents were rejected. <button className="btn sm danger" style={{ marginLeft: 8 }} onClick={submitDocs}>Resubmit</button></div>}
+      {user.doc_status === 'verified' && <div className="alert ok" role="status">Identity verified <span className="badge verified">✓ Verified student</span></div>}
 
       <h3 style={{ margin: '24px 0 12px', fontSize: 18 }}>Your applications</h3>
       {!stats ? null : (

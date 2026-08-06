@@ -440,7 +440,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 800; line-height: 1.
 a { color: var(--verify); text-decoration: none; }
 a:hover { text-decoration: underline; }
 button { font-family: var(--font-body); cursor: pointer; }
-:focus-visible { outline: 2px solid var(--verify-bright); outline-offset: 2px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--focus-ring-color); outline-offset: 2px; border-radius: 4px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
@@ -1445,3 +1445,57 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 [data-theme="dark"] .mock-card,
 [data-theme="dark"] .match-mock-card { box-shadow: var(--shadow-3); }
 [data-theme="dark"] .feature-tag { box-shadow: var(--shadow-2); }
+
+
+/* ============ task 10: touch targets ============
+   WCAG 2.2 target size. Growing the painted box would break the date picker's
+   grid and the nav's height, so the visible control keeps its size and an
+   invisible ::after extends the hit area to 44x44 around its centre. */
+.dtp-nav, .dtp-arrow, .nav-toggle, .lang-trigger, .btn.ghost, .filter-chevron { position: relative; }
+/* .btn.sm is 36px by design (section 7's 36/44/52 ladder) and .tabs buttons
+   and .logo-lockup are similarly sized on purpose. Rather than break those,
+   the visible control keeps its height and the hit area is extended. */
+.nav-bell, .account-trigger, .brand, .btn.sm, .tabs button, .logo-lockup { position: relative; }
+.dtp-nav::after, .dtp-arrow::after, .nav-toggle::after,
+.lang-trigger::after, .btn.ghost::after,
+.nav-bell::after, .account-trigger::after, .brand::after,
+.btn.sm::after, .tabs button::after, .logo-lockup::after,
+.job-card h2 a::after, .job-card h3 a::after {
+  content: ''; position: absolute; left: 50%; top: 50%;
+  width: max(100%, 44px); height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+}
+
+
+/* ============ task 10: the nav at 320-560px ============
+   Signed in, the bar carries brand + bell + language + account + menu toggle.
+   At 28px gaps with the account name visible that totals ~592px, so it
+   overflowed a 320px viewport. Earlier checks missed it because they ran
+   signed out, where there is no account trigger. */
+@media (max-width: 560px) {
+  .nav-inner { gap: 10px; }
+  .nav .brand { font-size: 17px; gap: 8px; }
+  .nav .brand-mark { width: 32px !important; height: 32px !important; }
+  .nav .brand-mark svg { width: 18px; height: 18px; }
+  .account-trigger-name, .account-chevron { display: none; }
+  .account-trigger { max-width: none; padding: 3px; }
+  .lang-trigger.btn.ghost { padding: 6px 8px; font-size: 12.5px; }
+}
+@media (max-width: 400px) {
+  .brand-word { display: none; }
+}
+
+/* Footer links were 22px tall in a 10px-gapped column. Padding rather than a
+   ::after hit area, because overlapping invisible targets on adjacent links is
+   worse than a small one — a tap would land on an unpredictable neighbour. */
+.footer-col { gap: 0; }
+.footer-col a { padding: 12px 0; }
+.footer-social-icons a { padding: 11px; margin: -11px; }
+
+/* A standalone URL link, not inline in a sentence, so the 2.5.8 inline
+   exception does not cover it. */
+.ext-link { display: inline-block; padding: 12px 0; }
+/* Job-title links wrap to one or two lines depending on the title and the
+   viewport, so padding cannot satisfy both — 2px clears a two-line title and
+   leaves a one-line one at 24px. The hit area handles either. */
+.job-card h2 a, .job-card h3 a { position: relative; display: inline-block; }

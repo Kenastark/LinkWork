@@ -13,7 +13,7 @@ export default function Meeting() {
 
   useEffect(() => { api.get(`/api/interviews/${id}/room`).then(setData).catch(e => setError(e.message)); }, [id]);
 
-  if (error) return <main className="container"><div className="alert error">{error}</div></main>;
+  if (error) return <main className="container"><div className="alert error" role="alert">{error}</div></main>;
   if (!data) return <main className="container" />;
 
   const { interview, role_title, company_name, student_name, when } = data;
@@ -21,7 +21,7 @@ export default function Meeting() {
   return (
     <main className="container" style={{ maxWidth: 820 }}>
       <span className="id-tag">ROOM-{interview.room_id.slice(0, 8).toUpperCase()}</span>
-      <h2 style={{ fontSize: 26, margin: '4px 0 2px' }}>{KIND_LABEL[interview.kind]} — {role_title}</h2>
+      <h1 style={{ fontSize: 26, margin: '4px 0 2px' }}>{KIND_LABEL[interview.kind]} — {role_title}</h1>
       <p className="muted">{company_name} · {student_name}{when ? ` · ${when}` : ''}</p>
 
       <div className="meeting-stage" style={{ marginTop: 18 }}>

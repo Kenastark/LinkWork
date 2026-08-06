@@ -19,7 +19,7 @@ export default function CompanyProfile() {
 
   const [description] = useTranslatedTexts([data?.company?.description || '']);
 
-  if (error) return <main className="container"><div className="alert error">{error}</div></main>;
+  if (error) return <main className="container"><div className="alert error" role="alert">{error}</div></main>;
   if (!data) return <main className="container" />;
   const { company, jobs, following } = data;
 
@@ -37,8 +37,8 @@ export default function CompanyProfile() {
         <div style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
           <span className="company-mono" style={{ width: 64, height: 64, fontSize: 26 }}>{company.name.charAt(0).toUpperCase()}</span>
           <div style={{ flex: 1, minWidth: 200 }}>
-            <h2 style={{ fontSize: 26 }}>{company.name}</h2>
-            {company.website && <a href={company.website} target="_blank" rel="noreferrer">{company.website}</a>}
+            <h1 style={{ fontSize: 26 }}>{company.name}</h1>
+            {company.website && <a className="ext-link" href={company.website} target="_blank" rel="noreferrer">{company.website}</a>}
           </div>
           {user.role === 'student' && (
             <Button variant={following ? 'secondary' : ''} disabled={busy} onClick={toggleFollow}>

@@ -96,8 +96,8 @@ export default function JobDetail() {
     job?.description || '', job?.requirements || '', job?.company_description || '',
   ]);
 
-  if (error) return <main className="container"><div className="alert error">{error}</div></main>;
-  if (!data || !data.job) return <main className="container"><div className="alert error">Couldn't load this posting. It may have been removed.</div></main>;
+  if (error) return <main className="container"><div className="alert error" role="alert">{error}</div></main>;
+  if (!data || !data.job) return <main className="container"><div className="alert error" role="alert">Couldn't load this posting. It may have been removed.</div></main>;
   const { application } = data;
   const isStudent = user.role === 'student';
 
@@ -185,7 +185,7 @@ export default function JobDetail() {
   return (
     <main className="container" style={{ maxWidth: 780 }}>
       <span className="id-tag">JOB-{String(job.id).padStart(4, '0')}</span>
-      <h2 style={{ fontSize: 30 }}>{job.title}</h2>
+      <h1 style={{ fontSize: 30 }}>{job.title}</h1>
       <p className="muted">{job.company_name} · {job.university_name}{job.faculty_name ? ` · ${job.faculty_name}` : ''}</p>
       <div className="meta" style={{ display: 'flex', gap: 8, margin: '10px 0 20px', flexWrap: 'wrap' }}>
         {job.faculty_verified
@@ -199,16 +199,16 @@ export default function JobDetail() {
         {job.status === 'closed' && <span className="badge danger">Filled & closed</span>}
       </div>
 
-      {error && <div className="alert error">{error}</div>}
+      {error && <div className="alert error" role="alert">{error}</div>}
       {result && <div className={result.passed ? 'alert ok' : 'alert error'}>
         Final skill test score: <b>{result.finalScore}%</b>. {result.passed ? 'You passed — the AI interview is next.' : 'Below the 60% bar for this round. Keep building — new openings arrive regularly.'}
       </div>}
 
       <div className="card">
-        <h3>About the role</h3>
+        <h2 style={{ fontSize: 20 }}>About the role</h2>
         <p style={{ marginTop: 8 }}>{description}</p>
         {job.requirements && <>
-          <h3 style={{ marginTop: 18 }}>Skills & requirements</h3>
+          <h2 style={{ fontSize: 20, marginTop: 18 }}>Skills &amp; requirements</h2>
           <p style={{ marginTop: 8 }}>{requirements}</p>
         </>}
       </div>
@@ -217,8 +217,8 @@ export default function JobDetail() {
         <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
           <span className="company-mono">{(job.company_name || '?').charAt(0).toUpperCase()}</span>
           <div>
-            <h3>{job.company_name}</h3>
-            {job.website && <a href={job.website} target="_blank" rel="noreferrer">{job.website}</a>}
+            <h2 style={{ fontSize: 20 }}>{job.company_name}</h2>
+            {job.website && <a className="ext-link" href={job.website} target="_blank" rel="noreferrer">{job.website}</a>}
           </div>
         </div>
         {job.company_description && <p className="muted" style={{ marginTop: 12 }}>{companyDescription}</p>}
