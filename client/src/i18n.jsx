@@ -24,6 +24,10 @@ const translations = {
     'nav.register': `Register`,
     'nav.joinAsStudent': `Join as a student`,
     'nav.joinAsCompany': `Join as a company`,
+    'nav.skipToContent': `Skip to content`,
+    'nav.openMenu': `Open menu`,
+    'nav.closeMenu': `Close menu`,
+    'nav.menu': `Menu`,
 
     'footer.forStudents': `For students`,
     'footer.hireTalent': `Hire the right talent`,
@@ -146,6 +150,11 @@ const translations = {
     'chain.stateDone': `completed`,
     'chain.stateFailed': `application not selected`,
     'ledger.facultyVerified': `Faculty verified`,
+
+    'notFound.title': `That record does not exist.`,
+    'notFound.body': `The page you asked for is not on the register. It may have been filled and taken down, or the address may be wrong.`,
+    'notFound.home': `Go to the homepage`,
+    'notFound.jobs': `Browse open roles`,
   },
 
   hu: {
@@ -163,6 +172,10 @@ const translations = {
     'nav.register': `Regisztráció`,
     'nav.joinAsStudent': `Csatlakozás hallgatóként`,
     'nav.joinAsCompany': `Csatlakozás cégként`,
+    'nav.skipToContent': `Ugrás a tartalomra`,
+    'nav.openMenu': `Menü megnyitása`,
+    'nav.closeMenu': `Menü bezárása`,
+    'nav.menu': `Menü`,
 
     'footer.forStudents': `Hallgatóknak`,
     'footer.hireTalent': `Találd meg a megfelelő tehetséget`,
@@ -284,6 +297,11 @@ const translations = {
     'chain.stateDone': `befejezve`,
     'chain.stateFailed': `a jelentkezést nem választották ki`,
     'ledger.facultyVerified': `Kar által ellenőrizve`,
+
+    'notFound.title': `Ez a rekord nem létezik.`,
+    'notFound.body': `A keresett oldal nem szerepel a nyilvántartásban. Lehet, hogy betöltötték a pozíciót és levették, vagy a cím hibás.`,
+    'notFound.home': `Vissza a főoldalra`,
+    'notFound.jobs': `Nyitott pozíciók böngészése`,
   },
 
   fr: {
@@ -301,6 +319,10 @@ const translations = {
     'nav.register': `S'inscrire`,
     'nav.joinAsStudent': `Rejoindre en tant qu'étudiant`,
     'nav.joinAsCompany': `Rejoindre en tant qu'entreprise`,
+    'nav.skipToContent': `Aller au contenu`,
+    'nav.openMenu': `Ouvrir le menu`,
+    'nav.closeMenu': `Fermer le menu`,
+    'nav.menu': `Menu`,
 
     'footer.forStudents': `Pour les étudiants`,
     'footer.hireTalent': `Recruter les bons talents`,
@@ -422,6 +444,11 @@ const translations = {
     'chain.stateDone': `terminée`,
     'chain.stateFailed': `candidature non retenue`,
     'ledger.facultyVerified': `Vérifié par la faculté`,
+
+    'notFound.title': `Cet enregistrement n'existe pas.`,
+    'notFound.body': `La page demandée ne figure pas au registre. Le poste a peut-être été pourvu et retiré, ou l'adresse est incorrecte.`,
+    'notFound.home': `Retour à l'accueil`,
+    'notFound.jobs': `Voir les offres`,
   },
 };
 

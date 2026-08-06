@@ -120,6 +120,10 @@
   --glass-bg:     rgba(255, 255, 255, 0.72);
   --glass-border: rgba(255, 255, 255, 0.6);
   --glass-blur:   saturate(180%) blur(16px);
+  /* The nav is a dark plate in both themes (see section 10), and all of its
+     chrome is white-on-dark. The white --glass-bg would composite to light
+     grey under that white text, so the nav frosts with its own surface. */
+  --glass-dark-bg: rgba(13, 27, 49, 0.82);
 
   /* --- Elevation. Blue-tinted, never neutral black. --------------------- */
   --shadow-0: none;
@@ -421,12 +425,84 @@ button { font-family: var(--font-body); cursor: pointer; }
 .shell { min-height: 100vh; display: flex; flex-direction: column; }
 .container { width: min(1100px, 92vw); margin: 0 auto; }
 main.container { flex: 1; padding: 32px 0 72px; }
+/* The skip-link target. It has to carry the flex growth that main.container
+   expects, or wrapping <Routes> in it lets the footer ride up the page. */
+#content { flex: 1; display: flex; flex-direction: column; }
+#content:focus { outline: none; }
+/* The nav is sticky, so it occupies flow space and content begins below it.
+   A transparent nav would therefore reveal the page background rather than the
+   hero. On routes that have a hero, pull the content up by the bar's height so
+   the hero starts behind it. The hero's 128px top padding clears the 62px bar. */
+#content.under-nav { margin-top: -62px; }
+
+/* 404. A record that is not on the register. */
+.not-found { max-width: 620px; }
+.not-found .ledger-record { border-bottom: 0; padding-top: 0; }
+.not-found h1 { font-size: var(--fs-2xl); margin: var(--space-2) 0 var(--space-3); }
+.not-found-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-5); }
 
 /* ============ nav ============ */
 .nav {
-  background: var(--ink); color: #fff;
-  position: sticky; top: 0; z-index: 20;
-  box-shadow: var(--shadow-sm);
+  background: var(--surface-dark); color: #fff;
+  position: sticky; top: 0; z-index: var(--z-nav);
+  box-shadow: var(--shadow-1);
+  transition: background var(--d-base) var(--ease-out), box-shadow var(--d-base) var(--ease-out);
+}
+/* Only "/" has a hero behind the bar. Transparent at rest, frosted past 24px. */
+.nav.over-hero { background: transparent; box-shadow: none; }
+.nav.over-hero.scrolled {
+  background: var(--glass-dark-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-2);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .nav.over-hero.scrolled { background: var(--surface-dark); }
+}
+
+.nav-inner { position: relative; }
+.nav-group { display: flex; align-items: center; gap: 28px; }
+.nav-auth { gap: 18px; }
+
+/* Active-route underline. Width comes from scaleX on a 1px element so the slide
+   animates transform only, per the motion rule. */
+.nav-underline {
+  position: absolute; left: 0; bottom: 0; width: 1px; height: 2px;
+  background: #fff; transform-origin: left center; pointer-events: none;
+  transition: transform var(--d-fast) var(--ease-out), opacity var(--d-fast) var(--ease-out);
+}
+
+.nav-toggle {
+  display: none; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.06);
+  color: #fff; border-radius: var(--radius-sm); padding: 7px 12px; font-size: 15px; line-height: 1;
+}
+.nav-toggle:hover { background: rgba(255,255,255,0.14); }
+
+.nav-sheet-backdrop {
+  position: fixed; inset: 0; background: rgba(7, 13, 26, 0.5); z-index: var(--z-overlay);
+}
+/* Visibility is driven by .open, not by the hidden attribute: a class selector
+   outranks the UA's [hidden] { display: none }, so `display: flex` here would
+   keep the sheet rendered and its links focusable while it was "closed". */
+.nav-sheet { display: none; }
+.nav-sheet.open {
+  position: fixed; top: 62px; left: 0; right: 0; z-index: var(--z-modal);
+  background: var(--surface-dark); border-top: 1px solid rgba(255,255,255,0.12);
+  padding: var(--space-4); display: flex; flex-direction: column; gap: 4px;
+  box-shadow: var(--shadow-4);
+}
+.nav-sheet .navlink { padding: 12px 8px; font-size: 16px; border-radius: var(--radius-sm); }
+.nav-sheet .navlink:hover, .nav-sheet .navlink.active { background: rgba(255,255,255,0.08); }
+.nav-sheet .btn.secondary { margin-top: var(--space-3); color: #fff; border-color: rgba(255,255,255,0.4); }
+.nav-sheet .btn.secondary:hover:not(:disabled) { background: rgba(255,255,255,0.14); border-color: #fff; }
+
+@media (max-width: 860px) {
+  .nav-primary, .nav-secondary { display: none; }
+  .nav-toggle { display: inline-flex; }
+  .nav-underline { display: none; }
+}
+@media (min-width: 861px) {
+  .nav-sheet, .nav-sheet-backdrop { display: none; }
 }
 /* Nav uses a wider track than the page so the logo sits further left and the
    account/bell items further right. */

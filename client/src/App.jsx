@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { Routes, Route, Link, NavLink, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { api } from './api.js';
 import LinkMark from './components/LinkMark.jsx';
@@ -22,6 +22,7 @@ import ComingSoon from './pages/ComingSoon.jsx';
 import Meeting from './pages/Meeting.jsx';
 import Notifications from './pages/Notifications.jsx';
 import ApplicantReview from './pages/ApplicantReview.jsx';
+import NotFound from './pages/NotFound.jsx';
 import { ACCOUNT_MENU } from './menuConfig.js';
 import { I18nProvider, useI18n, LANGUAGES } from './i18n.jsx';
 
@@ -59,6 +60,76 @@ function useCloseOnOutsideOrRoute(open, setOpen) {
   }, [open]);
 
   return ref;
+}
+
+// True once the page has scrolled past the threshold. Used to swap the nav from
+// transparent to glass over the hero.
+function useScrolledPast(threshold) {
+  const [past, setPast] = useState(() => typeof window !== 'undefined' && window.scrollY > threshold);
+  useEffect(() => {
+    const onScroll = () => setPast(window.scrollY > threshold);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [threshold]);
+  return past;
+}
+
+// Traps Tab inside the container while active, closes on Escape, and returns
+// focus to whatever opened it. Hand-rolled: no dependency is worth adding for
+// one sheet.
+function useFocusTrap(active, containerRef, onClose) {
+  useEffect(() => {
+    if (!active) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const opener = document.activeElement;
+    const SEL = 'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
+    const focusables = () => Array.from(el.querySelectorAll(SEL)).filter(n => n.offsetParent !== null);
+
+    focusables()[0]?.focus();
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const onKey = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
+      if (e.key !== 'Tab') return;
+      const f = focusables();
+      if (!f.length) return;
+      const i = f.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+      else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+      if (opener instanceof HTMLElement) opener.focus();
+    };
+  }, [active, containerRef, onClose]);
+}
+
+// Role-aware nav items, shared by the desktop bar and the mobile sheet so the
+// two can never drift.
+function navItemsFor(user, t) {
+  if (user?.role === 'student') return {
+    primary: [
+      { to: '/student', label: t('nav.findInternship'), lg: true },
+      { to: '/companies', label: t('nav.exploreCompanies'), lg: true },
+      { to: '/resources', label: t('nav.resources'), lg: true },
+    ],
+    secondary: [{ to: '/my-applications', label: t('nav.applications') }],
+  };
+  if (user?.role === 'company') return { primary: [{ to: '/company', label: t('nav.dashboard') }], secondary: [] };
+  if (user?.role === 'admin') return { primary: [{ to: '/admin', label: t('nav.admin') }], secondary: [] };
+  return {
+    primary: [
+      { to: '/auth', label: t('nav.findAJob'), lg: true },
+      { to: '/auth', label: t('nav.exploreCompanies'), lg: true },
+      { to: '/auth', label: t('nav.resources'), lg: true },
+    ],
+    secondary: [],
+  };
 }
 
 function Avatar({ user, size = 34 }) {
@@ -185,45 +256,113 @@ function RegisterMenu() {
 
 function AppShell({ user, setUser, logout }) {
   const { t } = useI18n();
+  const location = useLocation();
+  const { primary, secondary } = navItemsFor(user, t);
+
+  // Transparent only where there is a hero behind the bar. Companies and admins
+  // are redirected away from "/", so the landing is not what they see there.
+  const overHero = location.pathname === '/' && (!user || user.role === 'student');
+  const scrolled = useScrolledPast(24);
+
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const sheetRef = useRef(null);
+  const closeSheet = useCallback(() => setSheetOpen(false), []);
+  useFocusTrap(sheetOpen, sheetRef, closeSheet);
+  useEffect(() => { setSheetOpen(false); }, [location.pathname]);
+
+  // The active-route underline. Measured rather than computed, because item
+  // widths depend on the locale and on whether the display face has loaded.
+  const navInnerRef = useRef(null);
+  const [rule, setRule] = useState(null);
+  useEffect(() => {
+    const measure = () => {
+      const root = navInnerRef.current;
+      const active = root?.querySelector('a.navlink.active');
+      if (!root || !active) { setRule(null); return; }
+      const a = active.getBoundingClientRect();
+      const r = root.getBoundingClientRect();
+      setRule({ x: a.left - r.left, w: a.width });
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    document.fonts?.ready?.then(measure).catch(() => {});
+    return () => window.removeEventListener('resize', measure);
+  }, [location.pathname, user, t]);
+
+  const navClass = 'nav'
+    + (overHero ? ' over-hero' : '')
+    + (scrolled ? ' scrolled' : '');
 
   return (
     <AuthCtx.Provider value={{ user, setUser }}>
       <div className="shell">
-        <nav className="nav">
-          <div className="container nav-inner">
+        <a className="skip-link" href="#content">{t('nav.skipToContent')}</a>
+
+        <nav className={navClass}>
+          <div className="container nav-inner" ref={navInnerRef}>
             <Link to={homeFor(user)} className="brand"><LinkMark /> LinkWork</Link>
 
-            {user?.role === 'student' && <>
-              <NavLink className="navlink navlink-lg" to="/student">{t('nav.findInternship')}</NavLink>
-              <NavLink className="navlink navlink-lg" to="/companies">{t('nav.exploreCompanies')}</NavLink>
-              <NavLink className="navlink navlink-lg" to="/resources">{t('nav.resources')}</NavLink>
-            </>}
-            {!user && <>
-              <NavLink className="navlink navlink-lg" to="/auth">{t('nav.findAJob')}</NavLink>
-              <NavLink className="navlink navlink-lg" to="/auth">{t('nav.exploreCompanies')}</NavLink>
-              <NavLink className="navlink navlink-lg" to="/auth">{t('nav.resources')}</NavLink>
-            </>}
-            {user?.role === 'company' && <NavLink className="navlink" to="/company">{t('nav.dashboard')}</NavLink>}
-            {user?.role === 'admin' && <NavLink className="navlink" to="/admin">{t('nav.admin')}</NavLink>}
+            <div className="nav-group nav-primary">
+              {primary.map((i, n) => (
+                <NavLink key={`${i.to}-${n}`} className={'navlink' + (i.lg ? ' navlink-lg' : '')} to={i.to}>{i.label}</NavLink>
+              ))}
+            </div>
 
             <span className="spacer" />
 
-            {user?.role === 'student' && <>
-              <NavLink className="navlink" to="/my-applications">{t('nav.applications')}</NavLink>
-            </>}
+            <div className="nav-group nav-secondary">
+              {secondary.map(i => <NavLink key={i.to} className="navlink" to={i.to}>{i.label}</NavLink>)}
+            </div>
+
             {user && <NavBell />}
             <LanguageSwitcher />
             {user ? (
               <AccountMenu user={user} onSignOut={logout} />
             ) : (
-              <>
+              <div className="nav-group nav-auth">
                 <NavLink className="navlink" to="/auth">{t('nav.signIn')}</NavLink>
                 <RegisterMenu />
-              </>
+              </div>
             )}
+
+            <button
+              className="nav-toggle"
+              aria-label={sheetOpen ? t('nav.closeMenu') : t('nav.openMenu')}
+              aria-expanded={sheetOpen}
+              aria-controls="nav-sheet"
+              onClick={() => setSheetOpen(o => !o)}
+            >
+              <span aria-hidden="true">{sheetOpen ? '✕' : '☰'}</span>
+            </button>
+
+            <span
+              className="nav-underline"
+              aria-hidden="true"
+              style={rule
+                ? { opacity: 1, transform: `translateX(${rule.x}px) scaleX(${rule.w})` }
+                : { opacity: 0 }}
+            />
+          </div>
+
+          {sheetOpen && <div className="nav-sheet-backdrop" onClick={closeSheet} />}
+          <div
+            id="nav-sheet"
+            className={'nav-sheet' + (sheetOpen ? ' open' : '')}
+            ref={sheetRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('nav.menu')}
+            hidden={!sheetOpen}
+          >
+            {[...primary, ...secondary].map((i, n) => (
+              <NavLink key={`${i.to}-${n}`} className="navlink" to={i.to}>{i.label}</NavLink>
+            ))}
+            {!user && <NavLink className="navlink" to="/auth">{t('nav.signIn')}</NavLink>}
+            <button className="btn secondary" onClick={closeSheet}>{t('nav.closeMenu')}</button>
           </div>
         </nav>
 
+        <div id="content" className={overHero ? 'under-nav' : ''} tabIndex={-1}>
         <Routes>
           <Route path="/" element={!user || user.role === 'student' ? <Landing /> : <Navigate to={homeFor(user)} />} />
           <Route path="/auth" element={user ? <Navigate to={homeFor(user)} /> : <Auth />} />
@@ -246,7 +385,9 @@ function AppShell({ user, setUser, logout }) {
           <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/auth" />} />
           <Route path="/meeting/:id" element={user ? <Meeting /> : <Navigate to="/auth" />} />
           <Route path="/coming-soon" element={<ComingSoon />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
+        </div>
 
         <footer className="site">
           <div className="container">
