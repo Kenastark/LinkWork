@@ -669,17 +669,60 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 }
 .chain .node .dot {
   width: 34px; height: 34px; border-radius: 50%;
-  border: 2.5px solid var(--line); background: #fff; color: var(--ink-soft);
+  border: 2.5px solid var(--border); background: var(--surface); color: var(--text-2);
   display: grid; place-items: center; font-family: var(--font-mono); font-size: 13px; font-weight: 500;
-  transition: all .2s ease;
+  transition: border-color var(--d-fast) var(--ease-out), background var(--d-fast) var(--ease-out),
+              color var(--d-fast) var(--ease-out);
 }
 .chain .node.done .dot { border-color: var(--success-700); background: var(--success-700); color: #fff; }
-.chain .node.current .dot { border-color: var(--verify-bright); color: var(--verify); box-shadow: 0 0 0 5px var(--verify-tint); }
-.chain .node.failed .dot { border-color: var(--danger); background: var(--danger); color: #fff; }
-.chain .node small { font-size: 11.5px; font-weight: 600; color: var(--ink-soft); max-width: 90px; }
+.chain .node.current .dot { border-color: var(--accent); color: var(--brand); box-shadow: 0 0 0 5px var(--brand-subtle-bg); }
+/* --danger-500 would put the ✕ at 3.96:1; --danger-700 is 7.31:1. */
+.chain .node.failed .dot { border-color: var(--danger-700); background: var(--danger-700); color: #fff; }
+.chain .node small { font-size: 11.5px; font-weight: 600; color: var(--text-2); max-width: 90px; }
 .chain .node.done small, .chain .node.current small { color: var(--text-1); }
-.chain .connector { flex: 1; min-width: 18px; height: 2.5px; background: var(--line); margin-bottom: 22px; }
-.chain .connector.done { background: var(--success-700); }
+.chain .node.failed small { color: var(--danger-700); font-weight: 700; }
+
+/* The connector is the track; ::after is the fill that grows across it. This is
+   the moment a student learns they advanced, so it animates on mount rather
+   than only when the class flips — a returning student sees it fill too.
+
+   The fill RESTS at scale 1. The global reduced-motion rule kills animations
+   with `animation: none !important`, so a scale-0 resting state would leave
+   every completed connector permanently empty. Same trap as the logo draw-in. */
+.chain .connector {
+  position: relative; overflow: hidden;
+  flex: 1; min-width: 18px; height: 2.5px; background: var(--border); margin-bottom: 22px;
+}
+.chain .connector.done::after {
+  content: ''; position: absolute; inset: 0;
+  background: var(--success-700); transform: scaleX(1); transform-origin: left;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .chain .connector.done::after { animation: chain-fill-x var(--d-slow) var(--ease-out) both; }
+}
+@keyframes chain-fill-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* Rejected: the track goes quiet and the terminal failed node carries the
+   state. Nothing claims a failure point, because the data does not record one. */
+.chain.rejected .node:not(.failed),
+.chain.rejected .connector { opacity: .55; }
+
+/* Six nodes at min-width 86px need 516px plus connectors, so the row is an
+   unreadable tangle on a 375px screen. Below 640 it stacks. */
+@media (max-width: 640px) {
+  .chain { flex-direction: column; align-items: stretch; gap: 0; }
+  .chain .node { flex-direction: row; align-items: center; gap: 12px; min-width: 0; text-align: left; }
+  .chain .node small { max-width: none; font-size: 13px; }
+  .chain .connector {
+    flex: none; width: 2.5px; min-width: 0; height: 16px;
+    margin: 0 0 0 16px; align-self: flex-start;
+  }
+  .chain .connector.done::after { transform: scaleY(1); transform-origin: top; }
+}
+@media (max-width: 640px) and (prefers-reduced-motion: no-preference) {
+  .chain .connector.done::after { animation-name: chain-fill-y; }
+}
+@keyframes chain-fill-y { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 
 /* ============ landing hero ============ */
 .hero { background: var(--ink); color: #fff; padding: 128px 0 96px; overflow: hidden; }

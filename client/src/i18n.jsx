@@ -129,6 +129,22 @@ const translations = {
 
     'companyShowcase.eyebrow': `Trusted employers`,
     'companyShowcase.title': `Companies hiring on LinkWork`,
+
+    // Pipeline stage names. Keys match applications.stage in the database.
+    'stage.applied': `Applied`,
+    'stage.skill_test': `Skill test`,
+    'stage.ai_interview': `AI interview`,
+    'stage.company_test': `Company test`,
+    'stage.hr_interview': `HR interview`,
+    'stage.tech_interview': `Technical interview`,
+    'stage.hired': `Hired`,
+    'stage.rejected': `Not selected`,
+
+    'chain.label': `Hiring progress`,
+    'chain.position': `Stage {n} of {total}, {label}, {state}`,
+    'chain.stateCurrent': `in progress`,
+    'chain.stateDone': `completed`,
+    'chain.stateFailed': `application not selected`,
   },
 
   hu: {
@@ -251,6 +267,21 @@ const translations = {
 
     'companyShowcase.eyebrow': `Megbízható munkáltatók`,
     'companyShowcase.title': `Cégek, amelyek a LinkWorkön toboroznak`,
+
+    'stage.applied': `Jelentkezett`,
+    'stage.skill_test': `Készségteszt`,
+    'stage.ai_interview': `AI-interjú`,
+    'stage.company_test': `Céges teszt`,
+    'stage.hr_interview': `HR-interjú`,
+    'stage.tech_interview': `Szakmai interjú`,
+    'stage.hired': `Felvéve`,
+    'stage.rejected': `Nem kiválasztva`,
+
+    'chain.label': `Felvételi folyamat`,
+    'chain.position': `{total} szakaszból a(z) {n}., {label}, {state}`,
+    'chain.stateCurrent': `folyamatban`,
+    'chain.stateDone': `befejezve`,
+    'chain.stateFailed': `a jelentkezést nem választották ki`,
   },
 
   fr: {
@@ -373,6 +404,21 @@ const translations = {
 
     'companyShowcase.eyebrow': `Employeurs de confiance`,
     'companyShowcase.title': `Entreprises qui recrutent sur LinkWork`,
+
+    'stage.applied': `Candidature envoyée`,
+    'stage.skill_test': `Test de compétences`,
+    'stage.ai_interview': `Entretien IA`,
+    'stage.company_test': `Test de l'entreprise`,
+    'stage.hr_interview': `Entretien RH`,
+    'stage.tech_interview': `Entretien technique`,
+    'stage.hired': `Recruté`,
+    'stage.rejected': `Non retenu`,
+
+    'chain.label': `Progression de la candidature`,
+    'chain.position': `Étape {n} sur {total}, {label}, {state}`,
+    'chain.stateCurrent': `en cours`,
+    'chain.stateDone': `terminée`,
+    'chain.stateFailed': `candidature non retenue`,
   },
 };
 
@@ -387,7 +433,13 @@ export function I18nProvider({ children }) {
     try { localStorage.setItem('linkwork_lang', lang); } catch { /* ignore */ }
   }, [lang]);
 
-  const t = (key) => translations[lang]?.[key] ?? translations.en[key] ?? key;
+  // vars is optional: t('chain.position', { n: 3, total: 6 }) fills {n}/{total}.
+  // Interpolation rather than concatenation because hu and fr order the ordinal
+  // and the count differently from en.
+  const t = (key, vars) => {
+    const s = translations[lang]?.[key] ?? translations.en[key] ?? key;
+    return vars ? s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m)) : s;
+  };
 
   return <I18nCtx.Provider value={{ lang, setLang, t }}>{children}</I18nCtx.Provider>;
 }
