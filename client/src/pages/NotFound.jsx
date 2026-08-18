@@ -18,7 +18,7 @@ export default function NotFound() {
       <p className="muted">{t('notFound.body')}</p>
       <div className="not-found-actions">
         <Link to="/" className="btn">{t('notFound.home')}</Link>
-        <Link to={user?.role === 'student' ? '/student' : '/auth'} className="btn secondary">
+        <Link to={user?.role === 'student' ? '/jobs' : '/auth'} className="btn secondary">
           {t('notFound.jobs')}
         </Link>
       </div>
