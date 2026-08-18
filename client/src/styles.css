@@ -1553,7 +1553,8 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 }
 .ledger-punch {
   margin-top: var(--space-5); font-family: var(--font-display);
-  font-size: var(--fs-xl); font-weight: 700; letter-spacing: var(--ls-tight); max-width: 32ch;
+  font-size: var(--fs-xl); font-weight: 700; letter-spacing: var(--ls-tight); max-width: 46ch;
+  white-space: pre-line;
 }
 
 /* FAQ */

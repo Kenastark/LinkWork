@@ -194,7 +194,7 @@ const translations = {
     'ledgerSection.eyebrow': `On the record`,
     'ledgerSection.title': `Every hire is written down`,
     'ledgerSection.body': `When a company hires through LinkWork, the posting and the date are recorded here. Nothing is added by hand and nothing can be edited afterwards.`,
-    'ledgerSection.punch': `When a posting is filled, it comes down. That is why the list is short.`,
+    'ledgerSection.punch': `Every hire made through LinkWork has a permanent record here.\nNothing gets lost. Nothing gets erased.`,
     'ledgerSection.empty': `No hires are on the register yet.`,
 
     'faq.eyebrow': `Before you ask`,
@@ -403,7 +403,7 @@ const translations = {
     'ledgerSection.eyebrow': `Nyilvántartva`,
     'ledgerSection.title': `Minden felvételt rögzítünk`,
     'ledgerSection.body': `Amikor egy cég a LinkWorkön keresztül vesz fel valakit, a hirdetés és a dátum ide kerül. Semmit nem írunk be kézzel, és utólag semmi nem módosítható.`,
-    'ledgerSection.punch': `Ha egy hirdetést betöltenek, lekerül. Ezért rövid a lista.`,
+    'ledgerSection.punch': `Minden, ami a LinkWorkön keresztül történt felvétel, itt véglegesen rögzül.\nSemmi nem vész el. Semmit nem törölnek.`,
     'ledgerSection.empty': `Még nincs felvétel a nyilvántartásban.`,
 
     'faq.eyebrow': `Mielőtt megkérdeznéd`,
@@ -612,7 +612,7 @@ const translations = {
     'ledgerSection.eyebrow': `Au registre`,
     'ledgerSection.title': `Chaque recrutement est consigné`,
     'ledgerSection.body': `Lorsqu'une entreprise recrute via LinkWork, l'offre et la date sont consignées ici. Rien n'est saisi à la main et rien ne peut être modifié après coup.`,
-    'ledgerSection.punch': `Quand une offre est pourvue, elle est retirée. C'est pour cela que la liste est courte.`,
+    'ledgerSection.punch': `Chaque embauche réalisée via LinkWork est enregistrée ici, de façon permanente.\nRien ne se perd. Rien n'est jamais effacé.`,
     'ledgerSection.empty': `Aucun recrutement ne figure encore au registre.`,
 
     'faq.eyebrow': `Avant de demander`,
