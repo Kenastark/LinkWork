@@ -316,6 +316,12 @@ function seed() {
     'A regional law firm advising businesses across Eastern Hungary.');
   const publicHealthId = mkCompany('careers@dphi.hu', 'DPHI Recruiting', 'Debrecen Public Health Initiative', 'https://dphi.example',
     'A public health research and policy organization serving the Debrecen region.');
+  mkCompany('carrieres@aerium.fr', 'Aérium Recruiting', 'Aérium Aerospace SAS', 'https://aerium.example',
+    'Toulouse-based aerospace firm building avionics systems for regional aircraft.');
+  mkCompany('rh@verrierebiotech.fr', 'Verrière People Team', 'Verrière Biotech SARL', 'https://verrierebiotech.example',
+    'Lyon-based biotech company developing diagnostic assays for hospital networks.');
+  mkCompany('jobs@lumieremedia.fr', 'Lumière Talent', 'Lumière Média SA', 'https://lumieremedia.example',
+    'Paris-based media and design studio producing digital campaigns for European brands.');
 
   // Jobs
   const insJob = db.prepare(`INSERT INTO jobs (company_id,university_id,faculty_id,title,job_type,description,requirements,positions,faculty_verified,location,work_mode,salary_huf)

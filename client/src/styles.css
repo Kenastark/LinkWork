@@ -1134,11 +1134,37 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 .company-showcase { padding: 20px 0 88px; }
 .company-showcase h2 { font-size: 31px; margin: 8px 0 32px; }
 
-/* Clean, monochrome logo strip of custom company logotypes. */
-.logo-strip {
+/* Clean, monochrome logo strip of custom company logotypes, auto-scrolling
+   in a seamless loop. The track holds two identical .logo-strip-group
+   copies back to back; animating the track exactly -50% (one group's
+   width) makes the second copy land precisely where the first started,
+   so the loop has no visible seam or reset jump. */
+.logo-strip-viewport { position: relative; overflow: hidden; }
+.logo-strip-track { display: flex; padding: 8px 0; }
+.logo-strip-group {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
-  gap: 30px 52px; padding: 8px 0;
+  gap: 30px 52px; flex: none;
 }
+/* The -50% loop math only holds with both groups present and un-wrapped,
+   so the marquee (and the mask that hides its edges) is scoped to the same
+   condition as showing the duplicate group at all: motion allowed AND wide
+   enough that a scrolling row reads better than a wrapped grid. */
+@media (prefers-reduced-motion: no-preference) and (min-width: 701px) {
+  .logo-strip-viewport {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 64px, #000 calc(100% - 64px), transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 64px, #000 calc(100% - 64px), transparent);
+  }
+  .logo-strip-track { width: max-content; animation: logo-marquee 34s linear infinite; }
+  .logo-strip-viewport:hover .logo-strip-track { animation-play-state: paused; }
+  .logo-strip-group { flex-wrap: nowrap; justify-content: flex-start; }
+}
+/* Below that breakpoint, or under reduced motion, the second (aria-hidden)
+   copy would just be a redundant static repeat - drop it and let the
+   first group wrap normally instead. */
+@media (max-width: 700px), (prefers-reduced-motion: reduce) {
+  .logo-strip-group[aria-hidden] { display: none; }
+}
+@keyframes logo-marquee { to { transform: translateX(-50%); } }
 .logo-lockup {
   display: inline-flex; align-items: center; gap: 11px; color: var(--text-1);
   transition: transform .18s var(--ease), color .18s var(--ease); opacity: .82;
@@ -1154,7 +1180,12 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 .logo-word b { font-family: var(--font-display); font-weight: 800; font-size: 22px; letter-spacing: -0.02em; }
 .logo-word i { font-style: normal; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); }
 .logo-lockup:hover .logo-word i { color: var(--brand-fg); opacity: .8; }
-@media (max-width: 700px) { .logo-strip { gap: 24px 32px; } .logo-word b { font-size: 19px; } }
+.company-showcase-punch {
+  display: flex; align-items: center; gap: var(--space-4);
+  margin-top: var(--space-5); color: var(--ink-soft); font-size: 15px;
+}
+.company-showcase-punch::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+@media (max-width: 700px) { .logo-strip-group { gap: 24px 32px; } .logo-word b { font-size: 19px; } }
 
 /* ============ homepage feature rows (Track / Offers / Transparent) ============ */
 .feature-row { padding: 17px 0; }

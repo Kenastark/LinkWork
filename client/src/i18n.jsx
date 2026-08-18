@@ -141,6 +141,7 @@ const translations = {
 
     'companyShowcase.eyebrow': `Trusted employers`,
     'companyShowcase.title': `Companies hiring on LinkWork`,
+    'companyShowcase.punch': `Every company here has committed to hiring, not just posting.`,
 
     // Pipeline stage names. Keys match applications.stage in the database.
     'stage.applied': `Applied`,
@@ -350,6 +351,7 @@ const translations = {
 
     'companyShowcase.eyebrow': `Megbízható munkáltatók`,
     'companyShowcase.title': `Cégek, amelyek a LinkWorkön toboroznak`,
+    'companyShowcase.punch': `Minden itt látható cég valódi felvételt vállalt, nem csak hirdetést adott fel.`,
 
     'stage.applied': `Jelentkezett`,
     'stage.skill_test': `Készségteszt`,
@@ -558,6 +560,7 @@ const translations = {
 
     'companyShowcase.eyebrow': `Employeurs de confiance`,
     'companyShowcase.title': `Entreprises qui recrutent sur LinkWork`,
+    'companyShowcase.punch': `Chaque entreprise ici s'est engagée à embaucher, pas seulement à publier une offre.`,
 
     'stage.applied': `Candidature envoyée`,
     'stage.skill_test': `Test de compétences`,

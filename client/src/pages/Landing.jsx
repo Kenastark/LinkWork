@@ -28,6 +28,9 @@ const LOGO_ICONS = {
   leaf: <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 3C9 3 4 8.5 4 16.5c0 1.4.2 2.7.5 3.9C6 12 11 7 20 6c-5 2.4-8.5 6-9.4 12.4C17 17.5 20.5 11.6 20 3Z" /></svg>,
   scales: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v18M7.5 21h9M5 7.5l14-3M6 5 3 12a3 3 0 0 0 6 0L6 5ZM18 4.5 15 12a3 3 0 0 0 6 0l-3-7.5Z" /></svg>,
   cross: <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9.5 3h5v6h6v5h-6v6h-5v-6h-6V9h6z" /></svg>,
+  plane: <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M2 11 22 2 13 22l-2-8-9-3z" /></svg>,
+  flask: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 2h6M10 2v6.5L4.5 19a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L14 8.5V2M7 15h10" /></svg>,
+  aperture: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="14" rx="2.5" /><circle cx="12" cy="13" r="4" /><path d="M8 6l1.5-2.5h5L16 6" /></svg>,
 };
 
 // name -> { icon, primary (brand word), sub (descriptor) }. Full names preserved across primary+sub.
@@ -38,6 +41,9 @@ const COMPANY_LOGOS = {
   'GreenField AgroTech Zrt.': { icon: 'leaf', primary: 'GreenField', sub: 'AgroTech Zrt.' },
   'NyugatCom Legal Partners': { icon: 'scales', primary: 'NyugatCom', sub: 'Legal Partners' },
   'Debrecen Public Health Initiative': { icon: 'cross', primary: 'Debrecen', sub: 'Public Health' },
+  'Aérium Aerospace SAS': { icon: 'plane', primary: 'Aérium', sub: 'Aerospace SAS' },
+  'Verrière Biotech SARL': { icon: 'flask', primary: 'Verrière', sub: 'Biotech SARL' },
+  'Lumière Média SA': { icon: 'aperture', primary: 'Lumière', sub: 'Média SA' },
 };
 
 function Icon({ d }) {
@@ -45,6 +51,35 @@ function Icon({ d }) {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d={d} />
     </svg>
+  );
+}
+
+// duplicate: true for the marquee's second, aria-hidden copy - it renders
+// the same links but out of tab order, since a screen reader / keyboard
+// user has no use for a visually-identical repeat of the same row.
+function CompanyLogo({ c, user, duplicate }) {
+  const logo = COMPANY_LOGOS[c.name];
+  const colors = brandColors(c.name);
+  return (
+    <Link
+      to={user ? '/companies' : '/auth'}
+      className="logo-lockup"
+      title={c.name}
+      style={{ '--brand-fg': colors.fg }}
+      tabIndex={duplicate ? -1 : undefined}
+    >
+      {logo ? (
+        <>
+          <span className="logo-mark">{LOGO_ICONS[logo.icon]}</span>
+          <span className="logo-word"><b>{logo.primary}</b><i>{logo.sub}</i></span>
+        </>
+      ) : (
+        <>
+          <span className="logo-mark logo-mark-initial">{c.name.charAt(0).toUpperCase()}</span>
+          <span className="logo-word"><b>{c.name}</b></span>
+        </>
+      )}
+    </Link>
   );
 }
 
@@ -626,27 +661,17 @@ export default function Landing() {
           <div className="container">
             <span className="eyebrow">{t('companyShowcase.eyebrow')}</span>
             <h2>{t('companyShowcase.title')}</h2>
-            <div className="logo-strip">
-              {stats.companies.map(c => {
-                const logo = COMPANY_LOGOS[c.name];
-                const colors = brandColors(c.name);
-                return (
-                  <Link to={user ? '/companies' : '/auth'} key={c.name} className="logo-lockup" title={c.name} style={{ '--brand-fg': colors.fg }}>
-                    {logo ? (
-                      <>
-                        <span className="logo-mark">{LOGO_ICONS[logo.icon]}</span>
-                        <span className="logo-word"><b>{logo.primary}</b><i>{logo.sub}</i></span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="logo-mark logo-mark-initial">{c.name.charAt(0).toUpperCase()}</span>
-                        <span className="logo-word"><b>{c.name}</b></span>
-                      </>
-                    )}
-                  </Link>
-                );
-              })}
+            <div className="logo-strip-viewport">
+              <div className="logo-strip-track">
+                <div className="logo-strip-group">
+                  {stats.companies.map(c => <CompanyLogo key={c.name} c={c} user={user} />)}
+                </div>
+                <div className="logo-strip-group" aria-hidden="true">
+                  {stats.companies.map(c => <CompanyLogo key={`${c.name}-dup`} c={c} user={user} duplicate />)}
+                </div>
+              </div>
             </div>
+            <p className="company-showcase-punch">{t('companyShowcase.punch')}</p>
           </div>
         </section>
       )}
