@@ -484,7 +484,7 @@ function ClosingCta({ user }) {
         <h2>{t('cta.title')}</h2>
         <p>{t('cta.body')}</p>
         <div className="closing-cta-actions">
-          <Link to={user ? '/student' : '/auth?mode=student'} className="btn closing-cta-btn">
+          <Link to={user ? '/jobs' : '/auth?mode=student'} className="btn closing-cta-btn">
             {user ? t('cta.browse') : t('cta.student')}
           </Link>
         </div>
@@ -525,7 +525,7 @@ export default function Landing() {
             <div className="cta-row">
               {user ? (
                 <>
-                  <Link to="/student" className="btn">{t('nav.findInternship')}</Link>
+                  <Link to="/jobs" className="btn">{t('nav.findInternship')}</Link>
                   <Link to="/companies" className="btn secondary" style={{ borderColor: '#fff', color: '#fff' }}>{t('nav.exploreCompanies')}</Link>
                 </>
               ) : (
@@ -581,7 +581,7 @@ export default function Landing() {
             <h2>{t('matchPitch.title')}</h2>
             <h3 style={{ marginTop: 18, fontSize: 22 }}>{t('matchPitch.subtitle')}</h3>
             <p className="muted" style={{ marginTop: 10, fontSize: 16.5, maxWidth: '46ch' }}>{t('matchPitch.body')}</p>
-            <Link to={user ? '/student' : '/auth?mode=student'} className="btn" style={{ marginTop: 22 }}>
+            <Link to={user ? '/jobs' : '/auth?mode=student'} className="btn" style={{ marginTop: 22 }}>
               {user ? t('matchPitch.ctaBrowse') : t('matchPitch.ctaGetStarted')}
             </Link>
           </div>
@@ -605,7 +605,7 @@ export default function Landing() {
         icon={FEATURE_ICONS.offers}
         title={t('feature.offersTitle')}
         body={t('feature.offersBody')}
-        ctaTo={user ? '/student' : '/auth?mode=student'}
+        ctaTo={user ? '/jobs' : '/auth?mode=student'}
         ctaLabel={t('nav.findInternship')}
         art={<OffersArt t={t} />}
       />

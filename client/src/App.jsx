@@ -81,7 +81,7 @@ function useScrolledPast(threshold) {
 function navItemsFor(user, t) {
   if (user?.role === 'student') return {
     primary: [
-      { to: '/student', label: t('nav.findInternship'), lg: true },
+      { to: '/jobs', label: t('nav.findInternship'), lg: true },
       { to: '/companies', label: t('nav.exploreCompanies'), lg: true },
       { to: '/resources', label: t('nav.resources'), lg: true },
     ],
@@ -454,7 +454,7 @@ function AppShell({ user, setUser, logout }) {
         <Routes>
           <Route path="/" element={!user || user.role === 'student' ? <Landing /> : <Navigate to={homeFor(user)} />} />
           <Route path="/auth" element={user ? <Navigate to={homeFor(user)} /> : <Auth />} />
-          <Route path="/student" element={user?.role === 'student' ? <FindInternship /> : <Navigate to="/auth" />} />
+          <Route path="/jobs" element={user?.role === 'student' ? <FindInternship /> : <Navigate to="/auth" />} />
           <Route path="/jobs/:id" element={user ? <JobDetail /> : <Navigate to="/auth" />} />
           <Route path="/company" element={user?.role === 'company' ? <CompanyDashboard /> : <Navigate to="/auth" />} />
           <Route path="/company/applicants/:id" element={user?.role === 'company' ? <ApplicantReview /> : <Navigate to="/auth" />} />
@@ -482,7 +482,7 @@ function AppShell({ user, setUser, logout }) {
             <div className="footer-cols">
               <div className="footer-col">
                 <h2 className="footer-head">{t('footer.forStudents')}</h2>
-                <Link to="/student">{t('nav.findInternship')}</Link>
+                <Link to="/jobs">{t('nav.findInternship')}</Link>
                 <Link to="/companies">{t('nav.exploreCompanies')}</Link>
                 <Link to="/resources">{t('nav.resources')}</Link>
                 {!user && <Link to="/auth">{t('nav.signIn')}</Link>}
