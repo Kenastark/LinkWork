@@ -23,7 +23,7 @@ import Meeting from './pages/Meeting.jsx';
 import Notifications from './pages/Notifications.jsx';
 import ApplicantReview from './pages/ApplicantReview.jsx';
 import NotFound from './pages/NotFound.jsx';
-import { ACCOUNT_MENU, THEMES, THEME_STORAGE_KEY } from './menuConfig.js';
+import { ACCOUNT_MENU, THEMES, THEME_STORAGE_KEY, BRANDS, BRAND_STORAGE_KEY } from './menuConfig.js';
 import useFocusTrap from './useFocusTrap.js';
 import { I18nProvider, useI18n, LANGUAGES } from './i18n.jsx';
 
@@ -135,6 +135,37 @@ function useTheme() {
   }, []);
 
   return { theme, cycle };
+}
+
+// Brand. Two states, no OS signal to follow, so no 'system'
+// equivalent. Written to <html data-brand>, independent of
+// data-theme — the four combinations of brand x theme are all
+// defined in styles.css.
+function applyBrand(pref) {
+  const brand = BRANDS.includes(pref) ? pref : 'blue';
+  document.documentElement.setAttribute('data-brand', brand);
+  const icon = document.querySelector('link[rel="icon"][type="image/svg+xml"]');
+  if (icon) icon.setAttribute('href',
+    brand === 'green' ? '/favicon-green.svg' : '/favicon.svg');
+}
+
+function useBrand() {
+  const [brand, setBrand] = useState(() => {
+    try { return localStorage.getItem(BRAND_STORAGE_KEY) || 'blue'; }
+    catch { return 'blue'; }
+  });
+
+  useEffect(() => {
+    applyBrand(brand);
+    try { localStorage.setItem(BRAND_STORAGE_KEY, brand); }
+    catch { /* private mode */ }
+  }, [brand]);
+
+  const cycleBrand = useCallback(() => {
+    setBrand(b => BRANDS[(BRANDS.indexOf(b) + 1) % BRANDS.length]);
+  }, []);
+
+  return { brand, cycleBrand };
 }
 
 // One entry from ACCOUNT_MENU rendered as a button. Actions are not routes.
@@ -279,6 +310,7 @@ function AppShell({ user, setUser, logout }) {
   const location = useLocation();
   const { primary, secondary } = navItemsFor(user, t);
   const { theme, cycle } = useTheme();
+  const { brand, cycleBrand } = useBrand();
 
   // Transparent only where there is a hero behind the bar. Companies and admins
   // are redirected away from "/", so the landing is not what they see there.
