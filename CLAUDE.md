@@ -27,17 +27,26 @@ design system in BRANDING.md, token layer at the top of client/src/styles.css.
   100% translated; adding an untranslated section is a regression, not a
   partial win.
 - `--ink` is BOTH heading text and the dark plate behind .nav, footer.site,
-  .hero, .meeting-stage and .btn.dark. Text uses migrate to `--text-1`;
-  background and border uses stay. Dark mode cannot ship until this split is
-  done (BRANDING.md task 2). The dark palette is already in styles.css but is
-  unreachable: the resolver in client/index.html defaults to `'light'`, not
-  `'system'`. Restoring `'system'` before task 2 renders body text #0d1b31 on
-  a #070d1a canvas. That flip is task 9's job.
-- Colour law: blue dominates. `var(--seal)` (#c89b3c) means faculty-verified and
-  nothing else; after task 2 it resolves in exactly two rules. Warm decorative
-  fills use --warm-100 / --warm-300 / --warm-fg, which are NOT the seal. Green
-  means status only, never a button or a link. The `#fff` literals painted on
-  dark plates are correct; leave them alone.
+  .hero, .meeting-stage and .btn.dark. Text uses resolve to `--text-1`;
+  background and border uses stay on `--ink`/`--surface-dark`. This split is
+  done (BRANDING.md task 2) and dark mode is shipped (task 9): the resolver
+  in client/index.html defaults to `'system'`, and `[data-theme="dark"]` in
+  styles.css is live in both brands. Never reintroduce `var(--ink)` in a
+  `color:` declaration — that is what would put body text back on a
+  mismatched canvas.
+- Colour law: blue dominates in the blue brand (green dominates in the green
+  brand — see the brand toggle work). `var(--seal)` (#c89b3c in light,
+  `--gold-300` in dark) means faculty-verified and nothing else, in both
+  brands; it resolves in exactly three rules (`.badge.faculty`, `.btn.seal`,
+  `.ledger-record .lr-seal`). Warm decorative
+  fills use --warm-100 / --warm-300 / --warm-fg, which are NOT the seal. The
+  status ramp (`--success-*`) means passed/verified/hired only, never a
+  button or a link, in both brands — under the green brand this is enforced
+  by a teal shift (`--success-700`/`--success-fill` become `#0f766e` light /
+  `#4fd6c4` dark) so status doesn't read as the same colour as the green
+  brand's own buttons and links. Never touch `--success-*` for the blue
+  brand. The `#fff` literals painted on dark plates are correct; leave them
+  alone.
 - Sentence case everywhere, including buttons and headings.
 - Animate only transform and opacity. Respect prefers-reduced-motion.
 - client/src/styles.css is the single canonical token layer. tokens.css was a

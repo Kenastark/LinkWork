@@ -96,6 +96,16 @@
   --danger-500:  #d9534f;
   --danger-700:  #9b312e;
 
+  /* Fixed, like --surface-dark: the chain's done/failed dots paint a solid
+     circle with a white glyph on top, in both themes. --success-700 and
+     --danger-700 cannot serve that role in dark mode, because the dark block
+     below repoints them to a pale ink meant for text on a translucent badge
+     tint (e.g. .badge.verified), not a fill white text can sit on. These two
+     stay at the light-mode-safe value in both themes so the dot never
+     regresses to white-on-pale. */
+  --success-fill: #0e7150;
+  --danger-fill:  #9b312e;
+
   /* --- Fixed dark surface. Same in both themes. ------------------------- */
   /* The nav, footer, hero and meeting stage are dark plates in light mode
      and stay dark in dark mode. This is the colour they are painted with. */
@@ -393,6 +403,16 @@
   --shadow-3: 0 4px 8px rgba(6,41,30,.06), 0 16px 32px -8px rgba(6,41,30,.12);
   --shadow-4: 0 8px 16px rgba(6,41,30,.08), 0 32px 64px -16px rgba(6,41,30,.18);
   --shadow-brand: 0 6px 20px -6px rgba(13, 92, 66, 0.45);
+
+  /* Status vs brand collision: --hue-700 (#0d5c42) and the light-mode
+     --success-700 (#0e7150) are 160° vs 160° hue, 4 points of lightness
+     apart — the "done" chain dot and a primary button read as the same
+     green. Shift status to teal here only; blue's status colours are
+     untouched. --success-fill covers the chain dot in both themes (see
+     the fixed-token note in the Status block); --success-700 (the badge/
+     alert ink) gets its own dark-theme value below. */
+  --success-fill: #0f766e;
+  --success-700:  #0f766e;
 }
 
 /* Dark + green. The dark block maps --brand to --blue-400, which now
@@ -402,6 +422,12 @@
   --brand-hover:     #33c08f;
   --text-link-hover: #8adcba;
   --shadow-brand:    0 6px 24px -6px rgba(28, 168, 120, 0.50);
+  /* The dark block (lower specificity, but later in the cascade only within
+     its own selector) repoints --success-700 to a pale ink (#5fd3aa) for
+     dark-canvas text. Under green that pale mint sits even closer to
+     --hue-400 (#1ca878) than the light pairing did, so it needs its own
+     teal step rather than inheriting either single-attribute rule. */
+  --success-700: #4fd6c4;
 }
 
 /* ============================================================================
@@ -865,10 +891,10 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
   transition: border-color var(--d-fast) var(--ease-out), background var(--d-fast) var(--ease-out),
               color var(--d-fast) var(--ease-out);
 }
-.chain .node.done .dot { border-color: var(--success-700); background: var(--success-700); color: #fff; }
+.chain .node.done .dot { border-color: var(--success-fill); background: var(--success-fill); color: #fff; }
 .chain .node.current .dot { border-color: var(--accent); color: var(--brand); box-shadow: 0 0 0 5px var(--brand-subtle-bg); }
-/* --danger-500 would put the ✕ at 3.96:1; --danger-700 is 7.31:1. */
-.chain .node.failed .dot { border-color: var(--danger-700); background: var(--danger-700); color: #fff; }
+/* --danger-500 would put the ✕ at 3.96:1; --danger-fill (--danger-700's light-mode value) is 7.31:1. */
+.chain .node.failed .dot { border-color: var(--danger-fill); background: var(--danger-fill); color: #fff; }
 .chain .node small { font-size: 11.5px; font-weight: 600; color: var(--text-2); max-width: 90px; }
 .chain .node.done small, .chain .node.current small { color: var(--text-1); }
 .chain .node.failed small { color: var(--danger-700); font-weight: 700; }
