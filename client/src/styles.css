@@ -19,17 +19,45 @@
 :root {
   color-scheme: light;
 
-  /* --- Brand: University of Debrecen blue ------------------------------- */
-  --blue-50:  #eff5fc;
-  --blue-100: #d8e7f7;
-  --blue-200: #b0cdef;
-  --blue-300: #7fade3;
-  --blue-400: #4f8ef7;  /* accent, interactive highlight, dark-mode primary */
-  --blue-500: #1f6bc4;
-  --blue-600: #00539f;
-  --blue-700: #003b7a;  /* PRIMARY */
-  --blue-800: #002855;  /* primary dark */
-  --blue-900: #001b3a;
+  /* --- Brand hue ramp. The ONE place the brand colour is chosen. -------
+     Every brand role below resolves through these ten steps. A brand
+     block ([data-brand="green"], added later) redefines only this ramp
+     and a short list of hue-derived extras; nothing else in the
+     stylesheet needs to know which brand is active. Steps are monotonic
+     light -> dark. */
+  --hue-50:  #eff5fc;
+  --hue-100: #d8e7f7;
+  --hue-200: #b0cdef;
+  --hue-300: #7fade3;
+  --hue-400: #4f8ef7;
+  --hue-500: #1f6bc4;
+  --hue-600: #00539f;
+  --hue-700: #003b7a;
+  --hue-800: #002855;
+  --hue-900: #001b3a;
+
+  /* --- Brand: University of Debrecen blue -------------------------------
+     Retained as aliases so the existing var(--blue-*) references keep
+     resolving. Under a non-blue brand these names are a misnomer; kept
+     rather than renamed because renaming touches every call site for no
+     behavioural gain. New rules should use --hue-* or a semantic role. */
+  --blue-50:  var(--hue-50);
+  --blue-100: var(--hue-100);
+  --blue-200: var(--hue-200);
+  --blue-300: var(--hue-300);
+  --blue-400: var(--hue-400);
+  --blue-500: var(--hue-500);
+  --blue-600: var(--hue-600);
+  --blue-700: var(--hue-700);
+  --blue-800: var(--hue-800);
+  --blue-900: var(--hue-900);
+
+  /* Hue-derived composites. Redefined per brand. */
+  --hue-glow-a: rgba(79, 142, 247, 0.22);  /* .mesh, upper-left stop */
+  --hue-glow-b: rgba(0, 59, 122, 0.30);    /* .mesh, upper-right stop */
+  --hue-scrim:  rgba(22, 35, 63, 0.50);    /* .modal-backdrop */
+  --hue-lift:   rgba(22, 35, 63, 0.16);    /* raised-card shadow */
+  --hue-lift-2: rgba(22, 35, 63, 0.18);    /* floating tag shadow */
 
   /* --- Seal: University gold. Verification only. Never decorative. ------- */
   --gold-100: #f7edd6;
