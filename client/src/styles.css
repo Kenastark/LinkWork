@@ -554,7 +554,7 @@ button { font-family: var(--font-body); cursor: pointer; }
 
 /* ============ layout ============ */
 .shell { min-height: 100vh; display: flex; flex-direction: column; }
-.container { width: min(1100px, 92vw); margin: 0 auto; }
+.container { width: min(1320px, 94vw); margin: 0 auto; }
 main.container { flex: 1; padding: 32px 0 72px; }
 /* The skip-link target. It has to carry the flex growth that main.container
    expects, or wrapping <Routes> in it lets the footer ride up the page. */
