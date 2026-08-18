@@ -13,10 +13,7 @@ export const ACCOUNT_MENU = [
   { label: 'Alerts', path: '/alerts', roles: ['student'] },
   { label: 'Settings', path: '/settings', roles: ['student', 'company', 'admin'] },
   { labelKey: 'theme.label', action: 'theme', roles: ['student', 'company', 'admin', 'guest'] },
-  // brand.label / action: 'brand' entry deliberately deferred to phase 5:
-  // App.jsx's account-menu render map only special-cases action === 'theme'
-  // today, so adding this entry now would render a broken NavLink
-  // (to={undefined}) for every signed-in user instead of nothing.
+  { labelKey: 'brand.label', action: 'brand', roles: ['student', 'company', 'admin', 'guest'] },
 ];
 
 // light -> dark -> system -> light. "system" follows the OS rather than pinning.

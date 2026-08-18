@@ -1530,7 +1530,7 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
    WCAG 2.2 target size. Growing the painted box would break the date picker's
    grid and the nav's height, so the visible control keeps its size and an
    invisible ::after extends the hit area to 44x44 around its centre. */
-.dtp-nav, .dtp-arrow, .nav-toggle, .lang-trigger, .btn.ghost, .filter-chevron { position: relative; }
+.dtp-nav, .dtp-arrow, .nav-toggle, .lang-trigger, .btn.ghost, .filter-chevron, .nav-brand { position: relative; }
 /* .btn.sm is 36px by design (section 7's 36/44/52 ladder) and .tabs buttons
    and .logo-lockup are similarly sized on purpose. Rather than break those,
    the visible control keeps its height and the hit area is extended. */
@@ -1543,6 +1543,38 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
   content: ''; position: absolute; left: 50%; top: 50%;
   width: max(100%, 44px); height: max(100%, 44px);
   transform: translate(-50%, -50%);
+}
+
+
+/* ============ brand toggle ============
+   The nav at 320-560px is already tight (see the task 10 note above:
+   it was measured at ~592px signed in). A second full-text control
+   doesn't fit. The label shows only where there's room; below 900px
+   the button collapses to just its swatch, which is why the
+   accessible name lives on aria-label rather than the visible text.
+   The account-menu instance always shows its label — that's a
+   vertical list with room to spare. */
+.brand-swatch {
+  width: 14px; height: 14px; border-radius: 50%; flex: none;
+  background: linear-gradient(135deg, var(--hue-400) 0 50%, var(--hue-700) 50% 100%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35);
+}
+.nav-brand { display: inline-flex; align-items: center; gap: 7px; }
+.account-menu-item .brand-swatch { display: inline-block; margin-right: 8px; vertical-align: -2px; }
+
+@media (max-width: 900px) {
+  .nav-brand .brand-btn-label { display: none; }
+  .nav-brand { padding-left: 9px; padding-right: 9px; }
+}
+
+/* Measured: even signed out, 320-560px has no slack left once the
+   collapsed swatch button joins language + theme + menu-toggle (see
+   the task 10 note above — this is the same bar, just without the
+   account trigger). Trim the swatch button further here; its tap
+   target already comes from the shared .btn.ghost::after hit area
+   above, so shrinking the visible box doesn't shrink what's tappable. */
+@media (max-width: 560px) {
+  .nav-brand.lang-trigger.btn.ghost { padding-left: 2px; padding-right: 2px; margin-left: -6px; }
 }
 
 

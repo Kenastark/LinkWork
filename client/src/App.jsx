@@ -178,6 +178,25 @@ function ThemeButton({ theme, cycle, className, inMenu = false }) {
   );
 }
 
+function BrandButton({ brand, cycleBrand, className, inMenu = false }) {
+  const { t } = useI18n();
+  return (
+    <button
+      type="button"
+      className={className}
+      {...(inMenu ? { role: 'menuitem' } : {})}
+      onClick={cycleBrand}
+      aria-label={t('brand.switchTo')}
+      title={`${t('brand.label')}: ${t(`brand.${brand}`)}`}
+    >
+      <span className="brand-swatch" aria-hidden="true" />
+      <span className="brand-btn-label">
+        {t('brand.label')}: {t(`brand.${brand}`)}
+      </span>
+    </button>
+  );
+}
+
 function Avatar({ user, size = 34 }) {
   const initial = (user.name || user.email || '?').trim().charAt(0).toUpperCase();
   return user.photo_path
@@ -185,7 +204,23 @@ function Avatar({ user, size = 34 }) {
     : <span className="avatar avatar-initials" style={{ width: size, height: size, fontSize: Math.round(size * 0.42) }}>{initial}</span>;
 }
 
-function AccountMenu({ user, onSignOut, theme, cycle }) {
+// Renders one ACCOUNT_MENU entry. Actions ('theme', 'brand') become their
+// matching button; everything else is a route, rendered as a NavLink.
+function renderAccountMenuItem(i, { theme, cycle, brand, cycleBrand }) {
+  if (i.action === 'theme') {
+    return <ThemeButton key="theme" theme={theme} cycle={cycle} className="account-menu-item" inMenu />;
+  }
+  if (i.action === 'brand') {
+    return <BrandButton key="brand" brand={brand} cycleBrand={cycleBrand} className="account-menu-item" inMenu />;
+  }
+  return (
+    <NavLink key={i.path} to={i.path} className="account-menu-item" role="menuitem">
+      {i.label}
+    </NavLink>
+  );
+}
+
+function AccountMenu({ user, onSignOut, theme, cycle, brand, cycleBrand }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useCloseOnOutsideOrRoute(open, setOpen);
@@ -216,13 +251,7 @@ function AccountMenu({ user, onSignOut, theme, cycle }) {
             </div>
           </div>
           <div className="account-menu-divider" />
-          {items.map(i => (
-            i.action === 'theme'
-              ? <ThemeButton key="theme" theme={theme} cycle={cycle} className="account-menu-item" inMenu />
-              : <NavLink key={i.path} to={i.path} className="account-menu-item" role="menuitem">
-                  {i.label}
-                </NavLink>
-          ))}
+          {items.map(i => renderAccountMenuItem(i, { theme, cycle, brand, cycleBrand }))}
           <div className="account-menu-divider" />
           <button className="account-menu-item danger" role="menuitem" onClick={onSignOut}>{t('nav.signOut')}</button>
         </div>
@@ -370,8 +399,9 @@ function AppShell({ user, setUser, logout }) {
             {user && <NavBell />}
             <LanguageSwitcher />
             {!user && <ThemeButton theme={theme} cycle={cycle} className="btn sm ghost lang-trigger nav-theme" />}
+            {!user && <BrandButton brand={brand} cycleBrand={cycleBrand} className="btn sm ghost lang-trigger nav-brand" />}
             {user ? (
-              <AccountMenu user={user} onSignOut={logout} theme={theme} cycle={cycle} />
+              <AccountMenu user={user} onSignOut={logout} theme={theme} cycle={cycle} brand={brand} cycleBrand={cycleBrand} />
             ) : (
               <div className="nav-group nav-auth">
                 <NavLink className="navlink" to="/auth">{t('nav.signIn')}</NavLink>
