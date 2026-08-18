@@ -435,10 +435,10 @@
    Seven helpers, none of which existed before the rebrand and none of which
    override a rule further down this file. They are consumed by later tasks.
 
-   There is deliberately no base .eyebrow rule here. Only .hero .eyebrow and
-   .how .eyebrow are styled; Landing.jsx also renders three bare .eyebrow
-   spans (match pitch, testimonials, company showcase) that inherit body size.
-   A base rule would silently shrink those three to 11px mono.
+   .eyebrow below is the shared base for every bare eyebrow span: problem,
+   trust, ledgerSection, faq, matchPitch, testimonials, companyShowcase and
+   how. Only .hero .eyebrow overrides it, winning on specificity for the
+   hero's dark-plate treatment.
    ========================================================================== */
 
 .glass {
@@ -509,12 +509,12 @@
 .ledger-record .lr-role { color: var(--text-2); min-width: 0; text-align: left; }
 
 /* The signature. Mono is reserved for things that are on the record.
-   Scoped rules for .hero .eyebrow and .how .eyebrow still win on specificity;
-   this is the base every other eyebrow inherits. */
+   The scoped .hero .eyebrow rule still wins on specificity; this is the
+   base every other eyebrow — including how's — inherits. */
 .eyebrow {
   display: block;
   font-family: var(--font-mono);
-  font-size: var(--fs-micro);
+  font-size: var(--fs-md);
   letter-spacing: var(--ls-widest);
   text-transform: uppercase;
   color: var(--brand-subtle-fg);
@@ -954,7 +954,7 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
   .hero .cta-row .btn { white-space: normal; }
 }
 .hero .eyebrow {
-  font-family: var(--font-mono); font-size: 15px; color: var(--verify-bright);
+  font-family: var(--font-mono); font-size: var(--fs-md); color: var(--verify-bright);
   letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 20px;
 }
 .hero h1 { font-size: clamp(44px, 6.2vw, 74px); font-weight: 800; margin-bottom: 22px; }
@@ -1026,10 +1026,6 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 .mm-btn.ghost { border: 1.5px solid var(--line); color: var(--text-1); }
 
 .how { padding: 96px 0 88px; }
-.how .eyebrow {
-  font-family: var(--font-mono); font-size: 15px; color: var(--verify);
-  letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; display: block;
-}
 .how h2 { font-size: 42px; margin-bottom: 12px; }
 .how .sub { font-size: 20px; color: var(--ink-soft); margin-bottom: 48px; max-width: 62ch; }
 
