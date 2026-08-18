@@ -484,20 +484,35 @@
 
 /* A register reads as columns. Flex with `flex: 1` on the role let the seal's
    width push the date left on starred rows only, so the date column came out
-   ragged. The seal column is now reserved whether or not a row has one. */
+   ragged. The seal column is now reserved whether or not a row has one.
+   Every real column (ids/role/company/date/seal) is now a fixed width, and
+   a dedicated 1fr spacer TRACK sits between each pair of them - all four
+   spacers are equal fr units, so CSS Grid splits 100% of the row's leftover
+   width across them evenly. That's what makes every gap the same size
+   while still using the full row width, instead of one column (or one
+   `gap` value) absorbing all of it in one place. */
 .ledger-record {
-  display: grid; grid-template-columns: max-content 1fr max-content 1rem;
-  align-items: baseline; gap: var(--s-4);
+  display: grid;
+  grid-template-columns: max-content 1fr minmax(0, 220px) 1fr minmax(0, 200px) 1fr max-content 1fr 1rem;
+  align-items: baseline; gap: 0;
   padding: var(--s-3) 0;
   border-bottom: 1px solid var(--border-hair);
   font-size: var(--fs-sm);
 }
-.ledger-record .lr-seal { grid-column: 4; justify-self: center; }
+/* Explicit columns, not source order: company and date are each
+   conditionally omitted (no company on a record, no hiredAt yet), and
+   without a fixed slot a missing one would auto-place into its neighbour's
+   column (here, its neighbour's spacer) and throw off every gap after it. */
+.ledger-record .lr-role { grid-column: 3; }
+.ledger-record .lr-company { grid-column: 5; }
+.ledger-record .lr-date { grid-column: 7; }
+.ledger-record .lr-seal { grid-column: 9; justify-self: center; }
 @media (max-width: 640px) {
   .ledger-record { grid-template-columns: max-content 1fr; row-gap: 2px; }
-  .ledger-record .lr-role { grid-column: 1 / -1; grid-row: 2; }
+  .ledger-record .lr-role { grid-column: 1 / -1; grid-row: 2; overflow: visible; white-space: normal; }
+  .ledger-record .lr-company { grid-column: 1 / -1; grid-row: 3; }
   .ledger-record .lr-date { grid-column: 2; grid-row: 1; justify-self: end; }
-  .ledger-record .lr-seal { grid-column: 2; grid-row: 2; justify-self: end; }
+  .ledger-record .lr-seal { grid-column: 2; grid-row: 3; justify-self: end; }
 }
 .ledger-record .lr-ids {
   font-family: var(--font-mono);
@@ -506,7 +521,12 @@
   color: var(--brand);
   white-space: nowrap;
 }
-.ledger-record .lr-role { color: var(--text-2); min-width: 0; text-align: left; }
+.ledger-record .lr-role, .ledger-record .lr-company {
+  min-width: 0; text-align: left; justify-self: stretch;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ledger-record .lr-role { color: var(--text-2); }
+.ledger-record .lr-company { color: var(--text-3); }
 
 /* The signature. Mono is reserved for things that are on the record.
    The scoped .hero .eyebrow rule still wins on specificity; this is the
@@ -529,7 +549,7 @@
 }
 /* Gold star on a faculty-verified record. Decorative glyph only — the record
    also carries the words, per the rule that colour never means anything alone. */
-.ledger-record .lr-seal { color: var(--seal); font-size: var(--fs-sm); line-height: 1; }
+.ledger-record .lr-seal { color: var(--seal); font-size: calc(var(--fs-sm) + 0.5pt); line-height: 1; }
 
 /* Numbers that jitter while a counter animates look broken. */
 .tabular { font-variant-numeric: tabular-nums; }
@@ -982,7 +1002,7 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 
 /* ============ how it works ============ */
 /* ============ match pitch (homepage, before How it works) ============ */
-.match-pitch { padding: 88px 0 32px; }
+.match-pitch { padding: 48px 0 32px; }
 .match-pitch-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center; }
 @media (max-width: 860px) { .match-pitch-grid { grid-template-columns: 1fr; } }
 .match-pitch h2 { font-size: 37px; margin-top: 10px; }
@@ -1025,17 +1045,26 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 .mm-btn.primary { background: var(--brand); color: var(--text-on-brand); }
 .mm-btn.ghost { border: 1.5px solid var(--line); color: var(--text-1); }
 
-.how { padding: 96px 0 88px; }
+.how { padding: 48px 0 88px; }
 .how h2 { font-size: 43px; margin-bottom: 12px; }
 .how .sub { font-size: 21px; color: var(--ink-soft); margin-bottom: 48px; max-width: 62ch; }
 
 .how-flow { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
 @media (max-width: 800px) { .how-flow { grid-template-columns: 1fr; } }
 .how-flow::before {
-  content: ''; position: absolute; top: 34px; left: 16.5%; right: 16.5%; height: 2px;
+  /* Spans icon-center to icon-center: each 68px icon sits flush at its
+     column's start, so left is exactly its radius, and right is derived
+     from the third column's start (100%/3 * 2 of the content, minus the
+     two 28px gaps already inside those thirds) plus its own radius. */
+  content: ''; position: absolute; top: 34px; left: 34px; right: calc(100%/3 - 52.667px); height: 2px;
   background: repeating-linear-gradient(90deg, var(--line) 0 10px, transparent 10px 18px);
 }
-@media (max-width: 800px) { .how-flow::before { display: none; } }
+.how-flow::after {
+  /* Continues the line from the third icon's center to the page margin. */
+  content: ''; position: absolute; top: 34px; left: calc(66.667% + 52.667px); right: 0; height: 2px;
+  background: repeating-linear-gradient(90deg, var(--line) 0 10px, transparent 10px 18px);
+}
+@media (max-width: 800px) { .how-flow::before, .how-flow::after { display: none; } }
 .how-step {
   position: relative; opacity: 0; transform: translateY(24px);
   transition: opacity .6s var(--ease), transform .6s var(--ease);
@@ -1043,6 +1072,12 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 .how-flow.revealed .how-step { opacity: 1; transform: none; }
 .how-step:nth-child(2) { transition-delay: .12s; }
 .how-step:nth-child(3) { transition-delay: .24s; }
+/* The icon's untransformed box spans 0-68px from the step's top, and the
+   dashed line sits at top: 34px (its own vertical center). The icon also
+   scale(1.08)s on this same hover, which grows its radius from 34px to
+   36.72px around that fixed center - so the step must rise 36.72px, not
+   34px, to land the icon's (now-larger) bottom edge exactly on the line. */
+.how-flow.revealed .how-step:hover { transform: translateY(-36.72px); }
 .how-step .how-icon {
   width: 68px; height: 68px; border-radius: 50%; background: var(--card);
   border: 2.5px solid var(--verify); color: var(--verify);
@@ -1051,7 +1086,7 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
   box-shadow: var(--shadow-md); transition: transform .25s var(--ease), background .25s var(--ease), color .25s var(--ease);
 }
 .how-step:hover .how-icon { transform: scale(1.08); background: var(--verify); color: #fff; }
-.how-step h3 { margin: 20px 0 8px; font-size: 23px; }
+.how-step h3 { margin: var(--s-5) 0 var(--space-2); font-size: 23px; }
 .how-step p { color: var(--ink-soft); font-size: 18px; max-width: 34ch; }
 
 /* ============ overlap band — floats over the hero's bottom edge ============ */
@@ -1062,8 +1097,8 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
   position: relative; z-index: 5;
 }
 .overlap-band .stat { text-align: center; padding: var(--space-3); }
-.overlap-band .stat b { display: block; font-family: var(--font-display); font-size: 45px; font-weight: 800; color: var(--verify); line-height: 1.1; }
-.overlap-band .stat span { display: block; margin-top: 6px; color: var(--ink-soft); font-size: 16px; }
+.overlap-band .stat b { display: block; font-family: var(--font-display); font-size: 47px; font-weight: 800; color: var(--verify); line-height: 1.1; }
+.overlap-band .stat span { display: block; margin-top: 6px; color: var(--ink-soft); font-size: 18px; font-weight: 700; }
 @media (max-width: 800px) { .overlap-band { grid-template-columns: 1fr; margin-top: -40px; } }
 
 /* ============ company showcase ============ */
@@ -1153,6 +1188,17 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 .panel-green { background: linear-gradient(160deg, #e7f5ec, #d5eddd); }
 
 .mock-card { width: 100%; background: var(--surface); border-radius: 18px; box-shadow: 0 18px 42px var(--hue-lift); padding: 20px; }
+/* Two more job cards fanned out behind the main one, each tilted at a
+   different angle - .mock-card-stack is the positioning context, and the
+   real .mock-card (given position/z-index below) draws on top of them. */
+.mock-card-stack { position: relative; width: 100%; }
+.mock-card-stack .mock-card { position: relative; z-index: 4; }
+.stack-card {
+  position: absolute; inset: 0; border-radius: 18px;
+  background: var(--surface); box-shadow: var(--shadow-sm);
+}
+.stack-card-2 { transform: rotate(7deg); opacity: .7; z-index: 2; }
+.stack-card-3 { transform: rotate(-4deg); opacity: .88; z-index: 3; }
 .mock-card .mock-mono { font-family: var(--font-mono); font-size: 13px; color: var(--ink-soft); }
 .mock-card h4 { font-size: 19px; margin: 6px 0 2px; letter-spacing: -0.01em; }
 .mock-card > p { font-size: 14.5px; color: var(--ink-soft); }
@@ -1178,6 +1224,22 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 .feature-tag.tag-a { top: 22px; right: 14px; transform: rotate(4deg); }
 .feature-tag.tag-b { top: 44px; left: 6px; transform: rotate(-6deg); }
 .feature-tag.tag-c { bottom: 32px; right: 18px; transform: rotate(-3deg); }
+/* Scoped to the track-application badge only - .tag-a is reused elsewhere
+   (the green panel's checkmark) and shouldn't ring. */
+.panel-purple .feature-tag.tag-a .bell-ring { display: inline-block; transform-origin: 50% 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .panel-purple .feature-tag.tag-a .bell-ring { animation: bell-ring 3s ease-in-out infinite; }
+}
+@keyframes bell-ring {
+  0%, 62%, 100% { transform: rotate(0deg); }
+  65% { transform: rotate(14deg); }
+  70% { transform: rotate(-12deg); }
+  75% { transform: rotate(9deg); }
+  80% { transform: rotate(-7deg); }
+  85% { transform: rotate(4deg); }
+  90% { transform: rotate(-2deg); }
+  95% { transform: rotate(0deg); }
+}
 
 /* ============ Prepare to land your job ============ */
 .land-job { padding: 30px 0 60px; }
@@ -1410,6 +1472,7 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 .problem { padding: 88px 0 24px; }
 .problem h2 { font-size: var(--fs-2xl); margin-bottom: var(--space-6); max-width: 22ch; }
 .problem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+.problem-grid .problem-card { margin-top: 0; }
 .problem-card h3 { font-size: 18px; margin-bottom: 6px; }
 .problem-card p { font-size: 15.5px; line-height: 1.55; }
 .problem-punch {
@@ -1421,16 +1484,22 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 
 /* Trust chain */
 .trust { padding: 72px 0; }
-.trust h2 { font-size: var(--fs-2xl); margin-bottom: var(--space-6); max-width: 24ch; }
+/* The 56px circles sit on .trust-node's border-top, straddling it via
+   top: -28px measured from the node's padding edge (2px inside its
+   border-box, from the 2px border-top) - so they net 26px into this
+   margin. Adding that back keeps the true white space above the circles
+   at exactly var(--space-6). */
+.trust h2 { font-size: var(--fs-2xl); margin-bottom: calc(var(--space-6) + 26px); max-width: 24ch; }
 .trust-grid {
   list-style: none; margin: 0; padding: 0;
   display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-5);
 }
-.trust-node { position: relative; padding-top: var(--space-4); border-top: 2px solid var(--border); }
-.trust-node h3 { font-size: 17px; margin: var(--space-3) 0 6px; }
-.trust-node p { font-size: 15.5px; line-height: 1.55; }
+.trust-node { position: relative; padding-top: 28px; border-top: 2px solid var(--border); }
+.trust-node h3 { font-size: 17px; margin: var(--space-4) 0 6px; text-align: left; }
+.trust-node p { font-size: 15.5px; line-height: 1.55; text-align: left; }
 .trust-step {
-  display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
+  display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%;
+  position: absolute; top: -28px; left: 0; right: 0; margin: 0 auto;
   background: var(--brand); color: var(--text-on-brand);
   font-family: var(--font-mono); font-size: 14px; font-weight: 500;
 }

@@ -145,22 +145,26 @@ function TrackArt({ t }) {
           <li><span className="dot" />{t('mock.trackStep5')}</li>
         </ul>
       </div>
-      <span className="feature-tag tag-a">🔔 {t('mock.trackTag')}</span>
+      <span className="feature-tag tag-a"><span className="bell-ring" aria-hidden="true">🔔</span> {t('mock.trackTag')}</span>
     </div>
   );
 }
 function OffersArt({ t }) {
   return (
     <div className="feature-panel panel-blue" aria-hidden="true">
-      <div className="mock-card">
-        <span className="mock-mono">JOB-0037</span>
-        <h4>{t('mock.offersRole')}</h4>
-        <p>{t('mock.offersCompany')}</p>
-        <div className="mock-tags">
-          <span className="mock-chip strong">280K HUF / mo</span>
-          <span className="mock-chip">{t('mock.chipHybrid')}</span>
-          <span className="mock-chip">{t('mock.chipInternship')}</span>
-          <span className="mock-chip">{t('mock.chip6Months')}</span>
+      <div className="mock-card-stack">
+        <div className="stack-card stack-card-2" />
+        <div className="stack-card stack-card-3" />
+        <div className="mock-card">
+          <span className="mock-mono">JOB-0037</span>
+          <h4>{t('mock.offersRole')}</h4>
+          <p>{t('mock.offersCompany')}</p>
+          <div className="mock-tags">
+            <span className="mock-chip strong">280K HUF / mo</span>
+            <span className="mock-chip">{t('mock.chipHybrid')}</span>
+            <span className="mock-chip">{t('mock.chipInternship')}</span>
+            <span className="mock-chip">{t('mock.chip6Months')}</span>
+          </div>
         </div>
       </div>
       <span className="feature-tag tag-b">💰 {t('mock.tagSalary')}</span>

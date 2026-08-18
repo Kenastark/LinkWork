@@ -27,9 +27,8 @@ export default function LedgerRecord({
         JOB-{pad(jobId)}
         {studentId != null && <> ⟷ STU-{pad(studentId)}</>}
       </span>
-      <span className="lr-role">
-        {title}{company ? ` · ${company}` : ''}
-      </span>
+      <span className="lr-role">{title}</span>
+      {company && <span className="lr-company">{company}</span>}
       {date && <span className="lr-date">{date}</span>}
       {facultyVerified && (
         <span className="lr-seal">
