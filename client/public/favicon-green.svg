@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Original pre-rebrand glyph and layout, unchanged. Only the plate gradient
+       recoloured, green -> blue, to match .brand-mark in styles.css. -->
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="85%" y2="100%">
+      <stop offset="0%" stop-color="#1ca878" />
+      <stop offset="65%" stop-color="#0d5c42" />
+      <stop offset="100%" stop-color="#05291e" />
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="32" fill="url(#g)" />
+  <!-- Glyph is defined on a 24x24 grid (same as LinkMark.jsx) with its bounding
+       box centered at (12,12); this maps that center point exactly to (32,32). -->
+  <g transform="translate(12,12) scale(1.6667)" stroke="#fff" stroke-width="2.4" stroke-linecap="round" fill="none">
+    <path d="M9.5 14.5 14.5 9.5" />
+    <path d="M11 6.5 12.8 4.7a4 4 0 0 1 5.7 5.7L16.6 12.2" />
+    <path d="M13 17.5 11.2 19.3a4 4 0 0 1-5.7-5.7l1.9-1.8" />
+  </g>
+</svg>

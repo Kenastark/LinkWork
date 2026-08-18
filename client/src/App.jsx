@@ -23,7 +23,7 @@ import Meeting from './pages/Meeting.jsx';
 import Notifications from './pages/Notifications.jsx';
 import ApplicantReview from './pages/ApplicantReview.jsx';
 import NotFound from './pages/NotFound.jsx';
-import { ACCOUNT_MENU, THEMES, THEME_STORAGE_KEY } from './menuConfig.js';
+import { ACCOUNT_MENU, THEMES, THEME_STORAGE_KEY, BRANDS, BRAND_STORAGE_KEY } from './menuConfig.js';
 import useFocusTrap from './useFocusTrap.js';
 import { I18nProvider, useI18n, LANGUAGES } from './i18n.jsx';
 
@@ -137,12 +137,62 @@ function useTheme() {
   return { theme, cycle };
 }
 
+// Brand. Two states, no OS signal to follow, so no 'system'
+// equivalent. Written to <html data-brand>, independent of
+// data-theme — the four combinations of brand x theme are all
+// defined in styles.css.
+function applyBrand(pref) {
+  const brand = BRANDS.includes(pref) ? pref : 'blue';
+  document.documentElement.setAttribute('data-brand', brand);
+  const icon = document.querySelector('link[rel="icon"][type="image/svg+xml"]');
+  if (icon) icon.setAttribute('href',
+    brand === 'green' ? '/favicon-green.svg' : '/favicon.svg');
+}
+
+function useBrand() {
+  const [brand, setBrand] = useState(() => {
+    try { return localStorage.getItem(BRAND_STORAGE_KEY) || 'blue'; }
+    catch { return 'blue'; }
+  });
+
+  useEffect(() => {
+    applyBrand(brand);
+    try { localStorage.setItem(BRAND_STORAGE_KEY, brand); }
+    catch { /* private mode */ }
+  }, [brand]);
+
+  const cycleBrand = useCallback(() => {
+    setBrand(b => BRANDS[(BRANDS.indexOf(b) + 1) % BRANDS.length]);
+  }, []);
+
+  return { brand, cycleBrand };
+}
+
 // One entry from ACCOUNT_MENU rendered as a button. Actions are not routes.
 function ThemeButton({ theme, cycle, className, inMenu = false }) {
   const { t } = useI18n();
   return (
     <button type="button" className={className} {...(inMenu ? { role: 'menuitem' } : {})} onClick={cycle}>
       {t('theme.label')}: {t(`theme.${theme}`)}
+    </button>
+  );
+}
+
+function BrandButton({ brand, cycleBrand, className, inMenu = false }) {
+  const { t } = useI18n();
+  return (
+    <button
+      type="button"
+      className={className}
+      {...(inMenu ? { role: 'menuitem' } : {})}
+      onClick={cycleBrand}
+      aria-label={t('brand.switchTo')}
+      title={`${t('brand.label')}: ${t(`brand.${brand}`)}`}
+    >
+      <span className="brand-swatch" aria-hidden="true" />
+      <span className="brand-btn-label">
+        {t('brand.label')}: {t(`brand.${brand}`)}
+      </span>
     </button>
   );
 }
@@ -154,7 +204,23 @@ function Avatar({ user, size = 34 }) {
     : <span className="avatar avatar-initials" style={{ width: size, height: size, fontSize: Math.round(size * 0.42) }}>{initial}</span>;
 }
 
-function AccountMenu({ user, onSignOut, theme, cycle }) {
+// Renders one ACCOUNT_MENU entry. Actions ('theme', 'brand') become their
+// matching button; everything else is a route, rendered as a NavLink.
+function renderAccountMenuItem(i, { theme, cycle, brand, cycleBrand }) {
+  if (i.action === 'theme') {
+    return <ThemeButton key="theme" theme={theme} cycle={cycle} className="account-menu-item" inMenu />;
+  }
+  if (i.action === 'brand') {
+    return <BrandButton key="brand" brand={brand} cycleBrand={cycleBrand} className="account-menu-item" inMenu />;
+  }
+  return (
+    <NavLink key={i.path} to={i.path} className="account-menu-item" role="menuitem">
+      {i.label}
+    </NavLink>
+  );
+}
+
+function AccountMenu({ user, onSignOut, theme, cycle, brand, cycleBrand }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const ref = useCloseOnOutsideOrRoute(open, setOpen);
@@ -185,13 +251,7 @@ function AccountMenu({ user, onSignOut, theme, cycle }) {
             </div>
           </div>
           <div className="account-menu-divider" />
-          {items.map(i => (
-            i.action === 'theme'
-              ? <ThemeButton key="theme" theme={theme} cycle={cycle} className="account-menu-item" inMenu />
-              : <NavLink key={i.path} to={i.path} className="account-menu-item" role="menuitem">
-                  {i.label}
-                </NavLink>
-          ))}
+          {items.map(i => renderAccountMenuItem(i, { theme, cycle, brand, cycleBrand }))}
           <div className="account-menu-divider" />
           <button className="account-menu-item danger" role="menuitem" onClick={onSignOut}>{t('nav.signOut')}</button>
         </div>
@@ -279,6 +339,7 @@ function AppShell({ user, setUser, logout }) {
   const location = useLocation();
   const { primary, secondary } = navItemsFor(user, t);
   const { theme, cycle } = useTheme();
+  const { brand, cycleBrand } = useBrand();
 
   // Transparent only where there is a hero behind the bar. Companies and admins
   // are redirected away from "/", so the landing is not what they see there.
@@ -338,8 +399,9 @@ function AppShell({ user, setUser, logout }) {
             {user && <NavBell />}
             <LanguageSwitcher />
             {!user && <ThemeButton theme={theme} cycle={cycle} className="btn sm ghost lang-trigger nav-theme" />}
+            {!user && <BrandButton brand={brand} cycleBrand={cycleBrand} className="btn sm ghost lang-trigger nav-brand" />}
             {user ? (
-              <AccountMenu user={user} onSignOut={logout} theme={theme} cycle={cycle} />
+              <AccountMenu user={user} onSignOut={logout} theme={theme} cycle={cycle} brand={brand} cycleBrand={cycleBrand} />
             ) : (
               <div className="nav-group nav-auth">
                 <NavLink className="navlink" to="/auth">{t('nav.signIn')}</NavLink>

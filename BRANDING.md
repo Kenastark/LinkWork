@@ -36,7 +36,7 @@ Read this first. Two of these would have broken the build.
 
 Found by auditing revision 2 against the source. Verified independently before accepting.
 
-**A. `--brand-fg` is not a bug.** `Landing.jsx:415` sets it inline per company: `style={{ '--brand-fg': colors.fg }}`. The hover colouring works today. Revision 2 called it an undefined-variable bug and claimed fixing it was a free win. Wrong. The `:root` value in `tokens.css` is now a harmless fallback and is commented as such.
+**A. `--brand-fg` is not a bug.** `Landing.jsx:630` sets it inline per company: `style={{ '--brand-fg': colors.fg }}`. The hover colouring works today. Revision 2 called it an undefined-variable bug and claimed fixing it was a free win. Wrong. The `:root` value is now a harmless fallback and is commented as such.
 
 **B. `claude-opus-4-8` is a valid, current model.** `Claude Opus 4.8` is a real model ID and returns from `/v1/models`. Revision 1 and revision 2 both flagged it as suspect. Both were wrong. Item 2 of section 13 is deleted. `claude-opus-5` is the newer model in that tier if you want to upgrade when the feature is enabled.
 
@@ -262,6 +262,107 @@ Verify with a checker, not by eye.
 - Danger: white on `--danger-500` is 3.96:1 and **fails** for anything but large text. Filled danger controls use `--danger-700`, 7.31:1.
 
 **Two of the three status ramps cannot carry text at their 500 or 700 step.** Before pairing text with any status colour, measure it. The audited pairings as shipped: primary 11.01, primary hover 7.67, primary active 14.64, secondary 11.01, secondary hover 10.04, ghost 7.58, ghost hover 16.93, danger 7.31, dark 17.24, seal 4.55, badge faculty 4.55, badge verified 5.42, badge pending/warning 5.38, badge danger 6.37, field error 7.31. The floor is 4.55:1 and nothing sits below it.
+
+**These are the blue-brand numbers.** Section 5A documents what changes, and what deliberately doesn't, under the green brand added by the `brand-toggle` branch.
+
+---
+
+## 5A. Brands
+
+**Shipped on `brand-toggle`, phases 1-6.** Two selectable brands, `[data-brand="blue"|"green"]` on `<html>`, layered independently of `[data-theme="light"|"dark"]`. Four live combinations — blue-light, blue-dark, green-light, green-dark — all defined in the token layer at the top of `client/src/styles.css`. Numbered 5A rather than renumbering sections 6 onward, because section numbers are cited elsewhere in this document and in `CLAUDE.md` ("section 8"); inserting a plain "section 6" would have required remapping every citation below this point for no reader benefit.
+
+### The two-brand model
+
+`data-brand` and `data-theme` are two independent attributes on `<html>`. Neither implies the other, and every rule that depends on one is written to not care about the state of the other:
+
+- **Resolution happens in two places that must stay in sync.** The anti-flash script inline in `client/index.html` reads `localStorage['linkwork-brand']` and sets `data-brand` *before React mounts* — the same reason the theme resolver runs there (§10). `useBrand()` in `App.jsx` does the same resolution client-side and keeps the attribute, the swatch UI and the persisted key in agreement after mount.
+- **No `'system'` state.** `THEMES` has three values because there's an OS signal (`prefers-color-scheme`) to follow. `BRANDS = ['blue', 'green']` (`menuConfig.js`) has two, because there is no OS or platform signal for "which institution's colours." The control just cycles.
+- **Two entry points, one state.** `BrandButton` (a `.brand-swatch` + label) appears in the nav for signed-out users and in the account-menu dropdown for signed-in ones — the same pattern `ThemeButton` already used, including the `inMenu` prop that swaps `aria-label` for a `role="menuitem"` context. `cycleBrand()` from `useBrand()` is the single mutator both call.
+- **Storage key `linkwork-brand`**, values `'blue'` / `'green'`. Selecting a brand does not touch `linkwork-theme` or vice versa — picking green and staying in dark mode is a normal, supported combination, not a special case.
+
+### The hue-ramp indirection
+
+- **`--hue-50` through `--hue-900`**, defined once in `:root`, is, in the stylesheet's own words, "the ONE place the brand colour is chosen." Every semantic role that carries brand colour — `--brand`, `--brand-hover`, `--brand-active`, `--accent`, `--text-link`, `--brand-subtle-bg/fg` — resolves through one of these ten steps, never through a literal hex. `[data-brand="green"]` therefore only has to redefine the ramp itself plus a short list of hue-*derived* composites that can't be expressed as a single custom-property reference: `--hue-glow-a` / `--hue-glow-b` (the two `.mesh` gradient stops), `--hue-scrim` (`.modal-backdrop`), `--hue-lift` / `--hue-lift-2` (raised-card and floating-tag shadow tints). Nothing else in the file needs to know which brand is active.
+- **`--blue-50` through `--blue-900` still exist**, each now a one-line alias — `--blue-700: var(--hue-700)`, etc. They're kept, not deleted, because renaming every existing `var(--blue-*)` call site would touch a lot of the file (91 distinct `var(--x)` references were counted against 172 defined custom properties as of task 1) for zero behavioural change. Under the green brand these names are a **misnomer** — `--blue-700` resolves to `#0d5c42` — but they still resolve correctly.
+- **The rule for anything written from here on: use `--hue-*` or a semantic role, never `--blue-*` and never a hard-coded hex.** `--blue-*` still works today only because it's an alias; treat it as legacy compatibility surface, the same status `--verify` and `--ink` have in the compatibility layer above, not as a name to reach for in new code.
+- **Three things do not derive from the ramp and are restated by hand in each brand block**, because they're either genuinely independent design decisions or CSS mechanically can't derive them:
+  1. `--surface-dark` / `--surface-dark-hover` / `--on-dark-muted` / `--on-dark-faint` — the fixed dark-plate colours (see "brand-vs-status" below for why these are picked, not computed).
+  2. The three brand-specific literals inside `[data-theme="dark"][data-brand="green"]` — `--brand-hover`, `--text-link-hover`, `--shadow-brand` — because the base `[data-theme="dark"]` block already hard-codes blue literals for those same three properties (`#6ba1f9`, `#a8ccf5`, an rgba tuned to `--hue-400` blue) rather than deriving them from the ramp, so the green override has to restate them rather than inherit.
+  3. The two static favicon SVGs (see "brand-independent" below) — an SVG asset can't read a CSS custom property, which is the same reason `favicon.svg`'s three gradient stops are hard-coded hex rather than `var()` calls (§4).
+
+### The green ramp
+
+Pulled from `[data-brand="green"]` in `client/src/styles.css` (phase 3). Contrast ratios computed against WCAG 2.2's relative-luminance formula, not eyeballed.
+
+| Step | Value | Role |
+|---|---|---|
+| `--hue-50`  | `#eff8f3` | Palest tint |
+| `--hue-100` | `#d6efe1` | |
+| `--hue-200` | `#a9dfc6` | |
+| `--hue-300` | `#59c79c` | `--text-link` in dark mode |
+| `--hue-400` | `#1ca878` | `--accent`; also `--brand` in dark mode |
+| `--hue-500` | `#147d5b` | `--text-link-hover` in light mode |
+| `--hue-600` | `#11705a` | `--brand-hover` in light mode |
+| `--hue-700` | `#0d5c42` | **PRIMARY.** `--brand`, `--text-link` in light mode |
+| `--hue-800` | `#0a4633` | `--brand-active` in light mode |
+| `--hue-900` | `#05291e` | Darkest step |
+
+Audited pairings, green brand:
+
+| Pairing | Ratio |
+|---|---|
+| White text-on-brand on `--brand` light (`#0d5c42`) — primary button | 8.00:1 |
+| `--text-link` light (`#0d5c42`) on `--surface` white | 8.00:1 |
+| `--text-link-hover` light (`#147d5b`) on white | 5.10:1 |
+| `--text-on-brand` dark (`#04080f`) on `--brand` dark (`--hue-400` `#1ca878`) | 6.61:1 |
+| `--text-link` dark (`--hue-300` `#59c79c`) on `--surface` dark (`#0f1a2e`) | 8.34:1 |
+| White on `--surface-dark` green plate (`#0a2018`) — nav/footer/hero/`.btn.dark` | 17.04:1 |
+
+All clear the 4.5:1 body-text floor; the surface-dark pairing clears it by a wide margin, same as blue's 17.24:1 (the two dark plates were tuned independently, which is why they land close but not identical). None of these needed a contrast-driven exception the way `--danger-500`/`--warning-700` did on the blue ramp (§5) — the green primary happens to be dark enough at `--hue-700` that no step-up was necessary.
+
+### The brand-vs-status collision, and how it was resolved
+
+The problem is specific to the green brand: LinkWork's status colour (`--success-*`) has always been green, and the new brand's primary colour is *also* green. Blue never had this problem — blue's brand hue (`~211°`) and the status hue (`~160°`) are 51° apart, plainly different colours at a glance.
+
+**The numbers, computed from the actual token values, not estimated:**
+
+| Token | Hex | Hue | Lightness |
+|---|---|---|---|
+| Green brand primary (`--hue-700`) | `#0d5c42` | 160.3° | 20.6% |
+| `--success-700`, unshifted (blue brand, and pre-fix on green) | `#0e7150` | 160.0° | 24.9% |
+
+**160.3° vs 160.0° is not a difference — the two colours are the same hue**, 4.3 points of lightness apart. Lightness alone does not reliably separate two swatches at a glance, especially not at the small sizes a chain-dot or a badge border renders at. Something else had to give.
+
+**The fix has two parts, and both matter — hue alone would not have been enough, and neither would fill-vs-tint alone:**
+
+1. **A teal shift, applied only inside `[data-brand="green"]` and its dark variant.** `--success-700` and `--success-fill` are redefined to `#0f766e` (light) and `#4fd6c4` (dark) *only* under the green brand; blue's `--success-700` (`#0e7150` light / `#5fd3aa` dark) is untouched. Recomputed hue: `#0f766e` is **175.3°**, `#4fd6c4` is **172.0°** — roughly 15° off the green brand's 160.3°, enough to read as a distinct colour family (teal/cyan-green vs. pine-green) rather than a lighter or darker version of the same one. This is the "teal fallback": when a status colour and the active brand hue collide, shift status toward teal rather than touching the brand. It shipped, live, and it's the only hue-collision case that exists in the app today. A future brand should reuse this pattern — shift the non-brand role, never the brand role, and re-derive the actual hue distance rather than assuming a fixed number of degrees is "enough."
+2. **Fill-vs-tint does most of the remaining work, independent of hue.** Brand colour renders almost exclusively as a **solid fill**: primary buttons, active nav underline, links. Status colour renders almost exclusively as a **light tint**: `.badge.verified` and `.alert.ok` are `--success-50` background (a pale wash, `rgba`-equivalent lightness in the 90s) with `--success-700` text — not a saturated block of colour. A pale green wash and a solid green button don't get confused even at identical hue, which is why most of the status ramp (`--success-50`, `--success-500`, `--success-600`) was left untouched by the teal shift — they're either tints or not solid-fill-adjacent to a button.
+
+   **The one place status *is* rendered as a solid fill** is `.chain .node.done .dot` and `.chain .connector.done::after` — a small filled circle and a filled bar, both using `--success-fill` / `--success-700`. That's exactly why those two tokens (and only those two) needed the hue shift: it's the one status usage where fill-vs-tint provides no separation, so hue had to.
+
+**A known gap, left as-is, worth knowing about before adding a third brand:** `--success-500` (`#17a673`, hue 158.6°, lightness 37.1%) was *not* brought into the teal shift. It's a solid fill too — `.mock-track li.done .dot`, a bare status dot with no glyph — and under the green brand it sits almost exactly on top of `--hue-400`/`--accent` (`#1ca878`, hue 159.4°, lightness 38.4%): a 0.8° hue and 1.3-point lightness difference, well inside "looks identical." It wasn't fixed because `.mock-track` is a small, low-traffic mockup element (§7 Chain's sibling), and phase 6's QA pass didn't flag it. **A future brand's QA pass should check the full status ramp (`--success-50/500/600/700`, `--success-fill`) against the new brand hue, not just the two tokens the green brand happened to need.**
+
+### What's explicitly brand-independent, and why
+
+- **The seal (`--seal`, `--seal-fg`, `--seal-subtle-bg`, `--seal-border` and the `--gold-*` ramp they're built from) is never touched by `[data-brand="green"]`.** Verified: `[data-brand="green"]` redefines only the hue ramp, its composites, the fixed dark-plate tokens, shadows, and the two teal-shifted success tokens — no `--gold-*` or `--seal*` name appears in that block. `var(--seal)` still resolves in exactly the three rules §5 and `CLAUDE.md` both name — `.badge.faculty`, `.btn.seal`, `.ledger-record .lr-seal` — confirmed by grep, in both brands. This is deliberate: faculty verification is an institutional fact, not a skin choice, and letting it shift with the brand toggle would blur the one signal §5 rule 2 says must never mean anything else.
+- **`--danger-*` and `--warning-*` are untouched**, for the same reason gold is: rejected/pending states are not brand expression.
+- **The decorative colour rotations are untouched literals, not tokens.** `.panel-purple`/`.panel-blue`/`.panel-green` (feature-row art), `.land-lav`/`.land-peri`/`.land-cream`/`.land-gold` (the four-card grid) and their `.feature-badge`/`.land-ic` companions are hard-coded hex (`#eef0fb`, `#cdd9f4`, `#2f6fed`, etc.), each with its own `[data-theme="dark"]` override where needed, and none of them reference `--hue-*` or `--brand`. They're deliberately-varied decorative art, per §8's "a logo strip where every company is the same blue looks fake" reasoning, extended to these panels: they should look the same regardless of which brand is active, and they do.
+
+  **One exception worth flagging so it doesn't surprise someone:** despite the matching name, `.feature-green .feature-badge` is **not** part of that literal-colour group — it reads `background: var(--brand-subtle-bg); color: var(--verify)`, both of which resolve through the ramp. Under the green brand it happens to still look green (now it's tracking the *brand*, not coincidence), but under blue it renders blue text on a blue tint despite the class name. This was already flagged as a misnomer in §2 item 4 ("`.feature-green` ... now misnomers") before the brand toggle existed; the brand toggle makes the mismatch load-bearing rather than cosmetic. `.panel-green` (the gradient one rule above it) is not affected — it's the hard-coded literal group.
+- **Raster favicons stay blue-only.** `client/public/apple-touch-icon.png`, `favicon-16.png` and `favicon-32.png` were never duplicated for green and nothing in `applyBrand()` (`App.jsx`) or the anti-flash script swaps them — both only touch `link[rel="icon"][type="image/svg+xml"]`. The SVG icon *does* swap, between two hand-drawn, hand-duplicated files (`favicon.svg` / `favicon-green.svg`, phase 4) with the same three-stop gradient recoloured, because — as §4 already established for the plateless-favicon case — an SVG `<link>` asset can't read a CSS custom property, so there was no way to make one file serve both brands. If a third brand ships, the PNGs either need generating per brand (as task 3 originally did, via headless Chrome from the SVG) and swapping in the same place, or the product decision is that raster icons stay a single fixed brand regardless of the toggle — that decision hasn't been made, because it's never come up with only two brands.
+
+### Adding a third brand: what actually has to change
+
+For a future implementer, the complete list of places that currently hard-code "exactly two brands" rather than reading a list:
+
+1. **`client/src/styles.css`** — a new `[data-brand="X"]` block (hue ramp + composites + fixed dark-plate tokens + shadows), a `[data-theme="dark"][data-brand="X"]` block for the three non-derived dark literals, and a status-ramp collision check per the section above.
+2. **`client/src/menuConfig.js`** — add the value to `BRANDS`. The cycle button already loops over the array length, so a third value is picked up automatically by `cycleBrand()`.
+3. **`client/index.html`'s inline resolver** — `b === 'green' ? 'green' : 'blue'` is a binary ternary; it needs to become a lookup against `BRANDS` (or an inlined equivalent, since this script runs before any module loads) or a third brand will silently resolve to blue.
+4. **`applyBrand()` in `App.jsx`** — same problem, same fix: the favicon-swap line `brand === 'green' ? '/favicon-green.svg' : '/favicon.svg'` is also a binary ternary and needs a per-brand map.
+5. **`client/src/i18n.jsx`** — `brand.<name>` key in all three locale blocks (`en`, `hu`, `fr`), alongside the existing `brand.label`/`brand.switchTo`.
+6. **A new favicon SVG**, hand-recoloured the same way `favicon-green.svg` was — and a decision on the raster PNGs per the point above.
+
+Nothing else needs touching. In particular, `.brand-mark` and `.avatar-initials` (the in-app logo and avatar gradients) need **no** per-brand work — they already read `var(--accent)` / `var(--brand)` / `var(--blue-900)`, so they re-skin automatically the moment the ramp changes. That asymmetry — CSS re-skins for free, the two static SVG assets don't — is the direct, load-bearing consequence of the hue-ramp indirection described above.
 
 ---
 
@@ -648,13 +749,13 @@ The Work Sans link was replaced with preconnect plus Plus Jakarta Sans (700, 800
 
 3. **The gold migration.** All eight existing rules from the section 5 table. `var(--seal)` now resolves in **one** rule, `.badge.faculty`, on its border, because the section 5 contrast floor reserves gold for the glyph and the border. The second sanctioned use is the faculty-verified job card top rule, which does not exist yet and arrives in Task 6 — at which point the "exactly two" criterion becomes checkable. `--gold` and `--gold-tint` were left unreferenced and deleted from the compatibility layer.
 
-4. **Weights.** All seven `font-weight: 900` declarations became 800. `BRAND_PALETTE` in `Landing.jsx` had its green pair replaced with `--blue-50` / `--blue-700`; the other five stay varied. Note only `.fg` is ever read (`Landing.jsx:415`), so the six `bg` values are dead and can go in Task 8.
+4. **Weights.** All seven `font-weight: 900` declarations became 800. `BRAND_PALETTE` in `Landing.jsx` had its green pair replaced with `--blue-50` / `--blue-700`; the other five stay varied. Note only `.fg` is ever read (`Landing.jsx:630`), so the six `bg` values are dead and can go in Task 8.
 
 **Four leftovers fixed that no `var()` search could reach,** all raw values: `.notif-item.unread:hover` green `#dcefe5`, `.match-mock-badge`'s gold glow `rgba(217,154,6,.4)` and its hard-coded old-ink `#16233f`, and `.pref-chip`'s green border `rgba(20,125,91,0.2)`. Two are `rgba()`, which is why a "no hex outside the token block" criterion would not have caught them either.
 
 **Verified:** `npm run build` passes. Zero `var(--ink)` in any `color:` declaration, zero `font-weight: 900`, zero undefined custom properties. Every colour pairing checked with a contrast calculation. Landing page confirmed in a browser: completed pipeline steps green, in-progress step blue.
 
-**Deferred to Task 8 by agreement:** `.match-mock-panel` still fades `#d8efe0` into `--verify-tint`, and `.panel-green` is still a green gradient. Both are decorative landing-page art that section 8 says to leave alone until that page is open. The `.mm-chip.green` and `.feature-green` class names are also now misnomers and get renamed with their call sites.
+**Deferred to Task 8 by agreement:** `.panel-green` is still a green gradient — decorative landing-page art that section 8 says to leave alone until that page is open. The `.mm-chip.green` and `.feature-green` class names are also now misnomers and get renamed with their call sites. (`.match-mock-panel` was on this deferral list too, still fading `#d8efe0` into `--verify-tint`, until the `brand-toggle` branch retokenized it to `--brand-subtle-bg`/`--surface-alt`.)
 
 ### Task 3: Logo and marks — DONE
 
@@ -666,7 +767,7 @@ The Work Sans link was replaced with preconnect plus Plus Jakarta Sans (700, 800
 
 PNGs at 16, 32 and 180 are generated into `client/public/` but **not referenced yet** — `index.html` gets wired up in a later task. They are rasterised from `favicon.svg` via headless Chrome, so no dependency is added.
 
-**Verified:** build passes. Mark renders at 16, 28, 42 and 96px; nav and footer lockups checked in the running app; reduced motion confirmed to show the complete mark rather than a blank plate; draw direction confirmed by stretching the duration so a capture lands mid-animation; PNGs checked at all three sizes over light and dark chrome. No green gradient remains anywhere except `.match-mock-panel`, deferred to Task 8.
+**Verified:** build passes. Mark renders at 16, 28, 42 and 96px; nav and footer lockups checked in the running app; reduced motion confirmed to show the complete mark rather than a blank plate; draw direction confirmed by stretching the duration so a capture lands mid-animation; PNGs checked at all three sizes over light and dark chrome. No green gradient remains anywhere except `.panel-green`, deferred to Task 8 (`.match-mock-panel` carried one too, until the `brand-toggle` branch retokenized it).
 
 ### Task 4: Button, Card, Badge, Field — DONE
 

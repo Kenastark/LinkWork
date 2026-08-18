@@ -6,8 +6,11 @@ design system in BRANDING.md, token layer at the top of client/src/styles.css.
 
 ## Git workflow
 
-- All rebrand work happens on the `rebrand` branch. Never commit to `main`.
-- One commit per task, message format: `rebrand: task N, <name>`.
+- Feature work happens on a dedicated branch, tagged at a safe rollback point
+  before starting (see BRANDING.md section 11 for the tag/branch pattern this
+  project uses). Never commit to `main` directly.
+- One commit per task, message format: `<topic>: task/phase N, <name>` (e.g.
+  `rebrand: task 3, logo and marks`, `brand: phase 5, brand toggle control`).
 - Do not start a task without being asked, and do not commit until I have
   reviewed the diff.
 - `server/linkwork.db`, `client/dist` and `node_modules` are gitignored. Never
@@ -27,17 +30,32 @@ design system in BRANDING.md, token layer at the top of client/src/styles.css.
   100% translated; adding an untranslated section is a regression, not a
   partial win.
 - `--ink` is BOTH heading text and the dark plate behind .nav, footer.site,
-  .hero, .meeting-stage and .btn.dark. Text uses migrate to `--text-1`;
-  background and border uses stay. Dark mode cannot ship until this split is
-  done (BRANDING.md task 2). The dark palette is already in styles.css but is
-  unreachable: the resolver in client/index.html defaults to `'light'`, not
-  `'system'`. Restoring `'system'` before task 2 renders body text #0d1b31 on
-  a #070d1a canvas. That flip is task 9's job.
-- Colour law: blue dominates. `var(--seal)` (#c89b3c) means faculty-verified and
-  nothing else; after task 2 it resolves in exactly two rules. Warm decorative
-  fills use --warm-100 / --warm-300 / --warm-fg, which are NOT the seal. Green
-  means status only, never a button or a link. The `#fff` literals painted on
-  dark plates are correct; leave them alone.
+  .hero, .meeting-stage and .btn.dark. Text uses resolve to `--text-1`;
+  background and border uses stay on `--ink`/`--surface-dark`. This split is
+  done (BRANDING.md task 2) and dark mode is shipped (task 9): the resolver
+  in client/index.html defaults to `'system'`, and `[data-theme="dark"]` in
+  styles.css is live in both brands. Never reintroduce `var(--ink)` in a
+  `color:` declaration — that is what would put body text back on a
+  mismatched canvas. `--surface-dark` itself is fixed per BRAND now, not just
+  per theme: navy (`#0d1b31`) under blue, pine (`#0a2018`) under green, in
+  both light and dark. See BRANDING.md section 5A.
+- Colour law: the brand hue is whatever `--hue-*` resolves to — never
+  hard-code a brand-coloured hex, and prefer a semantic role (`--brand`,
+  `--accent`...) over `--hue-*` directly. `--blue-*` still resolves correctly
+  as an alias but its name is a misnomer under the green brand; don't reach
+  for it in new code. Blue dominates in the blue brand (green dominates in the
+  green brand — see the brand toggle work). `var(--seal)` (#c89b3c in light,
+  `--gold-300` in dark) means faculty-verified and nothing else, in both
+  brands; it resolves in exactly three rules (`.badge.faculty`, `.btn.seal`,
+  `.ledger-record .lr-seal`). Warm decorative
+  fills use --warm-100 / --warm-300 / --warm-fg, which are NOT the seal. The
+  status ramp (`--success-*`) means passed/verified/hired only, never a
+  button or a link, in both brands — under the green brand this is enforced
+  by a teal shift (`--success-700`/`--success-fill` become `#0f766e` light /
+  `#4fd6c4` dark) so status doesn't read as the same colour as the green
+  brand's own buttons and links. Never touch `--success-*` for the blue
+  brand. The `#fff` literals painted on dark plates are correct; leave them
+  alone.
 - Sentence case everywhere, including buttons and headings.
 - Animate only transform and opacity. Respect prefers-reduced-motion.
 - client/src/styles.css is the single canonical token layer. tokens.css was a

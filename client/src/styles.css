@@ -19,17 +19,45 @@
 :root {
   color-scheme: light;
 
-  /* --- Brand: University of Debrecen blue ------------------------------- */
-  --blue-50:  #eff5fc;
-  --blue-100: #d8e7f7;
-  --blue-200: #b0cdef;
-  --blue-300: #7fade3;
-  --blue-400: #4f8ef7;  /* accent, interactive highlight, dark-mode primary */
-  --blue-500: #1f6bc4;
-  --blue-600: #00539f;
-  --blue-700: #003b7a;  /* PRIMARY */
-  --blue-800: #002855;  /* primary dark */
-  --blue-900: #001b3a;
+  /* --- Brand hue ramp. The ONE place the brand colour is chosen. -------
+     Every brand role below resolves through these ten steps. A brand
+     block ([data-brand="green"], added later) redefines only this ramp
+     and a short list of hue-derived extras; nothing else in the
+     stylesheet needs to know which brand is active. Steps are monotonic
+     light -> dark. */
+  --hue-50:  #eff5fc;
+  --hue-100: #d8e7f7;
+  --hue-200: #b0cdef;
+  --hue-300: #7fade3;
+  --hue-400: #4f8ef7;
+  --hue-500: #1f6bc4;
+  --hue-600: #00539f;
+  --hue-700: #003b7a;
+  --hue-800: #002855;
+  --hue-900: #001b3a;
+
+  /* --- Brand: University of Debrecen blue -------------------------------
+     Retained as aliases so the existing var(--blue-*) references keep
+     resolving. Under a non-blue brand these names are a misnomer; kept
+     rather than renamed because renaming touches every call site for no
+     behavioural gain. New rules should use --hue-* or a semantic role. */
+  --blue-50:  var(--hue-50);
+  --blue-100: var(--hue-100);
+  --blue-200: var(--hue-200);
+  --blue-300: var(--hue-300);
+  --blue-400: var(--hue-400);
+  --blue-500: var(--hue-500);
+  --blue-600: var(--hue-600);
+  --blue-700: var(--hue-700);
+  --blue-800: var(--hue-800);
+  --blue-900: var(--hue-900);
+
+  /* Hue-derived composites. Redefined per brand. */
+  --hue-glow-a: rgba(79, 142, 247, 0.22);  /* .mesh, upper-left stop */
+  --hue-glow-b: rgba(0, 59, 122, 0.30);    /* .mesh, upper-right stop */
+  --hue-scrim:  rgba(22, 35, 63, 0.50);    /* .modal-backdrop */
+  --hue-lift:   rgba(22, 35, 63, 0.16);    /* raised-card shadow */
+  --hue-lift-2: rgba(22, 35, 63, 0.18);    /* floating tag shadow */
 
   /* --- Seal: University gold. Verification only. Never decorative. ------- */
   --gold-100: #f7edd6;
@@ -67,6 +95,16 @@
   --danger-50:   #fbeceb;
   --danger-500:  #d9534f;
   --danger-700:  #9b312e;
+
+  /* Fixed, like --surface-dark: the chain's done/failed dots paint a solid
+     circle with a white glyph on top, in both themes. --success-700 and
+     --danger-700 cannot serve that role in dark mode, because the dark block
+     below repoints them to a pale ink meant for text on a translucent badge
+     tint (e.g. .badge.verified), not a fill white text can sit on. These two
+     stay at the light-mode-safe value in both themes so the dot never
+     regresses to white-on-pale. */
+  --success-fill: #0e7150;
+  --danger-fill:  #9b312e;
 
   /* --- Fixed dark surface. Same in both themes. ------------------------- */
   /* The nav, footer, hero and meeting stage are dark plates in light mode
@@ -324,6 +362,75 @@
 }
 
 /* ============================================================================
+   BRAND: GREEN
+
+   The second selectable brand. Redefines the hue ramp and the hue-derived
+   composites; every semantic role in :root and [data-theme="dark"] resolves
+   through those, so nothing else needs a green variant.
+   ========================================================================== */
+
+[data-brand="green"] {
+  --hue-50:  #eff8f3;
+  --hue-100: #d6efe1;
+  --hue-200: #a9dfc6;
+  --hue-300: #59c79c;
+  --hue-400: #1ca878;
+  --hue-500: #147d5b;
+  --hue-600: #11705a;
+  --hue-700: #0d5c42;   /* PRIMARY */
+  --hue-800: #0a4633;
+  --hue-900: #05291e;
+
+  --hue-glow-a: rgba(28, 168, 120, 0.22);
+  --hue-glow-b: rgba(13, 92, 66, 0.32);
+  --hue-scrim:  rgba(10, 34, 26, 0.50);
+  --hue-lift:   rgba(10, 34, 26, 0.16);
+  --hue-lift-2: rgba(10, 34, 26, 0.18);
+
+  /* Fixed dark plates. .nav, footer.site, .hero, .meeting-stage and
+     .btn.dark are dark in BOTH themes; under the green brand they take a
+     pine plate rather than the blue navy. #fff on #0a2018 is 17.0:1. */
+  --surface-dark:       #0a2018;
+  --surface-dark-hover: #061510;
+  --on-dark-muted:      #9fbdb0;
+  --on-dark-faint:      #7a978a;
+
+  --border-hair:   rgba(13, 92, 66, 0.08);
+  --glass-dark-bg: rgba(10, 32, 24, 0.82);
+
+  --shadow-1: 0 1px 2px rgba(6,41,30,.05), 0 1px 3px rgba(6,41,30,.04);
+  --shadow-2: 0 2px 4px rgba(6,41,30,.05), 0 6px 16px -4px rgba(6,41,30,.08);
+  --shadow-3: 0 4px 8px rgba(6,41,30,.06), 0 16px 32px -8px rgba(6,41,30,.12);
+  --shadow-4: 0 8px 16px rgba(6,41,30,.08), 0 32px 64px -16px rgba(6,41,30,.18);
+  --shadow-brand: 0 6px 20px -6px rgba(13, 92, 66, 0.45);
+
+  /* Status vs brand collision: --hue-700 (#0d5c42) and the light-mode
+     --success-700 (#0e7150) are 160° vs 160° hue, 4 points of lightness
+     apart — the "done" chain dot and a primary button read as the same
+     green. Shift status to teal here only; blue's status colours are
+     untouched. --success-fill covers the chain dot in both themes (see
+     the fixed-token note in the Status block); --success-700 (the badge/
+     alert ink) gets its own dark-theme value below. */
+  --success-fill: #0f766e;
+  --success-700:  #0f766e;
+}
+
+/* Dark + green. The dark block maps --brand to --blue-400, which now
+   resolves to --hue-400 and therefore to green automatically. Only the
+   values the dark block hard-codes as blue literals need restating here. */
+[data-theme="dark"][data-brand="green"] {
+  --brand-hover:     #33c08f;
+  --text-link-hover: #8adcba;
+  --shadow-brand:    0 6px 24px -6px rgba(28, 168, 120, 0.50);
+  /* The dark block (lower specificity, but later in the cascade only within
+     its own selector) repoints --success-700 to a pale ink (#5fd3aa) for
+     dark-canvas text. Under green that pale mint sits even closer to
+     --hue-400 (#1ca878) than the light pairing did, so it needs its own
+     teal step rather than inheriting either single-attribute rule. */
+  --success-700: #4fd6c4;
+}
+
+/* ============================================================================
    ADDITIVE UTILITIES
    Seven helpers, none of which existed before the rebrand and none of which
    override a rule further down this file. They are consumed by later tasks.
@@ -347,8 +454,8 @@
 /* Ambient brand mesh. Hero and closing CTA only. Never behind body copy. */
 .mesh {
   background-image:
-    radial-gradient(60% 55% at 15% 0%,   rgba(79, 142, 247, 0.22), transparent 60%),
-    radial-gradient(50% 50% at 85% 10%,  rgba(0, 59, 122, 0.30),   transparent 60%),
+    radial-gradient(60% 55% at 15% 0%,   var(--hue-glow-a), transparent 60%),
+    radial-gradient(50% 50% at 85% 10%,  var(--hue-glow-b), transparent 60%),
     radial-gradient(40% 40% at 50% 100%, rgba(200, 155, 60, 0.10), transparent 60%);
 }
 [data-theme="dark"] .mesh { opacity: 0.65; }
@@ -784,10 +891,10 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
   transition: border-color var(--d-fast) var(--ease-out), background var(--d-fast) var(--ease-out),
               color var(--d-fast) var(--ease-out);
 }
-.chain .node.done .dot { border-color: var(--success-700); background: var(--success-700); color: #fff; }
+.chain .node.done .dot { border-color: var(--success-fill); background: var(--success-fill); color: #fff; }
 .chain .node.current .dot { border-color: var(--accent); color: var(--brand); box-shadow: 0 0 0 5px var(--brand-subtle-bg); }
-/* --danger-500 would put the ✕ at 3.96:1; --danger-700 is 7.31:1. */
-.chain .node.failed .dot { border-color: var(--danger-700); background: var(--danger-700); color: #fff; }
+/* --danger-500 would put the ✕ at 3.96:1; --danger-fill (--danger-700's light-mode value) is 7.31:1. */
+.chain .node.failed .dot { border-color: var(--danger-fill); background: var(--danger-fill); color: #fff; }
 .chain .node small { font-size: 11.5px; font-weight: 600; color: var(--text-2); max-width: 90px; }
 .chain .node.done small, .chain .node.current small { color: var(--text-1); }
 .chain .node.failed small { color: var(--danger-700); font-weight: 700; }
@@ -884,7 +991,7 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 /* Decorative job-card mockup in the "Looking for the right role?" section */
 .match-mock { position: relative; padding: 22px 14px; }
 .match-mock-panel {
-  position: relative; background: linear-gradient(155deg, #d8efe0, var(--verify-tint));
+  position: relative; background: linear-gradient(155deg, var(--brand-subtle-bg), var(--surface-alt));
   border-radius: 24px; padding: 30px 24px;
 }
 /* peeking card behind the main one */
@@ -894,7 +1001,7 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 }
 .match-mock-card {
   position: relative; background: var(--surface); border-radius: 18px; padding: 20px;
-  box-shadow: 0 18px 42px rgba(22,35,63,.16);
+  box-shadow: 0 18px 42px var(--hue-lift);
 }
 .match-mock-badge {
   position: absolute; top: -14px; right: -8px; transform: rotate(4deg);
@@ -1049,7 +1156,7 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 .panel-blue { background: linear-gradient(160deg, #e9effc, #d8e4fb); }
 .panel-green { background: linear-gradient(160deg, #e7f5ec, #d5eddd); }
 
-.mock-card { width: 100%; background: var(--surface); border-radius: 18px; box-shadow: 0 18px 42px rgba(22,35,63,.16); padding: 20px; }
+.mock-card { width: 100%; background: var(--surface); border-radius: 18px; box-shadow: 0 18px 42px var(--hue-lift); padding: 20px; }
 .mock-card .mock-mono { font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); }
 .mock-card h4 { font-size: 18px; margin: 6px 0 2px; letter-spacing: -0.01em; }
 .mock-card > p { font-size: 13.5px; color: var(--ink-soft); }
@@ -1070,7 +1177,7 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 .feature-tag {
   position: absolute; background: var(--surface); border-radius: 12px; padding: 9px 14px;
   font-size: 13.5px; font-weight: 700; color: var(--text-1);
-  box-shadow: 0 10px 26px rgba(22,35,63,.18); white-space: nowrap;
+  box-shadow: 0 10px 26px var(--hue-lift-2); white-space: nowrap;
 }
 .feature-tag.tag-a { top: 22px; right: 14px; transform: rotate(4deg); }
 .feature-tag.tag-b { top: 44px; left: 6px; transform: rotate(-6deg); }
@@ -1249,7 +1356,7 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 .score-input { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; font-weight: 600; font-size: 13.5px; }
 .score-input input { width: 70px; margin-top: 0; text-align: center; }
 
-.modal-backdrop { position: fixed; inset: 0; background: rgba(22,35,63,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+.modal-backdrop { position: fixed; inset: 0; background: var(--hue-scrim); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
 .modal { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 26px; width: min(460px, 100%); animation: menu-in .14s var(--ease) both; }
 
 /* recruitment-steps reminder strip (company dashboard) */
@@ -1434,10 +1541,8 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 [data-theme="dark"] .land-cream { background: rgba(246, 220, 154, 0.14); }
 [data-theme="dark"] .land-peri .land-ic { color: #a3c0f8; }
 
-/* The decorative job-card mockup. Its gradient still fades a green literal into
-   --verify-tint; that pairing is on the task 8 deferral list either way. */
 [data-theme="dark"] .match-mock-panel {
-  background: linear-gradient(155deg, rgba(23, 166, 115, 0.18), rgba(79, 142, 247, 0.14));
+  background: linear-gradient(155deg, var(--brand-subtle-bg), transparent);
 }
 [data-theme="dark"] .match-mock-badge b { background: var(--bg-sunken); color: var(--text-1); }
 
@@ -1451,7 +1556,7 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
    WCAG 2.2 target size. Growing the painted box would break the date picker's
    grid and the nav's height, so the visible control keeps its size and an
    invisible ::after extends the hit area to 44x44 around its centre. */
-.dtp-nav, .dtp-arrow, .nav-toggle, .lang-trigger, .btn.ghost, .filter-chevron { position: relative; }
+.dtp-nav, .dtp-arrow, .nav-toggle, .lang-trigger, .btn.ghost, .filter-chevron, .nav-brand { position: relative; }
 /* .btn.sm is 36px by design (section 7's 36/44/52 ladder) and .tabs buttons
    and .logo-lockup are similarly sized on purpose. Rather than break those,
    the visible control keeps its height and the hit area is extended. */
@@ -1464,6 +1569,38 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
   content: ''; position: absolute; left: 50%; top: 50%;
   width: max(100%, 44px); height: max(100%, 44px);
   transform: translate(-50%, -50%);
+}
+
+
+/* ============ brand toggle ============
+   The nav at 320-560px is already tight (see the task 10 note above:
+   it was measured at ~592px signed in). A second full-text control
+   doesn't fit. The label shows only where there's room; below 900px
+   the button collapses to just its swatch, which is why the
+   accessible name lives on aria-label rather than the visible text.
+   The account-menu instance always shows its label — that's a
+   vertical list with room to spare. */
+.brand-swatch {
+  width: 14px; height: 14px; border-radius: 50%; flex: none;
+  background: linear-gradient(135deg, var(--hue-400) 0 50%, var(--hue-700) 50% 100%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35);
+}
+.nav-brand { display: inline-flex; align-items: center; gap: 7px; }
+.account-menu-item .brand-swatch { display: inline-block; margin-right: 8px; vertical-align: -2px; }
+
+@media (max-width: 900px) {
+  .nav-brand .brand-btn-label { display: none; }
+  .nav-brand { padding-left: 9px; padding-right: 9px; }
+}
+
+/* Measured: even signed out, 320-560px has no slack left once the
+   collapsed swatch button joins language + theme + menu-toggle (see
+   the task 10 note above — this is the same bar, just without the
+   account trigger). Trim the swatch button further here; its tap
+   target already comes from the shared .btn.ghost::after hit area
+   above, so shrinking the visible box doesn't shrink what's tappable. */
+@media (max-width: 560px) {
+  .nav-brand.lang-trigger.btn.ghost { padding-left: 2px; padding-right: 2px; margin-left: -6px; }
 }
 
 

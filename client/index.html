@@ -8,10 +8,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-    <!-- Anti-flash theme resolution. Must run before React mounts, or the page
-         paints light and then flips. Kept in sync with useTheme() in App.jsx:
-         both resolve 'system' against prefers-color-scheme and write the same
-         data-theme attribute. -->
+    <!-- Anti-flash theme/brand resolution. Must run before React mounts, or the
+         page paints one way and then flips. Kept in sync with useTheme() and
+         useBrand() in App.jsx: both resolve the same storage keys and write
+         the same data-theme / data-brand attributes. -->
     <script>
       (function () {
         try {
@@ -19,6 +19,8 @@
           var d = t === 'dark' || (t === 'system' &&
             matchMedia('(prefers-color-scheme: dark)').matches);
           document.documentElement.setAttribute('data-theme', d ? 'dark' : 'light');
+          var b = localStorage.getItem('linkwork-brand');
+          document.documentElement.setAttribute('data-brand', b === 'green' ? 'green' : 'blue');
         } catch (e) {}
       })();
     </script>
