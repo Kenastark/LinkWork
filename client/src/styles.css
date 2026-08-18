@@ -352,6 +352,59 @@
 }
 
 /* ============================================================================
+   BRAND: GREEN
+
+   The second selectable brand. Redefines the hue ramp and the hue-derived
+   composites; every semantic role in :root and [data-theme="dark"] resolves
+   through those, so nothing else needs a green variant.
+   ========================================================================== */
+
+[data-brand="green"] {
+  --hue-50:  #eff8f3;
+  --hue-100: #d6efe1;
+  --hue-200: #a9dfc6;
+  --hue-300: #59c79c;
+  --hue-400: #1ca878;
+  --hue-500: #147d5b;
+  --hue-600: #11705a;
+  --hue-700: #0d5c42;   /* PRIMARY */
+  --hue-800: #0a4633;
+  --hue-900: #05291e;
+
+  --hue-glow-a: rgba(28, 168, 120, 0.22);
+  --hue-glow-b: rgba(13, 92, 66, 0.32);
+  --hue-scrim:  rgba(10, 34, 26, 0.50);
+  --hue-lift:   rgba(10, 34, 26, 0.16);
+  --hue-lift-2: rgba(10, 34, 26, 0.18);
+
+  /* Fixed dark plates. .nav, footer.site, .hero, .meeting-stage and
+     .btn.dark are dark in BOTH themes; under the green brand they take a
+     pine plate rather than the blue navy. #fff on #0a2018 is 17.0:1. */
+  --surface-dark:       #0a2018;
+  --surface-dark-hover: #061510;
+  --on-dark-muted:      #9fbdb0;
+  --on-dark-faint:      #7a978a;
+
+  --border-hair:   rgba(13, 92, 66, 0.08);
+  --glass-dark-bg: rgba(10, 32, 24, 0.82);
+
+  --shadow-1: 0 1px 2px rgba(6,41,30,.05), 0 1px 3px rgba(6,41,30,.04);
+  --shadow-2: 0 2px 4px rgba(6,41,30,.05), 0 6px 16px -4px rgba(6,41,30,.08);
+  --shadow-3: 0 4px 8px rgba(6,41,30,.06), 0 16px 32px -8px rgba(6,41,30,.12);
+  --shadow-4: 0 8px 16px rgba(6,41,30,.08), 0 32px 64px -16px rgba(6,41,30,.18);
+  --shadow-brand: 0 6px 20px -6px rgba(13, 92, 66, 0.45);
+}
+
+/* Dark + green. The dark block maps --brand to --blue-400, which now
+   resolves to --hue-400 and therefore to green automatically. Only the
+   values the dark block hard-codes as blue literals need restating here. */
+[data-theme="dark"][data-brand="green"] {
+  --brand-hover:     #33c08f;
+  --text-link-hover: #8adcba;
+  --shadow-brand:    0 6px 24px -6px rgba(28, 168, 120, 0.50);
+}
+
+/* ============================================================================
    ADDITIVE UTILITIES
    Seven helpers, none of which existed before the rebrand and none of which
    override a rule further down this file. They are consumed by later tasks.
