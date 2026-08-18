@@ -36,7 +36,7 @@ Read this first. Two of these would have broken the build.
 
 Found by auditing revision 2 against the source. Verified independently before accepting.
 
-**A. `--brand-fg` is not a bug.** `Landing.jsx:415` sets it inline per company: `style={{ '--brand-fg': colors.fg }}`. The hover colouring works today. Revision 2 called it an undefined-variable bug and claimed fixing it was a free win. Wrong. The `:root` value in `tokens.css` is now a harmless fallback and is commented as such.
+**A. `--brand-fg` is not a bug.** `Landing.jsx:630` sets it inline per company: `style={{ '--brand-fg': colors.fg }}`. The hover colouring works today. Revision 2 called it an undefined-variable bug and claimed fixing it was a free win. Wrong. The `:root` value is now a harmless fallback and is commented as such.
 
 **B. `claude-opus-4-8` is a valid, current model.** `Claude Opus 4.8` is a real model ID and returns from `/v1/models`. Revision 1 and revision 2 both flagged it as suspect. Both were wrong. Item 2 of section 13 is deleted. `claude-opus-5` is the newer model in that tier if you want to upgrade when the feature is enabled.
 
@@ -648,13 +648,13 @@ The Work Sans link was replaced with preconnect plus Plus Jakarta Sans (700, 800
 
 3. **The gold migration.** All eight existing rules from the section 5 table. `var(--seal)` now resolves in **one** rule, `.badge.faculty`, on its border, because the section 5 contrast floor reserves gold for the glyph and the border. The second sanctioned use is the faculty-verified job card top rule, which does not exist yet and arrives in Task 6 — at which point the "exactly two" criterion becomes checkable. `--gold` and `--gold-tint` were left unreferenced and deleted from the compatibility layer.
 
-4. **Weights.** All seven `font-weight: 900` declarations became 800. `BRAND_PALETTE` in `Landing.jsx` had its green pair replaced with `--blue-50` / `--blue-700`; the other five stay varied. Note only `.fg` is ever read (`Landing.jsx:415`), so the six `bg` values are dead and can go in Task 8.
+4. **Weights.** All seven `font-weight: 900` declarations became 800. `BRAND_PALETTE` in `Landing.jsx` had its green pair replaced with `--blue-50` / `--blue-700`; the other five stay varied. Note only `.fg` is ever read (`Landing.jsx:630`), so the six `bg` values are dead and can go in Task 8.
 
 **Four leftovers fixed that no `var()` search could reach,** all raw values: `.notif-item.unread:hover` green `#dcefe5`, `.match-mock-badge`'s gold glow `rgba(217,154,6,.4)` and its hard-coded old-ink `#16233f`, and `.pref-chip`'s green border `rgba(20,125,91,0.2)`. Two are `rgba()`, which is why a "no hex outside the token block" criterion would not have caught them either.
 
 **Verified:** `npm run build` passes. Zero `var(--ink)` in any `color:` declaration, zero `font-weight: 900`, zero undefined custom properties. Every colour pairing checked with a contrast calculation. Landing page confirmed in a browser: completed pipeline steps green, in-progress step blue.
 
-**Deferred to Task 8 by agreement:** `.match-mock-panel` still fades `#d8efe0` into `--verify-tint`, and `.panel-green` is still a green gradient. Both are decorative landing-page art that section 8 says to leave alone until that page is open. The `.mm-chip.green` and `.feature-green` class names are also now misnomers and get renamed with their call sites.
+**Deferred to Task 8 by agreement:** `.panel-green` is still a green gradient — decorative landing-page art that section 8 says to leave alone until that page is open. The `.mm-chip.green` and `.feature-green` class names are also now misnomers and get renamed with their call sites. (`.match-mock-panel` was on this deferral list too, still fading `#d8efe0` into `--verify-tint`, until the `brand-toggle` branch retokenized it to `--brand-subtle-bg`/`--surface-alt`.)
 
 ### Task 3: Logo and marks — DONE
 
@@ -666,7 +666,7 @@ The Work Sans link was replaced with preconnect plus Plus Jakarta Sans (700, 800
 
 PNGs at 16, 32 and 180 are generated into `client/public/` but **not referenced yet** — `index.html` gets wired up in a later task. They are rasterised from `favicon.svg` via headless Chrome, so no dependency is added.
 
-**Verified:** build passes. Mark renders at 16, 28, 42 and 96px; nav and footer lockups checked in the running app; reduced motion confirmed to show the complete mark rather than a blank plate; draw direction confirmed by stretching the duration so a capture lands mid-animation; PNGs checked at all three sizes over light and dark chrome. No green gradient remains anywhere except `.match-mock-panel`, deferred to Task 8.
+**Verified:** build passes. Mark renders at 16, 28, 42 and 96px; nav and footer lockups checked in the running app; reduced motion confirmed to show the complete mark rather than a blank plate; draw direction confirmed by stretching the duration so a capture lands mid-animation; PNGs checked at all three sizes over light and dark chrome. No green gradient remains anywhere except `.panel-green`, deferred to Task 8 (`.match-mock-panel` carried one too, until the `brand-toggle` branch retokenized it).
 
 ### Task 4: Button, Card, Badge, Field — DONE
 

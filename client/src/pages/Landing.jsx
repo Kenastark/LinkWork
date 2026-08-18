@@ -6,7 +6,7 @@ import { useI18n } from '../i18n.jsx';
 import LedgerRecord from '../components/LedgerRecord.jsx';
 
 const BRAND_PALETTE = [
-  { bg: '#eff5fc', fg: '#003b7a' }, // brand blue (--blue-50 / --blue-700)
+  { bg: 'var(--brand-subtle-bg)', fg: 'var(--brand-subtle-fg)' }, // brand blue (--blue-50 / --blue-700)
   { bg: '#fbf3dd', fg: '#7c5a00' }, // gold
   { bg: '#e6ecf7', fg: '#2b4a8c' }, // blue
   { bg: '#f3e8f5', fg: '#7a3d8c' }, // plum

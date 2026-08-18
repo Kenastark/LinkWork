@@ -375,8 +375,8 @@
 /* Ambient brand mesh. Hero and closing CTA only. Never behind body copy. */
 .mesh {
   background-image:
-    radial-gradient(60% 55% at 15% 0%,   rgba(79, 142, 247, 0.22), transparent 60%),
-    radial-gradient(50% 50% at 85% 10%,  rgba(0, 59, 122, 0.30),   transparent 60%),
+    radial-gradient(60% 55% at 15% 0%,   var(--hue-glow-a), transparent 60%),
+    radial-gradient(50% 50% at 85% 10%,  var(--hue-glow-b), transparent 60%),
     radial-gradient(40% 40% at 50% 100%, rgba(200, 155, 60, 0.10), transparent 60%);
 }
 [data-theme="dark"] .mesh { opacity: 0.65; }
@@ -912,7 +912,7 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 /* Decorative job-card mockup in the "Looking for the right role?" section */
 .match-mock { position: relative; padding: 22px 14px; }
 .match-mock-panel {
-  position: relative; background: linear-gradient(155deg, #d8efe0, var(--verify-tint));
+  position: relative; background: linear-gradient(155deg, var(--brand-subtle-bg), var(--surface-alt));
   border-radius: 24px; padding: 30px 24px;
 }
 /* peeking card behind the main one */
@@ -922,7 +922,7 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 }
 .match-mock-card {
   position: relative; background: var(--surface); border-radius: 18px; padding: 20px;
-  box-shadow: 0 18px 42px rgba(22,35,63,.16);
+  box-shadow: 0 18px 42px var(--hue-lift);
 }
 .match-mock-badge {
   position: absolute; top: -14px; right: -8px; transform: rotate(4deg);
@@ -1077,7 +1077,7 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 .panel-blue { background: linear-gradient(160deg, #e9effc, #d8e4fb); }
 .panel-green { background: linear-gradient(160deg, #e7f5ec, #d5eddd); }
 
-.mock-card { width: 100%; background: var(--surface); border-radius: 18px; box-shadow: 0 18px 42px rgba(22,35,63,.16); padding: 20px; }
+.mock-card { width: 100%; background: var(--surface); border-radius: 18px; box-shadow: 0 18px 42px var(--hue-lift); padding: 20px; }
 .mock-card .mock-mono { font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); }
 .mock-card h4 { font-size: 18px; margin: 6px 0 2px; letter-spacing: -0.01em; }
 .mock-card > p { font-size: 13.5px; color: var(--ink-soft); }
@@ -1098,7 +1098,7 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
 .feature-tag {
   position: absolute; background: var(--surface); border-radius: 12px; padding: 9px 14px;
   font-size: 13.5px; font-weight: 700; color: var(--text-1);
-  box-shadow: 0 10px 26px rgba(22,35,63,.18); white-space: nowrap;
+  box-shadow: 0 10px 26px var(--hue-lift-2); white-space: nowrap;
 }
 .feature-tag.tag-a { top: 22px; right: 14px; transform: rotate(4deg); }
 .feature-tag.tag-b { top: 44px; left: 6px; transform: rotate(-6deg); }
@@ -1277,7 +1277,7 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 .score-input { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; font-weight: 600; font-size: 13.5px; }
 .score-input input { width: 70px; margin-top: 0; text-align: center; }
 
-.modal-backdrop { position: fixed; inset: 0; background: rgba(22,35,63,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+.modal-backdrop { position: fixed; inset: 0; background: var(--hue-scrim); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
 .modal { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 26px; width: min(460px, 100%); animation: menu-in .14s var(--ease) both; }
 
 /* recruitment-steps reminder strip (company dashboard) */
@@ -1462,10 +1462,8 @@ footer.site { background: var(--ink); color: #8d99b2; padding: 48px 0 26px; font
 [data-theme="dark"] .land-cream { background: rgba(246, 220, 154, 0.14); }
 [data-theme="dark"] .land-peri .land-ic { color: #a3c0f8; }
 
-/* The decorative job-card mockup. Its gradient still fades a green literal into
-   --verify-tint; that pairing is on the task 8 deferral list either way. */
 [data-theme="dark"] .match-mock-panel {
-  background: linear-gradient(155deg, rgba(23, 166, 115, 0.18), rgba(79, 142, 247, 0.14));
+  background: linear-gradient(155deg, var(--brand-subtle-bg), transparent);
 }
 [data-theme="dark"] .match-mock-badge b { background: var(--bg-sunken); color: var(--text-1); }
 
