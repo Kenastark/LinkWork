@@ -90,7 +90,7 @@ const translations = {
     'mock.trackStep2': `Skill test passed`,
     'mock.trackStep3': `AI interview in review`,
     'mock.trackStep4': `Company review`,
-    'mock.trackStep5': `Offer`,
+    'mock.trackStep5': `Hired`,
     'mock.trackTag': `Application update`,
     'mock.offersRole': `Data Analyst Intern`,
     'mock.offersCompany': `Voltix Electronics · Debrecen`,
@@ -141,6 +141,7 @@ const translations = {
 
     'companyShowcase.eyebrow': `Trusted employers`,
     'companyShowcase.title': `Companies hiring on LinkWork`,
+    'companyShowcase.punch': `Every company here has committed to hiring, not just posting.`,
 
     // Pipeline stage names. Keys match applications.stage in the database.
     'stage.applied': `Applied`,
@@ -193,7 +194,7 @@ const translations = {
     'ledgerSection.eyebrow': `On the record`,
     'ledgerSection.title': `Every hire is written down`,
     'ledgerSection.body': `When a company hires through LinkWork, the posting and the date are recorded here. Nothing is added by hand and nothing can be edited afterwards.`,
-    'ledgerSection.punch': `When a posting is filled, it comes down. That is why the list is short.`,
+    'ledgerSection.punch': `Every hire made through LinkWork has a permanent record here.\nNothing gets lost. Nothing gets erased.`,
     'ledgerSection.empty': `No hires are on the register yet.`,
 
     'faq.eyebrow': `Before you ask`,
@@ -299,7 +300,7 @@ const translations = {
     'mock.trackStep2': `Készségteszt sikeres`,
     'mock.trackStep3': `AI interjú elbírálás alatt`,
     'mock.trackStep4': `Céges felülvizsgálat`,
-    'mock.trackStep5': `Ajánlat`,
+    'mock.trackStep5': `Felvéve`,
     'mock.trackTag': `Jelentkezés frissítve`,
     'mock.offersRole': `Adatelemző gyakornok`,
     'mock.offersCompany': `Voltix Electronics · Debrecen`,
@@ -350,6 +351,7 @@ const translations = {
 
     'companyShowcase.eyebrow': `Megbízható munkáltatók`,
     'companyShowcase.title': `Cégek, amelyek a LinkWorkön toboroznak`,
+    'companyShowcase.punch': `Minden itt látható cég valódi felvételt vállalt, nem csak hirdetést adott fel.`,
 
     'stage.applied': `Jelentkezett`,
     'stage.skill_test': `Készségteszt`,
@@ -401,7 +403,7 @@ const translations = {
     'ledgerSection.eyebrow': `Nyilvántartva`,
     'ledgerSection.title': `Minden felvételt rögzítünk`,
     'ledgerSection.body': `Amikor egy cég a LinkWorkön keresztül vesz fel valakit, a hirdetés és a dátum ide kerül. Semmit nem írunk be kézzel, és utólag semmi nem módosítható.`,
-    'ledgerSection.punch': `Ha egy hirdetést betöltenek, lekerül. Ezért rövid a lista.`,
+    'ledgerSection.punch': `Minden, ami a LinkWorkön keresztül történt felvétel, itt véglegesen rögzül.\nSemmi nem vész el. Semmit nem törölnek.`,
     'ledgerSection.empty': `Még nincs felvétel a nyilvántartásban.`,
 
     'faq.eyebrow': `Mielőtt megkérdeznéd`,
@@ -507,7 +509,7 @@ const translations = {
     'mock.trackStep2': `Test de compétences réussi`,
     'mock.trackStep3': `Entretien IA en cours d'évaluation`,
     'mock.trackStep4': `Examen par l'entreprise`,
-    'mock.trackStep5': `Offre`,
+    'mock.trackStep5': `Embauché`,
     'mock.trackTag': `Mise à jour de candidature`,
     'mock.offersRole': `Stagiaire analyste de données`,
     'mock.offersCompany': `Voltix Electronics · Debrecen`,
@@ -558,6 +560,7 @@ const translations = {
 
     'companyShowcase.eyebrow': `Employeurs de confiance`,
     'companyShowcase.title': `Entreprises qui recrutent sur LinkWork`,
+    'companyShowcase.punch': `Chaque entreprise ici s'est engagée à embaucher, pas seulement à publier une offre.`,
 
     'stage.applied': `Candidature envoyée`,
     'stage.skill_test': `Test de compétences`,
@@ -609,7 +612,7 @@ const translations = {
     'ledgerSection.eyebrow': `Au registre`,
     'ledgerSection.title': `Chaque recrutement est consigné`,
     'ledgerSection.body': `Lorsqu'une entreprise recrute via LinkWork, l'offre et la date sont consignées ici. Rien n'est saisi à la main et rien ne peut être modifié après coup.`,
-    'ledgerSection.punch': `Quand une offre est pourvue, elle est retirée. C'est pour cela que la liste est courte.`,
+    'ledgerSection.punch': `Chaque embauche réalisée via LinkWork est enregistrée ici, de façon permanente.\nRien ne se perd. Rien n'est jamais effacé.`,
     'ledgerSection.empty': `Aucun recrutement ne figure encore au registre.`,
 
     'faq.eyebrow': `Avant de demander`,

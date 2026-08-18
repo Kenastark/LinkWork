@@ -224,7 +224,7 @@ app.get('/api/stats', (req, res) => {
     open_jobs: db.prepare(`SELECT COUNT(*) c FROM jobs WHERE status='open'`).get().c,
     hires: db.prepare(`SELECT COUNT(*) c FROM matches`).get().c,
     approved_companies: db.prepare(`SELECT COUNT(*) c FROM companies WHERE status='approved'`).get().c,
-    companies: db.prepare(`SELECT name FROM companies WHERE status='approved' AND can_view_all_applicants=0 ORDER BY created_at DESC LIMIT 6`).all(),
+    companies: db.prepare(`SELECT name FROM companies WHERE status='approved' AND can_view_all_applicants=0 ORDER BY created_at DESC LIMIT 12`).all(),
   });
 });
 
