@@ -83,7 +83,6 @@ export default function Auth() {
         {mode === 'login' && (
           <>
             <h2>{t('auth.welcomeBack')}</h2>
-            <p className="muted" style={{ marginBottom: 18 }}>{t('auth.demoAccounts')}</p>
             <label className="field">{t('auth.emailLabel')}<input name="email" type="email" required autoComplete="email" /></label>
             <label className="field">{t('auth.passwordLabel')}<input name="password" type="password" required autoComplete="current-password" /></label>
           </>

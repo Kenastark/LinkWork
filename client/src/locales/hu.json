@@ -261,7 +261,6 @@
   "auth.modeCompanySignup": "Céges regisztráció",
   "auth.passwordMismatch": "A jelszavak nem egyeznek.",
   "auth.welcomeBack": "Üdv ismét",
-  "auth.demoAccounts": "Demó fiókok — diák: demo.student@mailbox.unideb.hu / student1234 · cég: hr@datatech.hu / company1234 · admin: admin@linkwork.app / admin1234",
   "auth.emailLabel": "Email",
   "auth.passwordLabel": "Jelszó",
   "auth.joinAsStudentTitle": "Csatlakozz diákként",

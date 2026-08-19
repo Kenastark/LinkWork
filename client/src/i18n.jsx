@@ -319,7 +319,6 @@ const translations = {
     'auth.modeCompanySignup': `Company sign-up`,
     'auth.passwordMismatch': `Passwords do not match.`,
     'auth.welcomeBack': `Welcome back`,
-    'auth.demoAccounts': `Demo accounts — student: demo.student@mailbox.unideb.hu / student1234 · company: hr@datatech.hu / company1234 · admin: admin@linkwork.app / admin1234`,
     'auth.emailLabel': `Email`,
     'auth.passwordLabel': `Password`,
     'auth.joinAsStudentTitle': `Join as a student`,
