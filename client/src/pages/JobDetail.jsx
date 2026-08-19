@@ -107,8 +107,9 @@ export default function JobDetail() {
   }, [applicationId, stage, user.role]);
 
   const job = data?.job;
-  const [description, requirements, companyDescription] = useTranslatedTexts([
+  const [description, requirements, companyDescription, title, companyName] = useTranslatedTexts([
     job?.description || '', job?.requirements || '', job?.company_description || '',
+    job?.title || '', job?.company_name || '',
   ]);
 
   if (error) return <main className="container"><div className="alert error" role="alert">{error}</div></main>;
@@ -200,8 +201,8 @@ export default function JobDetail() {
   return (
     <main className="container" style={{ maxWidth: 780 }}>
       <span className="id-tag">JOB-{String(job.id).padStart(4, '0')}</span>
-      <h1 style={{ fontSize: 30 }}>{job.title}</h1>
-      <p className="muted">{job.company_name} · {job.university_name}{job.faculty_name ? ` · ${job.faculty_name}` : ''}</p>
+      <h1 style={{ fontSize: 30 }}>{title}</h1>
+      <p className="muted">{companyName} · {job.university_name}{job.faculty_name ? ` · ${job.faculty_name}` : ''}</p>
       <div className="meta" style={{ display: 'flex', gap: 8, margin: '10px 0 20px', flexWrap: 'wrap' }}>
         {job.faculty_verified
           ? <span className="badge faculty">★ Faculty partnership — negotiated directly with your university</span>
@@ -232,7 +233,7 @@ export default function JobDetail() {
         <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
           <span className="company-mono">{(job.company_name || '?').charAt(0).toUpperCase()}</span>
           <div>
-            <h2 style={{ fontSize: 20 }}>{job.company_name}</h2>
+            <h2 style={{ fontSize: 20 }}>{companyName}</h2>
             {job.website && <a className="ext-link" href={job.website} target="_blank" rel="noreferrer">{job.website}</a>}
           </div>
         </div>

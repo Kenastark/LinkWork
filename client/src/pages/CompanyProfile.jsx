@@ -17,7 +17,9 @@ export default function CompanyProfile() {
   const load = () => api.get(`/api/companies/${id}`).then(setData).catch(e => setError(e.message));
   useEffect(() => { load(); }, [id]);
 
-  const [description] = useTranslatedTexts([data?.company?.description || '']);
+  const [description, name] = useTranslatedTexts([
+    data?.company?.description || '', data?.company?.name || '',
+  ]);
 
   if (error) return <main className="container"><div className="alert error" role="alert">{error}</div></main>;
   if (!data) return <main className="container" />;
@@ -37,7 +39,7 @@ export default function CompanyProfile() {
         <div style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
           <span className="company-mono" style={{ width: 64, height: 64, fontSize: 26 }}>{company.name.charAt(0).toUpperCase()}</span>
           <div style={{ flex: 1, minWidth: 200 }}>
-            <h1 style={{ fontSize: 26 }}>{company.name}</h1>
+            <h1 style={{ fontSize: 26 }}>{name}</h1>
             {company.website && <a className="ext-link" href={company.website} target="_blank" rel="noreferrer">{company.website}</a>}
           </div>
           {user.role === 'student' && (
