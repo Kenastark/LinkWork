@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
 import { useI18n, splitT } from '../i18n.jsx';
+import { useTranslatedTexts } from '../useTranslatedTexts.js';
 import LedgerRecord from '../components/LedgerRecord.jsx';
 
 const BRAND_PALETTE = [
@@ -394,6 +395,7 @@ function LedgerSection({ records, failed, hires }) {
   const { t } = useI18n();
   const empty = !records || records.length === 0;
   const [play] = useState(() => !ledgerIntroPlayed && !prefersReducedMotion());
+  const translatedTitles = useTranslatedTexts((records || []).map(r => r.title));
 
   useEffect(() => {
     if (!play) return;
@@ -416,7 +418,7 @@ function LedgerSection({ records, failed, hires }) {
                 key={r.job_id}
                 style={play ? { animationDelay: `${i * LEDGER_STAGGER}ms` } : undefined}
                 jobId={r.job_id}
-                title={r.title}
+                title={translatedTitles[i]}
                 company={r.company}
                 hiredAt={r.hired_at}
                 facultyVerified={!!r.faculty_verified}

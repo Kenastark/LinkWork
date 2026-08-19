@@ -125,6 +125,18 @@ async function main() {
     keysToTranslate.forEach((k, i) => { result[k] = translated[i]; });
     Object.assign(result, langOverrides);
 
+    // The digit-placeholder swap above survives most sentences, but MT has been seen
+    // resolving `{0}`/`{1}` into literal numbers and dropping the braces instead of
+    // leaving the token alone — silent since the result still looks like plausible
+    // text. Catch that here rather than shipping a placeholder that never fills in.
+    keysToTranslate.forEach((k, i) => {
+      for (const name of varNamesByKey[i]) {
+        if (!result[k].includes(`{${name}}`)) {
+          console.warn(`[translate-i18n] WARNING: ${lang}.${k} lost the {${name}} placeholder in translation: ${JSON.stringify(result[k])}`);
+        }
+      }
+    });
+
     const outPath = path.join(OUTPUT_DIR, `${lang}.json`);
     fs.writeFileSync(outPath, JSON.stringify(result, null, 2) + '\n');
     console.log(`[translate-i18n] wrote ${outPath} (${keysToTranslate.length} machine-translated, ${Object.keys(langOverrides).length} overridden, ${noMt.size} no-mt)`);

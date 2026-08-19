@@ -1,13 +1,5 @@
 // Shared stage/interview helpers used by the company dashboard, applicant review, and student pages.
 
-export const STAGE_LABEL = {
-  applied: 'Applied', skill_test: 'Skill test', ai_interview: 'AI interview',
-  company_test: 'Company test', hr_interview: 'HR interview', tech_interview: 'Technical interview',
-  hired: 'Hired', rejected: 'Not selected',
-};
-
-export const KIND_LABEL = { hr_interview: 'HR interview', tech_interview: 'Technical interview' };
-
 export const STAGE_ORDER = ['applied', 'skill_test', 'ai_interview', 'company_test', 'hr_interview', 'tech_interview', 'hired'];
 
 // What the Chain renders. 'applied' is in the database enum and is the column

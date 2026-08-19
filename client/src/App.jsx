@@ -206,7 +206,7 @@ function Avatar({ user, size = 34 }) {
 
 // Renders one ACCOUNT_MENU entry. Actions ('theme', 'brand') become their
 // matching button; everything else is a route, rendered as a NavLink.
-function renderAccountMenuItem(i, { theme, cycle, brand, cycleBrand }) {
+function renderAccountMenuItem(i, { theme, cycle, brand, cycleBrand, t }) {
   if (i.action === 'theme') {
     return <ThemeButton key="theme" theme={theme} cycle={cycle} className="account-menu-item" inMenu />;
   }
@@ -215,7 +215,7 @@ function renderAccountMenuItem(i, { theme, cycle, brand, cycleBrand }) {
   }
   return (
     <NavLink key={i.path} to={i.path} className="account-menu-item" role="menuitem">
-      {i.label}
+      {t(i.labelKey)}
     </NavLink>
   );
 }
@@ -251,7 +251,7 @@ function AccountMenu({ user, onSignOut, theme, cycle, brand, cycleBrand }) {
             </div>
           </div>
           <div className="account-menu-divider" />
-          {items.map(i => renderAccountMenuItem(i, { theme, cycle, brand, cycleBrand }))}
+          {items.map(i => renderAccountMenuItem(i, { theme, cycle, brand, cycleBrand, t }))}
           <div className="account-menu-divider" />
           <button className="account-menu-item danger" role="menuitem" onClick={onSignOut}>{t('nav.signOut')}</button>
         </div>

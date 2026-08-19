@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import { useTranslatedTexts } from '../useTranslatedTexts.js';
 import { useI18n } from '../i18n.jsx';
 
 export default function AdminDashboard() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const { t } = useI18n();
+  const translatedMatchTitles = useTranslatedTexts((data?.matches || []).map(m => m.title));
 
   const load = () => api.get('/api/admin/overview').then(setData).catch(e => setError(e.message));
   useEffect(() => { load(); }, []);
@@ -76,10 +78,10 @@ export default function AdminDashboard() {
           <table className="ledger">
             <thead><tr><th>{t('adminDashboard.matchHeader')}</th><th>{t('adminDashboard.roleHeader')}</th><th>{t('adminDashboard.companyHeader')}</th><th>{t('adminDashboard.hiredHeader')}</th></tr></thead>
             <tbody>
-              {data.matches.map(m => (
+              {data.matches.map((m, i) => (
                 <tr key={m.id}>
                   <td className="match-ids">JOB-{String(m.job_id).padStart(4, '0')} ⟷ STU-{String(m.student_id).padStart(4, '0')}</td>
-                  <td>{m.title}<br /><span className="muted">{m.student_name}</span></td>
+                  <td>{translatedMatchTitles[i]}<br /><span className="muted">{m.student_name}</span></td>
                   <td>{m.company_name}</td>
                   <td className="muted">{m.hired_at?.slice(0, 10)}</td>
                 </tr>

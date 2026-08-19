@@ -2,36 +2,52 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import DateTimePicker from '../components/DateTimePicker.jsx';
-import { STAGE_LABEL, KIND_LABEL, reached, formatSlot } from '../stages.js';
+import { reached, formatSlot } from '../stages.js';
 import useFocusTrap from '../useFocusTrap.js';
+import { useTranslatedTexts } from '../useTranslatedTexts.js';
+import { useI18n, splitT } from '../i18n.jsx';
 
-const DETAIL_TABS = [
-  { key: 'overview', label: 'Overview' },
-  { key: 'ai', label: 'AI interview' },
-  { key: 'company_test', label: 'Company test' },
-  { key: 'hr', label: 'HR interview' },
-  { key: 'tech', label: 'Technical' },
+function splitParts(value, count) {
+  const parts = [];
+  let rest = value;
+  for (let i = 0; i < count; i++) {
+    const [a, b] = splitT(rest);
+    parts.push(a);
+    rest = b;
+  }
+  parts.push(rest);
+  return parts;
+}
+
+const DETAIL_TAB_KEYS = [
+  { key: 'overview', labelKey: 'applicantReview.tabOverview' },
+  { key: 'ai', labelKey: 'applicantReview.tabAi' },
+  { key: 'company_test', labelKey: 'applicantReview.tabCompanyTest' },
+  { key: 'hr', labelKey: 'applicantReview.tabHr' },
+  { key: 'tech', labelKey: 'applicantReview.tabTech' },
 ];
 function defaultTabForStage(stage) {
   return { ai_interview: 'ai', company_test: 'company_test', hr_interview: 'hr', tech_interview: 'tech' }[stage] || 'overview';
 }
-const ADVANCE_GATE = {
-  company_test: 'The candidate must submit the company test before you can advance them.',
-  hr_interview: 'Schedule (and hold) the HR interview before advancing.',
-  tech_interview: 'Schedule (and hold) the technical interview before hiring.',
+const ADVANCE_GATE_KEY = {
+  company_test: 'applicantReview.gateCompanyTest',
+  hr_interview: 'applicantReview.gateHrInterview',
+  tech_interview: 'applicantReview.gateTechInterview',
 };
+const KIND_I18N_KEY = { hr_interview: 'interview.kindHrInterview', tech_interview: 'interview.kindTechInterview' };
 
 // ---- tabs ----
 function OverviewTab({ applicant }) {
+  const { t } = useI18n();
   const rows = [
-    ['Current stage', STAGE_LABEL[applicant.stage]],
-    ['Skill test', applicant.skill_score != null ? `${applicant.skill_score}%` : '—'],
-    ['AI interview', applicant.ai_score != null ? `${applicant.ai_score}/100` : 'Not scored'],
-    ['Company test', applicant.company_test_score != null ? `${applicant.company_test_score}%` : 'Not taken'],
+    [t('applicantReview.rowCurrentStage'), t(`stage.${applicant.stage}`)],
+    [t('applicantReview.rowSkillTest'), applicant.skill_score != null ? `${applicant.skill_score}%` : '—'],
+    [t('applicantReview.rowAiInterview'), applicant.ai_score != null ? `${applicant.ai_score}/100` : t('applicantReview.notScored')],
+    [t('applicantReview.rowCompanyTest'), applicant.company_test_score != null ? `${applicant.company_test_score}%` : t('applicantReview.notTaken')],
   ];
   return (
     <div>
-      <h3 style={{ fontSize: 17, marginBottom: 10 }}>Overview</h3>
+      <h3 style={{ fontSize: 17, marginBottom: 10 }}>{t('applicantReview.overviewTitle')}</h3>
       <table className="ledger">
         <tbody>{rows.map(([k, v]) => <tr key={k}><td style={{ fontWeight: 600, width: 220 }}>{k}</td><td>{v}</td></tr>)}</tbody>
       </table>
@@ -40,6 +56,7 @@ function OverviewTab({ applicant }) {
 }
 
 function AiInterviewTab({ applicant, aiAnswers, onChange }) {
+  const { t } = useI18n();
   const [scores, setScores] = useState(() => Object.fromEntries(aiAnswers.map(a => [a.id, a.company_score ?? ''])));
   const [saved, setSaved] = useState('');
   const [err, setErr] = useState('');
@@ -48,54 +65,55 @@ function AiInterviewTab({ applicant, aiAnswers, onChange }) {
     setErr(''); setSaved('');
     try {
       const r = await api.post(`/api/company/applicants/${applicant.id}/ai-scores`, { scores });
-      setSaved(r.ai_score != null ? `Saved. Section score: ${r.ai_score}/100.` : 'Saved.');
+      setSaved(r.ai_score != null ? t('applicantReview.savedWithScore', { n: r.ai_score }) : t('applicantReview.saved'));
       onChange();
     } catch (e) { setErr(e.message); }
   };
 
-  if (aiAnswers.length === 0) return <><h3 style={{ fontSize: 17 }}>AI interview</h3><p className="muted" style={{ marginTop: 8 }}>The candidate hasn't completed the AI interview yet.</p></>;
+  if (aiAnswers.length === 0) return <><h3 style={{ fontSize: 17 }}>{t('applicantReview.tabAi')}</h3><p className="muted" style={{ marginTop: 8 }}>{t('applicantReview.aiNotCompleted')}</p></>;
 
   return (
     <div>
       <div className="job-row">
-        <h3 style={{ fontSize: 17 }}>AI interview — score the answers</h3>
-        {applicant.ai_score != null && <span className="badge verified">Section score: {applicant.ai_score}/100</span>}
+        <h3 style={{ fontSize: 17 }}>{t('applicantReview.aiScoreTitle')}</h3>
+        {applicant.ai_score != null && <span className="badge verified">{t('applicantReview.sectionScoreBadge', { n: applicant.ai_score })}</span>}
       </div>
-      <p className="muted" style={{ fontSize: 13, margin: '6px 0 4px' }}>Placeholder recorded answers — the live AI-graded video interview ships later. Rate each answer 0–10.</p>
+      <p className="muted" style={{ fontSize: 13, margin: '6px 0 4px' }}>{t('applicantReview.aiIntro')}</p>
       {err && <div className="alert error" role="alert">{err}</div>}
       {saved && <div className="alert ok" role="status">{saved}</div>}
       {[1, 2].filter(round => aiAnswers.some(qa => qa.attempt === round)).map(round => (
         <div key={round}>
-          {aiAnswers.some(qa => qa.attempt === 2) && <p className="id-tag" style={{ marginTop: 16 }}>ROUND {round}</p>}
+          {aiAnswers.some(qa => qa.attempt === 2) && <p className="id-tag" style={{ marginTop: 16 }}>{t('applicantReview.roundLabel', { n: round })}</p>}
           {aiAnswers.filter(qa => qa.attempt === round).map(qa => (
             <div key={qa.id} style={{ marginTop: 12, borderBottom: '1px solid var(--line)', paddingBottom: 12 }}>
               <p style={{ fontWeight: 600, fontSize: 14 }}>{qa.question}</p>
               <p className="muted" style={{ marginTop: 4 }}>{qa.answer}</p>
-              <label className="score-input">Score
+              <label className="score-input">{t('applicantReview.scoreLabel')}
                 <input type="number" min="0" max="10" value={scores[qa.id]} onChange={e => setScores(s => ({ ...s, [qa.id]: e.target.value }))} />
-                <span className="muted">/ 10</span>
+                <span className="muted">{t('applicantReview.outOf10')}</span>
               </label>
             </div>
           ))}
         </div>
       ))}
-      <button className="btn" style={{ marginTop: 14 }} onClick={save}>Save scores</button>
+      <button className="btn" style={{ marginTop: 14 }} onClick={save}>{t('applicantReview.saveScores')}</button>
     </div>
   );
 }
 
 function CompanyTestTab({ companyTest }) {
+  const { t } = useI18n();
   const { questions, answers, score } = companyTest;
   const answerFor = (qid) => answers.find(a => a.question_id === qid);
   const taken = score != null;
   return (
     <div>
       <div className="job-row">
-        <h3 style={{ fontSize: 17 }}>Company test</h3>
-        {taken ? <span className="badge verified">Score: {score}%</span> : <span className="badge pending">Not taken yet</span>}
+        <h3 style={{ fontSize: 17 }}>{t('applicantReview.companyTestTitle')}</h3>
+        {taken ? <span className="badge verified">{t('applicantReview.companyTestScore', { n: score })}</span> : <span className="badge pending">{t('applicantReview.companyTestNotTaken')}</span>}
       </div>
-      <p className="muted" style={{ fontSize: 13, margin: '6px 0 10px' }}>Sample multiple-choice test (you'll be able to upload your own questions later). Auto-scored on submit.</p>
-      {!taken && <p className="muted">The candidate hasn't submitted the company test yet.</p>}
+      <p className="muted" style={{ fontSize: 13, margin: '6px 0 10px' }}>{t('applicantReview.companyTestIntro')}</p>
+      {!taken && <p className="muted">{t('applicantReview.companyTestNotSubmitted')}</p>}
       {taken && questions.map((q, i) => {
         const ans = answerFor(q.id);
         return (
@@ -107,7 +125,7 @@ function CompanyTestTab({ companyTest }) {
                 const correct = q.answer_idx === oi;
                 return (
                   <p key={oi} style={{ fontSize: 13.5, color: correct ? 'var(--verify)' : chosen ? 'var(--danger)' : 'var(--ink-soft)', fontWeight: chosen || correct ? 600 : 400 }}>
-                    {correct ? '✓' : chosen ? '✕' : '•'} {opt}{chosen ? ' (their answer)' : ''}
+                    {correct ? '✓' : chosen ? '✕' : '•'} {opt}{chosen ? ` ${t('applicantReview.theirAnswer')}` : ''}
                   </p>
                 );
               })}
@@ -121,6 +139,7 @@ function CompanyTestTab({ companyTest }) {
 
 // Score + written feedback the interviewer records after the interview.
 function InterviewFeedback({ iv, onChange }) {
+  const { t } = useI18n();
   const [score, setScore] = useState(iv.score ?? '');
   const [feedback, setFeedback] = useState(iv.feedback ?? '');
   const [saved, setSaved] = useState(false);
@@ -134,23 +153,24 @@ function InterviewFeedback({ iv, onChange }) {
 
   return (
     <div style={{ marginTop: 14, borderTop: '1px solid var(--line)', paddingTop: 14 }}>
-      <p className="filter-label">Interviewer assessment</p>
-      <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>Score the candidate and note how they performed. You can save now and come back to advance or reject later.</p>
+      <p className="filter-label">{t('applicantReview.interviewerAssessment')}</p>
+      <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>{t('applicantReview.assessmentIntro')}</p>
       {err && <div className="alert error" role="alert">{err}</div>}
-      {saved && <div className="alert ok" role="status">Assessment saved.</div>}
-      <label className="score-input">Score
+      {saved && <div className="alert ok" role="status">{t('applicantReview.assessmentSaved')}</div>}
+      <label className="score-input">{t('applicantReview.scoreLabel')}
         <input type="number" min="0" max="10" value={score} onChange={e => setScore(e.target.value)} />
-        <span className="muted">/ 10</span>
+        <span className="muted">{t('applicantReview.outOf10')}</span>
       </label>
-      <label className="field" style={{ marginTop: 10 }}>Comments on performance
-        <textarea value={feedback} onChange={e => setFeedback(e.target.value)} placeholder="Strengths, concerns, overall impression…" />
+      <label className="field" style={{ marginTop: 10 }}>{t('applicantReview.commentsLabel')}
+        <textarea value={feedback} onChange={e => setFeedback(e.target.value)} placeholder={t('applicantReview.feedbackPlaceholder')} />
       </label>
-      <button className="btn sm" onClick={save}>Save assessment</button>
+      <button className="btn sm" onClick={save}>{t('applicantReview.saveAssessment')}</button>
     </div>
   );
 }
 
 function InterviewTab({ applicant, interviews, kind, onChange }) {
+  const { t } = useI18n();
   const [proposed, setProposed] = useState([]);
   const [picker, setPicker] = useState(false);
   const [email, setEmail] = useState('');
@@ -158,6 +178,7 @@ function InterviewTab({ applicant, interviews, kind, onChange }) {
 
   const iv = interviews.find(x => x.kind === kind);
   const atThisStage = applicant.stage === kind;
+  const kindLabel = t(KIND_I18N_KEY[kind]);
 
   const send = async () => {
     setErr('');
@@ -176,39 +197,39 @@ function InterviewTab({ applicant, interviews, kind, onChange }) {
 
   return (
     <div>
-      <h3 style={{ fontSize: 17 }}>{KIND_LABEL[kind]}</h3>
+      <h3 style={{ fontSize: 17 }}>{kindLabel}</h3>
       {err && <div className="alert error" style={{ marginTop: 10 }}>{err}</div>}
       {!iv && !atThisStage && (
         <p className="muted" style={{ marginTop: 8 }}>
-          {reached(applicant.stage, kind) ? 'This interview stage has passed.' : `This step becomes available when the candidate reaches the ${KIND_LABEL[kind].toLowerCase()} stage.`}
+          {reached(applicant.stage, kind) ? t('applicantReview.stagePassed') : t('applicantReview.stageNotYet', { kind: kindLabel.toLowerCase() })}
         </p>
       )}
       {iv && (
         <div className="card" style={{ marginTop: 12, boxShadow: 'none' }}>
           <div className="job-row">
-            <span className={'badge ' + (iv.status === 'scheduled' ? 'verified' : 'pending')}>{iv.status === 'scheduled' ? 'Scheduled' : 'Awaiting candidate'}</span>
+            <span className={'badge ' + (iv.status === 'scheduled' ? 'verified' : 'pending')}>{iv.status === 'scheduled' ? t('applicantReview.scheduled') : t('applicantReview.awaitingCandidate')}</span>
           </div>
           {iv.status === 'scheduled' && iv.chosen_slot ? (
             <>
               <p style={{ marginTop: 8, fontWeight: 600 }}>{formatSlot(iv.chosen_slot.start_at, iv.chosen_slot.duration_min)}</p>
-              <Link to={`/meeting/${iv.id}`} className="btn sm" style={{ marginTop: 10 }}>Join meeting</Link>
+              <Link to={`/meeting/${iv.id}`} className="btn sm" style={{ marginTop: 10 }}>{t('applicantReview.joinMeeting')}</Link>
             </>
           ) : (
             <div className="slot-list">
               {iv.slots.map(s => <div className="slot-row" key={s.id}><span className="slot-when">{formatSlot(s.start_at, s.duration_min)}</span></div>)}
-              <p className="muted" style={{ fontSize: 13 }}>Proposed — waiting for the candidate to pick one.</p>
+              <p className="muted" style={{ fontSize: 13 }}>{t('applicantReview.proposedWaiting')}</p>
             </div>
           )}
           <div style={{ marginTop: 12 }}>
-            <p className="filter-label">Participants {kind === 'tech_interview' ? '(add technical team members)' : '(add colleagues)'}</p>
+            <p className="filter-label">{t('applicantReview.participantsLabel')} {kind === 'tech_interview' ? t('applicantReview.participantsTechHint') : t('applicantReview.participantsColleagueHint')}</p>
             <div className="participant-chips">
-              {iv.participants.length === 0 && <span className="muted" style={{ fontSize: 13 }}>Just you so far.</span>}
-              {iv.participants.map(p => <span className="participant-chip" key={p.id}>{p.email}<button onClick={() => removeParticipant(p.id)} aria-label={`Remove ${p.email}`}>✕</button></span>)}
+              {iv.participants.length === 0 && <span className="muted" style={{ fontSize: 13 }}>{t('applicantReview.justYou')}</span>}
+              {iv.participants.map(p => <span className="participant-chip" key={p.id}>{p.email}<button onClick={() => removeParticipant(p.id)} aria-label={t('applicantReview.removeParticipant', { email: p.email })}>✕</button></span>)}
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
               <input type="email" placeholder="colleague@company.com" value={email} onChange={e => setEmail(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addParticipant(); } }} />
-              <button className="btn sm secondary" onClick={addParticipant}>Add</button>
+              <button className="btn sm secondary" onClick={addParticipant}>{t('applicantReview.add')}</button>
             </div>
           </div>
           <InterviewFeedback iv={iv} onChange={onChange} />
@@ -216,7 +237,7 @@ function InterviewTab({ applicant, interviews, kind, onChange }) {
       )}
       {!iv && atThisStage && (
         <div style={{ marginTop: 14 }}>
-          {!picker && proposed.length === 0 && <button className="btn sm" onClick={() => setPicker(true)}>Propose {KIND_LABEL[kind].toLowerCase()} times</button>}
+          {!picker && proposed.length === 0 && <button className="btn sm" onClick={() => setPicker(true)}>{t('applicantReview.proposeTimes', { kind: kindLabel.toLowerCase() })}</button>}
           {(picker || proposed.length > 0) && (
             <>
               {proposed.length > 0 && (
@@ -224,16 +245,18 @@ function InterviewTab({ applicant, interviews, kind, onChange }) {
                   {proposed.map((s, i) => (
                     <div className="slot-row" key={i}>
                       <span className="slot-when">{formatSlot(s.start_at, s.duration_min)}</span>
-                      <button className="btn sm ghost" onClick={() => setProposed(p => p.filter((_, x) => x !== i))}>Remove</button>
+                      <button className="btn sm ghost" onClick={() => setProposed(p => p.filter((_, x) => x !== i))}>{t('applicantReview.remove')}</button>
                     </div>
                   ))}
                 </div>
               )}
               {picker
                 ? <DateTimePicker onAdd={(slot) => { setProposed(p => [...p, slot]); setPicker(false); }} />
-                : <button className="btn sm secondary" onClick={() => setPicker(true)}>+ Add another time</button>}
+                : <button className="btn sm secondary" onClick={() => setPicker(true)}>{t('applicantReview.addAnotherTime')}</button>}
               {proposed.length > 0 && !picker && (
-                <button className="btn" style={{ marginTop: 12 }} onClick={send}>Send {proposed.length} time{proposed.length > 1 ? 's' : ''} to candidate</button>
+                <button className="btn" style={{ marginTop: 12 }} onClick={send}>
+                  {t(proposed.length === 1 ? 'applicantReview.sendTimesOne' : 'applicantReview.sendTimesOther', { n: proposed.length })}
+                </button>
               )}
             </>
           )}
@@ -245,22 +268,26 @@ function InterviewTab({ applicant, interviews, kind, onChange }) {
 
 // ---- reject confirmation modal ----
 function RejectModal({ name, role, onCancel, onConfirm, busy }) {
+  const { t } = useI18n();
   const ref = useRef(null);
   useFocusTrap(true, ref, onCancel);
+
+  const [confirmPre, confirmName, confirmMid, confirmRole, confirmSuffix] = splitParts(t('applicantReview.rejectConfirm', { name, role }), 4);
+  const [warnPre, warnBold, warnSuffix] = splitParts(t('applicantReview.rejectWarning'), 2);
 
   return (
     <div className="modal-backdrop" onClick={onCancel}>
       <div className="modal" ref={ref} onClick={e => e.stopPropagation()}
            role="dialog" aria-modal="true" aria-labelledby="reject-title">
-        <h3 id="reject-title" style={{ fontSize: 20 }}>Reject this candidate?</h3>
-        <p style={{ marginTop: 10 }}>Are you sure you want to reject <b>{name}</b> for the <b>{role}</b> position?</p>
+        <h3 id="reject-title" style={{ fontSize: 20 }}>{t('applicantReview.rejectTitle')}</h3>
+        <p style={{ marginTop: 10 }}>{confirmPre} <b>{confirmName}</b> {confirmMid} <b>{confirmRole}</b> {confirmSuffix}</p>
         <div className="alert error" style={{ marginTop: 14, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
           <span style={{ fontSize: 18, lineHeight: 1 }}>⚠️</span>
-          <span>This action <b>cannot be reversed</b> and is final. The candidate will be notified that they were not selected.</span>
+          <span>{warnPre} <b>{warnBold}</b> {warnSuffix}</span>
         </div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 18 }}>
-          <button className="btn secondary" onClick={onCancel} disabled={busy}>Cancel</button>
-          <button className="btn danger" onClick={onConfirm} disabled={busy}>{busy ? 'Rejecting…' : 'Yes, reject'}</button>
+          <button className="btn secondary" onClick={onCancel} disabled={busy}>{t('applicantReview.cancel')}</button>
+          <button className="btn danger" onClick={onConfirm} disabled={busy}>{busy ? t('applicantReview.rejecting') : t('applicantReview.yesReject')}</button>
         </div>
       </div>
     </div>
@@ -270,19 +297,21 @@ function RejectModal({ name, role, onCancel, onConfirm, busy }) {
 export default function ApplicantReview() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [detail, setDetail] = useState(null);
   const [tab, setTab] = useState('overview');
   const [error, setError] = useState('');
   const [ok, setOk] = useState('');
   const [confirmReject, setConfirmReject] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [translatedTitle] = useTranslatedTexts([detail?.applicant?.title || '']);
 
   const load = (resetTab = false) => api.get(`/api/company/applicants/${id}`)
     .then(d => { setDetail(d); if (resetTab) setTab(defaultTabForStage(d.applicant.stage)); })
     .catch(e => setError(e.message));
   useEffect(() => { load(true); /* eslint-disable-next-line */ }, [id]);
 
-  if (error) return <main className="container"><div className="alert error" role="alert">{error}</div><Link to="/company" className="btn secondary" style={{ marginTop: 12 }}>Back to dashboard</Link></main>;
+  if (error) return <main className="container"><div className="alert error" role="alert">{error}</div><Link to="/company" className="btn secondary" style={{ marginTop: 12 }}>{t('applicantReview.backToDashboard')}</Link></main>;
   if (!detail) return <main className="container" />;
 
   const a = detail.applicant;
@@ -292,7 +321,7 @@ export default function ApplicantReview() {
     setError(''); setOk(''); setBusy(true);
     try {
       const r = await api.post(`/api/company/applicants/${a.id}/advance`);
-      setOk(r.stage === 'hired' ? 'Candidate hired. The match is recorded on the ledger.' : `Advanced to ${STAGE_LABEL[r.stage]}.`);
+      setOk(r.stage === 'hired' ? t('applicantReview.hiredOk') : t('applicantReview.advancedTo', { stage: t(`stage.${r.stage}`) }));
       await load(true);
     } catch (e) { setError(e.message); } finally { setBusy(false); }
   };
@@ -302,28 +331,28 @@ export default function ApplicantReview() {
       await api.post(`/api/company/applicants/${a.id}/reject`);
       setConfirmReject(false);
       await load();
-      setOk('Candidate rejected. They have been notified.');
+      setOk(t('applicantReview.rejectedOk'));
     } catch (e) { setError(e.message); setConfirmReject(false); } finally { setBusy(false); }
   };
 
   return (
     <main className="container">
-      <Link to="/company" className="btn sm ghost" style={{ marginBottom: 12 }}>← Back to applicants</Link>
+      <Link to="/company" className="btn sm ghost" style={{ marginBottom: 12 }}>{t('applicantReview.backToApplicants')}</Link>
 
       <div className="card">
         <div className="job-row">
           <div>
             <h1 style={{ fontSize: 24 }}>{a.student_name}</h1>
-            <p className="muted">{a.title} · {a.student_email} · {a.major}</p>
+            <p className="muted">{translatedTitle} · {a.student_email} · {a.major}</p>
           </div>
-          <span className={'badge ' + (a.stage === 'hired' ? 'verified' : a.stage === 'rejected' ? 'danger' : 'pending')}>{STAGE_LABEL[a.stage]}</span>
+          <span className={'badge ' + (a.stage === 'hired' ? 'verified' : a.stage === 'rejected' ? 'danger' : 'pending')}>{t(`stage.${a.stage}`)}</span>
         </div>
 
         {error && <div className="alert error" style={{ marginTop: 14 }}>{error}</div>}
         {ok && <div className="alert ok" style={{ marginTop: 14 }}>{ok}</div>}
 
         <div className="tabs" style={{ marginTop: 16 }}>
-          {DETAIL_TABS.map(dt => <button key={dt.key} className={tab === dt.key ? 'active' : ''} onClick={() => setTab(dt.key)}>{dt.label}</button>)}
+          {DETAIL_TAB_KEYS.map(dt => <button key={dt.key} className={tab === dt.key ? 'active' : ''} onClick={() => setTab(dt.key)}>{t(dt.labelKey)}</button>)}
         </div>
 
         <div style={{ marginTop: 16 }}>
@@ -337,22 +366,22 @@ export default function ApplicantReview() {
 
       {canAct && (
         <div className="card" style={{ marginTop: 16 }}>
-          <h3 style={{ fontSize: 16, marginBottom: 12 }}>Decision</h3>
+          <h3 style={{ fontSize: 16, marginBottom: 12 }}>{t('applicantReview.decisionTitle')}</h3>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <button className="btn" onClick={advance} disabled={busy || !detail.can_advance} title={detail.can_advance ? '' : ADVANCE_GATE[a.stage]}>
-              {a.stage === 'tech_interview' ? 'Hire ✓' : 'Advance to next stage →'}
+            <button className="btn" onClick={advance} disabled={busy || !detail.can_advance} title={detail.can_advance ? '' : t(ADVANCE_GATE_KEY[a.stage])}>
+              {a.stage === 'tech_interview' ? t('applicantReview.hire') : t('applicantReview.advanceNext')}
             </button>
-            <button className="btn danger" onClick={() => setConfirmReject(true)} disabled={busy}>Reject candidate</button>
+            <button className="btn danger" onClick={() => setConfirmReject(true)} disabled={busy}>{t('applicantReview.rejectCandidate')}</button>
           </div>
-          {!detail.can_advance && <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>{ADVANCE_GATE[a.stage]}</p>}
+          {!detail.can_advance && <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>{t(ADVANCE_GATE_KEY[a.stage])}</p>}
         </div>
       )}
 
-      {a.stage === 'hired' && <div className="alert ok" style={{ marginTop: 16 }}>This candidate has been hired. The match is on the ledger.</div>}
-      {a.stage === 'rejected' && <div className="alert error" style={{ marginTop: 16 }}>This candidate was not selected. They have been notified.</div>}
+      {a.stage === 'hired' && <div className="alert ok" style={{ marginTop: 16 }}>{t('applicantReview.hiredBanner')}</div>}
+      {a.stage === 'rejected' && <div className="alert error" style={{ marginTop: 16 }}>{t('applicantReview.rejectedBanner')}</div>}
 
       {confirmReject && (
-        <RejectModal name={a.student_name} role={a.title} busy={busy}
+        <RejectModal name={a.student_name} role={translatedTitle} busy={busy}
           onCancel={() => setConfirmReject(false)} onConfirm={doReject} />
       )}
     </main>

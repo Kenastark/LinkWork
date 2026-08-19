@@ -22,6 +22,8 @@ export default function CompanyProfile() {
   const [description, name] = useTranslatedTexts([
     data?.company?.description || '', data?.company?.name || '',
   ]);
+  const translatedTitles = useTranslatedTexts((data?.jobs || []).map(j => j.title));
+  const translatedFacultyNames = useTranslatedTexts((data?.jobs || []).map(j => j.faculty_name || ''));
 
   if (error) return <main className="container"><div className="alert error" role="alert">{error}</div></main>;
   if (!data) return <main className="container" />;
@@ -56,15 +58,15 @@ export default function CompanyProfile() {
       <h3 style={{ margin: '24px 0 12px', fontSize: 18 }}>{t('companyProfile.openPositionsTitle', { n: jobs.length })}</h3>
       {jobs.length === 0 ? (
         <Card><p className="muted">{t('companyProfile.noOpenPositions')}</p></Card>
-      ) : jobs.map(j => (
+      ) : jobs.map((j, i) => (
         <Card key={j.id} className="job-card">
           <span className="id-tag">JOB-{String(j.id).padStart(4, '0')}</span>
           <div className="job-row">
             <div>
-              <h3><Link to={`/jobs/${j.id}`} style={{ color: 'inherit' }}>{j.title}</Link></h3>
+              <h3><Link to={`/jobs/${j.id}`} style={{ color: 'inherit' }}>{translatedTitles[i]}</Link></h3>
               <div className="meta">
                 {j.faculty_verified
-                  ? <Badge variant="faculty">{t('companyProfile.facultyPartnership', { faculty: j.faculty_name || t('companyProfile.universityWide') })}</Badge>
+                  ? <Badge variant="faculty">{t('companyProfile.facultyPartnership', { faculty: translatedFacultyNames[i] || t('companyProfile.universityWide') })}</Badge>
                   : <Badge variant="verified">{t('companyProfile.platformCommitted')}</Badge>}
                 <Badge variant="pending">{j.job_type === 'internship' ? t('companyProfile.internship') : t('companyProfile.entryLevel')}</Badge>
               </div>

@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
 import Chain from '../components/Chain.jsx';
 import { formatSlot } from '../stages.js';
+import { useTranslatedTexts } from '../useTranslatedTexts.js';
 import { useI18n } from '../i18n.jsx';
 
 const KIND_I18N_KEY = { hr_interview: 'interview.kindHrInterview', tech_interview: 'interview.kindTechInterview' };
@@ -61,6 +62,7 @@ export default function MyApplications() {
   const { user } = useAuth();
   const [apps, setApps] = useState([]);
   const { t } = useI18n();
+  const translatedTitles = useTranslatedTexts(apps.map(a => a.title));
 
   useEffect(() => { api.get('/api/my-applications').then(d => setApps(d.applications)); }, []);
 
@@ -70,10 +72,10 @@ export default function MyApplications() {
 
       {apps.length === 0 ? (
         <div className="card"><p className="muted">{t('myApplications.empty')}</p></div>
-      ) : apps.map(a => (
+      ) : apps.map((a, i) => (
         <div className="card" key={a.id}>
           <span className="id-tag">JOB-{String(a.job_id).padStart(4, '0')}</span>
-          <h3>{a.title}</h3>
+          <h3>{translatedTitles[i]}</h3>
           <p className="muted">{a.company_name}{a.skill_score != null ? ` · ${t('myApplications.skillTestLine', { score: a.skill_score })}` : ''}</p>
           <Chain stage={a.stage} />
           {['skill_test', 'ai_interview', 'company_test'].includes(a.stage) && (

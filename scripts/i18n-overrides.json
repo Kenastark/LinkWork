@@ -9,7 +9,15 @@
     "adminDashboard.matchHeader": "Párosítás",
     "myApplications.hiredBadge": "✓ Felvéve – gratulálunk! A párosítás rögzítve:",
     "notifications.open": "Megnyitás",
-    "companyProfile.viewApply": "Megtekintés és jelentkezés"
+    "companyProfile.viewApply": "Megtekintés és jelentkezés",
+    "stage.applied": "Jelentkezett",
+    "stage.hired": "Felvéve",
+    "companyDashboard.tabPostings": "Hirdetéseim ({n})",
+    "companyDashboard.stageHeader": "Szakasz",
+    "companyDashboard.postingChip": "Hirdetés: {title} ✕",
+    "companyDashboard.sortApplied": "Jelentkezés sorrendje",
+    "applicantReview.hire": "Felvétel ✓",
+    "ledger.panelTitle": "A felvételi nyilvántartás"
   },
   "fr": {
     "adminDashboard.majorHeader": "Spécialisation",
@@ -19,6 +27,18 @@
     "myApplications.title": "Mes candidatures ({n})",
     "adminDashboard.actionsHeader": "Actions",
     "adminDashboard.matchHeader": "Correspondance",
-    "myApplications.hiredBadge": "✓ Embauché(e) — félicitations ! Correspondance enregistrée :"
+    "myApplications.hiredBadge": "✓ Embauché(e) — félicitations ! Correspondance enregistrée :",
+    "companyDashboard.filledOfOne": "{filled} sur {total} poste pourvu · Fermé",
+    "companyDashboard.filledOfOther": "{filled} sur {total} postes pourvus · Fermé",
+    "stage.applied": "Candidature déposée",
+    "companyDashboard.tabPostings": "Mes offres ({n})",
+    "companyDashboard.statusOpen": "Ouvert",
+    "companyDashboard.stageHeader": "Stade",
+    "companyDashboard.typeLabel": "Type",
+    "companyDashboard.sortApplied": "Ordre de candidature",
+    "applicantReview.saveScores": "Enregistrer les scores",
+    "applicantReview.saveAssessment": "Enregistrer l'évaluation",
+    "applicantReview.rejectCandidate": "Rejeter le candidat",
+    "ledger.panelTitle": "Le registre des embauches"
   }
 }
