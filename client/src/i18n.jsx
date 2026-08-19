@@ -6,6 +6,14 @@ export const LANGUAGES = [
   { code: 'fr', label: 'Français', flag: '🇫🇷' },
 ];
 
+// Some translation values embed a `||` delimiter marking a styling boundary
+// (e.g. where <em> or <b> starts) inside an otherwise whole, translatable
+// sentence — splitT() below breaks the value into the two parts at render time.
+export function splitT(value, delimiter = '||') {
+  const i = value.indexOf(delimiter);
+  return i === -1 ? [value, ''] : [value.slice(0, i), value.slice(i + delimiter.length)];
+}
+
 // Coverage: shared chrome (nav / account menu / footer) + the full homepage.
 // Other pages fall back to their hard-coded English strings until translated.
 const translations = {
@@ -52,8 +60,7 @@ const translations = {
     'footer.tagline': `Every posting is real. Every hire is on the ledger.`,
 
     'hero.eyebrow': `University of Debrecen · Pilot`,
-    'hero.title': `Real companies. Open roles.`,
-    'hero.titleEm': `Actual hires.`,
+    'hero.title': `Real companies. Open roles. ||Actual hires.`,
     'hero.lede': `LinkWork only lists internships and entry-level roles that companies have committed to filling — most of them negotiated directly with your faculty. No fake listings, no pre-filled positions. If you see it here, someone is getting hired for it.`,
     'hero.ctaJoinStudent': `Join with your university email`,
     'hero.ctaHireStudents': `Hire students`,
@@ -100,24 +107,18 @@ const translations = {
     'mock.tagSalary': `Salary shown upfront`,
     'mock.tagRemote': `Remote-friendly`,
     'mock.whatToExpect': `What to expect`,
-    'mock.factVerified': `★ Faculty-verified`,
-    'mock.factVerifiedRest': `partnership`,
-    'mock.factResponse': `~3 days`,
-    'mock.factResponseRest': `average response time`,
-    'mock.factSteps': `5 steps`,
-    'mock.factStepsRest': `, all shown before you apply`,
+    'mock.factVerified': `★ Faculty-verified|| partnership`,
+    'mock.factResponse': `~3 days|| average response time`,
+    'mock.factSteps': `5 steps||, all shown before you apply`,
     'mock.chipMentorship': `Mentorship`,
     'mock.chipPaid': `Paid`,
     'mock.tagCommitted': `Committed to hire`,
 
-    'landJob.titleLight': `Prepare yourself to`,
-    'landJob.titleBold': `Land your job!`,
-    'landJob.card1Pre': `Verified roles are open right now — `,
-    'landJob.card1Bold': `be the next hire.`,
+    'landJob.title': `Prepare yourself to||Land your job!`,
+    'landJob.card1': `Verified roles are open right now — ||be the next hire.`,
     'landJob.card2Title': `Make yourself visible to companies`,
     'landJob.card2Cta': `Upload my CV`,
-    'landJob.card3Pre': `Companies are committed to hiring here. `,
-    'landJob.card3Bold': `Want the roles that match your major?`,
+    'landJob.card3': `Companies are committed to hiring here. ||Want the roles that match your major?`,
     'landJob.card4Title': `Be alerted quickly`,
     'landJob.card4Cta': `Create my alert`,
 
@@ -262,8 +263,7 @@ const translations = {
     'footer.tagline': `Minden hirdetés valódi. Minden felvétel a nyilvántartásban van.`,
 
     'hero.eyebrow': `Debreceni Egyetem · Kísérleti program`,
-    'hero.title': `Valódi cégek. Nyitott pozíciók.`,
-    'hero.titleEm': `Valódi felvételek.`,
+    'hero.title': `Valódi cégek. Nyitott pozíciók. ||Valódi felvételek.`,
     'hero.lede': `A LinkWork kizárólag olyan gyakornoki és kezdő pozíciókat listáz, amelyek betöltésére a cégek elkötelezték magukat — ezek nagy részét közvetlenül a karoddal egyeztetve. Nincs hamis hirdetés, nincs előre betöltött pozíció. Ha itt látod, valakit tényleg felvesznek rá.`,
     'hero.ctaJoinStudent': `Csatlakozz az egyetemi email címeddel`,
     'hero.ctaHireStudents': `Vegyél fel hallgatókat`,
@@ -310,24 +310,18 @@ const translations = {
     'mock.tagSalary': `Fizetés előre látható`,
     'mock.tagRemote': `Távmunka-barát`,
     'mock.whatToExpect': `Mire számíthatsz`,
-    'mock.factVerified': `★ Kar által ellenőrzött`,
-    'mock.factVerifiedRest': `partnerség`,
-    'mock.factResponse': `~3 nap`,
-    'mock.factResponseRest': `átlagos válaszidő`,
-    'mock.factSteps': `5 lépés`,
-    'mock.factStepsRest': `, mind látható jelentkezés előtt`,
+    'mock.factVerified': `★ Kar által ellenőrzött|| partnerség`,
+    'mock.factResponse': `~3 nap|| átlagos válaszidő`,
+    'mock.factSteps': `5 lépés||, mind látható jelentkezés előtt`,
     'mock.chipMentorship': `Mentorálás`,
     'mock.chipPaid': `Fizetett`,
     'mock.tagCommitted': `Felvételre elkötelezve`,
 
-    'landJob.titleLight': `Készülj fel, hogy`,
-    'landJob.titleBold': `megszerezd az állásod!`,
-    'landJob.card1Pre': `Ellenőrzött pozíció áll nyitva most — `,
-    'landJob.card1Bold': `légy te a következő felvett.`,
+    'landJob.title': `Készülj fel, hogy||megszerezd az állásod!`,
+    'landJob.card1': `Ellenőrzött pozíció áll nyitva most — ||légy te a következő felvett.`,
     'landJob.card2Title': `Mutasd meg magad a cégeknek`,
     'landJob.card2Cta': `Önéletrajz feltöltése`,
-    'landJob.card3Pre': `Cégek köteleződtek el a felvétel mellett itt. `,
-    'landJob.card3Bold': `Szeretnéd a szakodnak megfelelő pozíciókat?`,
+    'landJob.card3': `Cégek köteleződtek el a felvétel mellett itt. ||Szeretnéd a szakodnak megfelelő pozíciókat?`,
     'landJob.card4Title': `Kapj gyors értesítést`,
     'landJob.card4Cta': `Értesítés létrehozása`,
 
@@ -471,8 +465,7 @@ const translations = {
     'footer.tagline': `Chaque offre est réelle. Chaque embauche est enregistrée.`,
 
     'hero.eyebrow': `Université de Debrecen · Programme pilote`,
-    'hero.title': `De vraies entreprises. Des postes ouverts.`,
-    'hero.titleEm': `De vraies embauches.`,
+    'hero.title': `De vraies entreprises. Des postes ouverts. ||De vraies embauches.`,
     'hero.lede': `LinkWork ne propose que des stages et des postes débutants que les entreprises se sont engagées à pourvoir — la plupart négociés directement avec votre faculté. Pas de fausses annonces, pas de postes déjà pourvus. Si vous le voyez ici, quelqu'un sera réellement embauché.`,
     'hero.ctaJoinStudent': `Rejoignez-nous avec votre e-mail universitaire`,
     'hero.ctaHireStudents': `Recruter des étudiants`,
@@ -519,24 +512,18 @@ const translations = {
     'mock.tagSalary': `Salaire affiché`,
     'mock.tagRemote': `Télétravail possible`,
     'mock.whatToExpect': `À quoi s'attendre`,
-    'mock.factVerified': `★ Vérifié par la faculté`,
-    'mock.factVerifiedRest': `partenariat`,
-    'mock.factResponse': `~3 jours`,
-    'mock.factResponseRest': `délai de réponse moyen`,
-    'mock.factSteps': `5 étapes`,
-    'mock.factStepsRest': `, toutes visibles avant de postuler`,
+    'mock.factVerified': `★ Vérifié par la faculté|| partenariat`,
+    'mock.factResponse': `~3 jours|| délai de réponse moyen`,
+    'mock.factSteps': `5 étapes||, toutes visibles avant de postuler`,
     'mock.chipMentorship': `Mentorat`,
     'mock.chipPaid': `Rémunéré`,
     'mock.tagCommitted': `Engagé à recruter`,
 
-    'landJob.titleLight': `Préparez-vous à`,
-    'landJob.titleBold': `décrocher votre emploi !`,
-    'landJob.card1Pre': `Des postes vérifiés sont ouverts dès maintenant — `,
-    'landJob.card1Bold': `soyez le prochain recruté.`,
+    'landJob.title': `Préparez-vous à||décrocher votre emploi !`,
+    'landJob.card1': `Des postes vérifiés sont ouverts dès maintenant — ||soyez le prochain recruté.`,
     'landJob.card2Title': `Rendez-vous visible auprès des entreprises`,
     'landJob.card2Cta': `Télécharger mon CV`,
-    'landJob.card3Pre': `Des entreprises se sont engagées à recruter ici. `,
-    'landJob.card3Bold': `Vous voulez les offres qui correspondent à votre filière ?`,
+    'landJob.card3': `Des entreprises se sont engagées à recruter ici. ||Vous voulez les offres qui correspondent à votre filière ?`,
     'landJob.card4Title': `Soyez alerté rapidement`,
     'landJob.card4Cta': `Créer mon alerte`,
 

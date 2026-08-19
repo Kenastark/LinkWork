@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
-import { useI18n } from '../i18n.jsx';
+import { useI18n, splitT } from '../i18n.jsx';
 import LedgerRecord from '../components/LedgerRecord.jsx';
 
 const BRAND_PALETTE = [
@@ -208,15 +208,18 @@ function OffersArt({ t }) {
   );
 }
 function TransparentArt({ t }) {
+  const [factVerified, factVerifiedRest] = splitT(t('mock.factVerified'));
+  const [factResponse, factResponseRest] = splitT(t('mock.factResponse'));
+  const [factSteps, factStepsRest] = splitT(t('mock.factSteps'));
   return (
     <div className="feature-panel panel-green" aria-hidden="true">
       <div className="mock-card">
         <span className="mock-mono">GreenField AgroTech Zrt.</span>
         <h4 style={{ marginTop: 6 }}>{t('mock.whatToExpect')}</h4>
         <ul className="mock-facts">
-          <li><b>{t('mock.factVerified')}</b> {t('mock.factVerifiedRest')}</li>
-          <li><b>{t('mock.factResponse')}</b> {t('mock.factResponseRest')}</li>
-          <li><b>{t('mock.factSteps')}</b>{t('mock.factStepsRest')}</li>
+          <li><b>{factVerified}</b>{factVerifiedRest}</li>
+          <li><b>{factResponse}</b>{factResponseRest}</li>
+          <li><b>{factSteps}</b>{factStepsRest}</li>
         </ul>
         <div className="mock-tags">
           <span className="mock-chip">{t('mock.chipMentorship')}</span>
@@ -514,13 +517,18 @@ export default function Landing() {
   const ledgerFailed = ledger === 'failed';
   const records = Array.isArray(ledger) ? ledger : [];
 
+  const [heroTitle, heroTitleEm] = splitT(t('hero.title'));
+  const [landJobTitleLight, landJobTitleBold] = splitT(t('landJob.title'));
+  const [landJobCard1Pre, landJobCard1Bold] = splitT(t('landJob.card1'));
+  const [landJobCard3Pre, landJobCard3Bold] = splitT(t('landJob.card3'));
+
   return (
     <main>
       <section className="hero">
         <div className="container">
           <div>
             <div className="eyebrow">{t('hero.eyebrow')}</div>
-            <h1>{t('hero.title')} <em>{t('hero.titleEm')}</em></h1>
+            <h1>{heroTitle}<em>{heroTitleEm}</em></h1>
             <p className="lede">{t('hero.lede')}</p>
             <div className="cta-row">
               {user ? (
@@ -678,11 +686,11 @@ export default function Landing() {
 
       <section className="land-job reveal">
         <div className="container">
-          <h2 className="land-title"><span className="land-title-light">{t('landJob.titleLight')}</span><span className="land-title-bold">{t('landJob.titleBold')}</span></h2>
+          <h2 className="land-title"><span className="land-title-light">{landJobTitleLight}</span><span className="land-title-bold">{landJobTitleBold}</span></h2>
           <div className="land-grid">
             <div className="land-card stat land-lav">
               <b>{stats ? stats.open_jobs : '—'}</b>
-              <p>{t('landJob.card1Pre')}<b>{t('landJob.card1Bold')}</b></p>
+              <p>{landJobCard1Pre}<b>{landJobCard1Bold}</b></p>
             </div>
             <div className="land-card action land-peri">
               <div className="land-card-top">
@@ -693,7 +701,7 @@ export default function Landing() {
             </div>
             <div className="land-card stat land-cream">
               <b>{stats ? stats.approved_companies : '—'}</b>
-              <p>{t('landJob.card3Pre')}<b>{t('landJob.card3Bold')}</b></p>
+              <p>{landJobCard3Pre}<b>{landJobCard3Bold}</b></p>
             </div>
             <div className="land-card action land-gold">
               <div className="land-card-top">
