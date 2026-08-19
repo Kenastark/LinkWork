@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // One-off authoring script: machine-translates client/src/i18n.jsx's `translations.en`
 // into hu/fr, layering hand-written overrides on top, and writes the result to
-// scripts/output/ for manual review before anything is copied into i18n.jsx.
+// client/src/locales/ — the real source of truth i18n.jsx imports at build time.
 // Not imported by the app or by server/ — safe to change without a build.
 
 const fs = require('fs');
@@ -19,7 +19,7 @@ const REPO_ROOT = path.join(__dirname, '..');
 const I18N_PATH = path.join(REPO_ROOT, 'client', 'src', 'i18n.jsx');
 const OVERRIDES_PATH = path.join(__dirname, 'i18n-overrides.json');
 const NO_MT_PATH = path.join(__dirname, 'i18n-no-mt.json');
-const OUTPUT_DIR = path.join(__dirname, 'output');
+const OUTPUT_DIR = path.join(REPO_ROOT, 'client', 'src', 'locales');
 const TARGET_LANGS = ['hu', 'fr'];
 
 // Values are simple, single-line `key`: `value` template literals with no
