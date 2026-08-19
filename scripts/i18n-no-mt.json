@@ -1,1 +1,25 @@
-[]
+[
+  "terms.policyVersionLabel",
+  "terms.title",
+  "terms.eligibilityTitle",
+  "terms.eligibilityBody",
+  "terms.commitmentsTitle",
+  "terms.commitmentsBody",
+  "terms.fairUseTitle",
+  "terms.fairUseBody",
+  "terms.terminationTitle",
+  "terms.termination",
+  "privacy.policyVersionLabel",
+  "privacy.title",
+  "privacy.collectTitle",
+  "privacy.collectBody",
+  "privacy.whyTitle",
+  "privacy.whyBody",
+  "privacy.retentionTitle",
+  "privacy.retentionBody",
+  "privacy.rightsTitle",
+  "privacy.rightsBodyPre",
+  "privacy.contactTitle",
+  "privacy.contactBodyPre",
+  "privacy.disclaimer"
+]
