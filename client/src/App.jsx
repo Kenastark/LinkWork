@@ -81,9 +81,9 @@ function useScrolledPast(threshold) {
 function navItemsFor(user, t) {
   if (user?.role === 'student') return {
     primary: [
-      { to: '/jobs', label: t('nav.findInternship'), lg: true },
-      { to: '/companies', label: t('nav.exploreCompanies'), lg: true },
-      { to: '/resources', label: t('nav.resources'), lg: true },
+      { to: '/jobs', label: t('nav.findInternship') },
+      { to: '/companies', label: t('nav.exploreCompanies') },
+      { to: '/resources', label: t('nav.resources') },
     ],
     secondary: [{ to: '/my-applications', label: t('nav.applications') }],
   };
@@ -91,9 +91,9 @@ function navItemsFor(user, t) {
   if (user?.role === 'admin') return { primary: [{ to: '/admin', label: t('nav.admin') }], secondary: [] };
   return {
     primary: [
-      { to: '/auth', label: t('nav.findAJob'), lg: true },
-      { to: '/auth', label: t('nav.exploreCompanies'), lg: true },
-      { to: '/auth', label: t('nav.resources'), lg: true },
+      { to: '/auth', label: t('nav.findAJob') },
+      { to: '/auth', label: t('nav.exploreCompanies') },
+      { to: '/auth', label: t('nav.resources') },
     ],
     secondary: [],
   };
