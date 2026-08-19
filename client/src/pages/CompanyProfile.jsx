@@ -6,6 +6,7 @@ import { useTranslatedTexts } from '../useTranslatedTexts.js';
 import Card from '../components/Card.jsx';
 import Badge from '../components/Badge.jsx';
 import Button from '../components/Button.jsx';
+import { useI18n } from '../i18n.jsx';
 
 export default function CompanyProfile() {
   const { id } = useParams();
@@ -13,6 +14,7 @@ export default function CompanyProfile() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const { t } = useI18n();
 
   const load = () => api.get(`/api/companies/${id}`).then(setData).catch(e => setError(e.message));
   useEffect(() => { load(); }, [id]);
@@ -44,16 +46,16 @@ export default function CompanyProfile() {
           </div>
           {user.role === 'student' && (
             <Button variant={following ? 'secondary' : ''} disabled={busy} onClick={toggleFollow}>
-              {following ? 'Following ✓' : 'Follow'}
+              {following ? t('companyProfile.following') : t('companyProfile.follow')}
             </Button>
           )}
         </div>
         {company.description && <p className="muted" style={{ marginTop: 16 }}>{description}</p>}
       </Card>
 
-      <h3 style={{ margin: '24px 0 12px', fontSize: 18 }}>Open positions ({jobs.length})</h3>
+      <h3 style={{ margin: '24px 0 12px', fontSize: 18 }}>{t('companyProfile.openPositionsTitle', { n: jobs.length })}</h3>
       {jobs.length === 0 ? (
-        <Card><p className="muted">No open positions right now.</p></Card>
+        <Card><p className="muted">{t('companyProfile.noOpenPositions')}</p></Card>
       ) : jobs.map(j => (
         <Card key={j.id} className="job-card">
           <span className="id-tag">JOB-{String(j.id).padStart(4, '0')}</span>
@@ -61,11 +63,13 @@ export default function CompanyProfile() {
             <div>
               <h3><Link to={`/jobs/${j.id}`} style={{ color: 'inherit' }}>{j.title}</Link></h3>
               <div className="meta">
-                {j.faculty_verified ? <Badge variant="faculty">★ Faculty partnership · {j.faculty_name || 'University-wide'}</Badge> : <Badge variant="verified">✓ Platform-committed hire</Badge>}
-                <Badge variant="pending">{j.job_type === 'internship' ? 'Internship' : 'Entry level'}</Badge>
+                {j.faculty_verified
+                  ? <Badge variant="faculty">{t('companyProfile.facultyPartnership', { faculty: j.faculty_name || t('companyProfile.universityWide') })}</Badge>
+                  : <Badge variant="verified">{t('companyProfile.platformCommitted')}</Badge>}
+                <Badge variant="pending">{j.job_type === 'internship' ? t('companyProfile.internship') : t('companyProfile.entryLevel')}</Badge>
               </div>
             </div>
-            <Link to={`/jobs/${j.id}`} className="btn sm">View & apply</Link>
+            <Link to={`/jobs/${j.id}`} className="btn sm">{t('companyProfile.viewApply')}</Link>
           </div>
         </Card>
       ))}

@@ -2,8 +2,21 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
+import { useI18n, splitT } from '../i18n.jsx';
 
-const MODE_TITLE = { login: 'Sign in', student: 'Student sign-up', company: 'Company sign-up' };
+const MODE_TITLE_KEY = { login: 'auth.modeSignIn', student: 'auth.modeStudentSignup', company: 'auth.modeCompanySignup' };
+
+function splitParts(value, count) {
+  const parts = [];
+  let rest = value;
+  for (let i = 0; i < count; i++) {
+    const [a, b] = splitT(rest);
+    parts.push(a);
+    rest = b;
+  }
+  parts.push(rest);
+  return parts;
+}
 
 export default function Auth() {
   const [params] = useSearchParams();
@@ -16,18 +29,20 @@ export default function Auth() {
   const [busy, setBusy] = useState(false);
   const { setUser } = useAuth();
   const nav = useNavigate();
+  const { t } = useI18n();
 
   useEffect(() => { api.get('/api/meta').then(setMeta); }, []);
 
   const EDU_LEVEL_RANK = { "Bachelor's": 0, "Master's": 1, PhD: 2, Other: 0 };
   const EDUCATION_LEVELS = ["Bachelor's", "Master's", 'PhD', 'Other'];
+  const EDU_LEVEL_KEY = { "Bachelor's": 'auth.eduBachelors', "Master's": 'auth.eduMasters', PhD: 'auth.eduPhd', Other: 'auth.eduOther' };
 
   const submit = async (e) => {
     e.preventDefault();
     setError('');
     const fd = Object.fromEntries(new FormData(e.target));
     if ((mode === 'student' || mode === 'company') && fd.password !== fd.confirm_password) {
-      setError('Passwords do not match.');
+      setError(t('auth.passwordMismatch'));
       return;
     }
     delete fd.confirm_password;
@@ -48,15 +63,17 @@ export default function Auth() {
   const facultyMajors = meta?.majors?.filter(m => m.faculty_id === Number(facultyId)
     && (!m.min_level || (EDU_LEVEL_RANK[educationLevel] ?? -1) >= EDU_LEVEL_RANK[m.min_level])) || [];
 
+  const [termsPre, termsTos, termsMid, termsPrivacy, termsSuffix] = splitParts(t('auth.termsAgreement'), 4);
+
   return (
     <main className="container" style={{ maxWidth: 560 }}>
       {/* The visible headings live inside the card and change with the tab, so
           the page needs its own h1 for structure. */}
-      <h1 className="sr-only">{MODE_TITLE[mode]}</h1>
+      <h1 className="sr-only">{t(MODE_TITLE_KEY[mode])}</h1>
       <div className="tabs">
-        <button className={mode === 'login' ? 'active' : ''} onClick={() => setMode('login')}>Sign in</button>
-        <button className={mode === 'student' ? 'active' : ''} onClick={() => setMode('student')}>Student sign-up</button>
-        <button className={mode === 'company' ? 'active' : ''} onClick={() => setMode('company')}>Company sign-up</button>
+        <button className={mode === 'login' ? 'active' : ''} onClick={() => setMode('login')}>{t('auth.modeSignIn')}</button>
+        <button className={mode === 'student' ? 'active' : ''} onClick={() => setMode('student')}>{t('auth.modeStudentSignup')}</button>
+        <button className={mode === 'company' ? 'active' : ''} onClick={() => setMode('company')}>{t('auth.modeCompanySignup')}</button>
       </div>
 
       {error && <div className="alert error" role="alert">{error}</div>}
@@ -65,66 +82,66 @@ export default function Auth() {
       <form className="card" onSubmit={submit}>
         {mode === 'login' && (
           <>
-            <h2>Welcome back</h2>
-            <p className="muted" style={{ marginBottom: 18 }}>Demo accounts — student: demo.student@mailbox.unideb.hu / student1234 · company: hr@datatech.hu / company1234 · admin: admin@linkwork.app / admin1234</p>
-            <label className="field">Email<input name="email" type="email" required autoComplete="email" /></label>
-            <label className="field">Password<input name="password" type="password" required autoComplete="current-password" /></label>
+            <h2>{t('auth.welcomeBack')}</h2>
+            <p className="muted" style={{ marginBottom: 18 }}>{t('auth.demoAccounts')}</p>
+            <label className="field">{t('auth.emailLabel')}<input name="email" type="email" required autoComplete="email" /></label>
+            <label className="field">{t('auth.passwordLabel')}<input name="password" type="password" required autoComplete="current-password" /></label>
           </>
         )}
 
         {mode === 'student' && (
           <>
-            <h3>Join as a student</h3>
-            <p className="muted" style={{ marginBottom: 18 }}>Only official university addresses are accepted — this keeps every profile real.</p>
-            <label className="field">Full name<input name="name" required /></label>
-            <label className="field">University email <span className="hint">(e.g. you@mailbox.unideb.hu)</span><input name="email" type="email" required /></label>
-            <label className="field">Current level of education
+            <h3>{t('auth.joinAsStudentTitle')}</h3>
+            <p className="muted" style={{ marginBottom: 18 }}>{t('auth.studentIntro')}</p>
+            <label className="field">{t('auth.fullNameLabel')}<input name="name" required /></label>
+            <label className="field">{t('auth.universityEmailLabel')} <span className="hint">{t('auth.universityEmailHint')}</span><input name="email" type="email" required /></label>
+            <label className="field">{t('auth.educationLevelLabel')}
               <select name="education_level" required value={educationLevel} onChange={e => setEducationLevel(e.target.value)}>
-                <option value="" disabled>Select your education level</option>
-                {EDUCATION_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
+                <option value="" disabled>{t('auth.selectEducationLevel')}</option>
+                {EDUCATION_LEVELS.map(l => <option key={l} value={l}>{t(EDU_LEVEL_KEY[l])}</option>)}
               </select>
             </label>
-            <label className="field">Faculty
+            <label className="field">{t('auth.facultyLabel')}
               <select name="faculty_id" required value={facultyId} onChange={e => setFacultyId(e.target.value)}>
-                <option value="" disabled>Select your faculty</option>
+                <option value="" disabled>{t('auth.selectFaculty')}</option>
                 {uniFaculties.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
               </select>
             </label>
-            <label className="field">Major <span className="hint">(your skill test is based on this)</span>
+            <label className="field">{t('auth.majorLabel')} <span className="hint">{t('auth.majorHint')}</span>
               <select name="major" required defaultValue="" disabled={!facultyId}>
-                <option value="" disabled>{facultyId ? 'Select your major' : 'Select a faculty first'}</option>
+                <option value="" disabled>{facultyId ? t('auth.selectMajor') : t('auth.selectFacultyFirst')}</option>
                 {facultyMajors.map(m => <option key={m.id} value={m.name}>{m.name}{m.min_level ? ` (${m.min_level}+)` : ''}</option>)}
               </select>
             </label>
-            <label className="field">Password <span className="hint">(8+ characters)</span><input name="password" type="password" minLength={8} required autoComplete="new-password" /></label>
-            <label className="field">Confirm password<input name="confirm_password" type="password" minLength={8} required autoComplete="new-password" /></label>
+            <label className="field">{t('auth.passwordLabel')} <span className="hint">{t('auth.passwordHint')}</span><input name="password" type="password" minLength={8} required autoComplete="new-password" /></label>
+            <label className="field">{t('auth.confirmPasswordLabel')}<input name="confirm_password" type="password" minLength={8} required autoComplete="new-password" /></label>
             <label className="field" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontWeight: 400 }}>
               <input type="checkbox" name="terms_accepted" required style={{ width: 'auto', margin: '3px 0 0' }} />
-              <span>I agree to the <Link to="/terms" target="_blank">Terms of Service</Link> and <Link to="/privacy" target="_blank">Privacy Policy</Link>.</span>
+              <span>{termsPre} <Link to="/terms" target="_blank">{termsTos}</Link> {termsMid} <Link to="/privacy" target="_blank">{termsPrivacy}</Link>{termsSuffix}</span>
             </label>
           </>
         )}
 
         {mode === 'company' && (
           <>
-            <h3>Hire from LinkWork</h3>
-            <p className="muted" style={{ marginBottom: 18 }}>Register with your work email. The admin reviews every company before it can post — and posting means committing to hire from this platform.</p>
-            <label className="field">Company name<input name="company_name" required /></label>
-            <label className="field">Your name<input name="contact_name" required /></label>
-            <label className="field">Work email<input name="email" type="email" required /></label>
-            <label className="field">Website<input name="website" type="url" placeholder="https://" /></label>
-            <label className="field">What does your company do?<textarea name="description" /></label>
-            <label className="field">Password <span className="hint">(8+ characters)</span><input name="password" type="password" minLength={8} required autoComplete="new-password" /></label>
-            <label className="field">Confirm password<input name="confirm_password" type="password" minLength={8} required autoComplete="new-password" /></label>
+            <h3>{t('auth.hireTitle')}</h3>
+            <p className="muted" style={{ marginBottom: 18 }}>{t('auth.companyIntro')}</p>
+            <label className="field">{t('auth.companyNameLabel')}<input name="company_name" required /></label>
+            <label className="field">{t('auth.contactNameLabel')}<input name="contact_name" required /></label>
+            <label className="field">{t('auth.workEmailLabel')}<input name="email" type="email" required /></label>
+            <label className="field">{t('auth.websiteLabel')}<input name="website" type="url" placeholder="https://" /></label>
+            <label className="field">{t('auth.companyDescLabel')}<textarea name="description" /></label>
+            <label className="field">{t('auth.passwordLabel')} <span className="hint">{t('auth.passwordHint')}</span><input name="password" type="password" minLength={8} required autoComplete="new-password" /></label>
+            <label className="field">{t('auth.confirmPasswordLabel')}<input name="confirm_password" type="password" minLength={8} required autoComplete="new-password" /></label>
             <label className="field" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontWeight: 400 }}>
               <input type="checkbox" name="terms_accepted" required style={{ width: 'auto', margin: '3px 0 0' }} />
-              <span>I agree to the <Link to="/terms" target="_blank">Terms of Service</Link> and <Link to="/privacy" target="_blank">Privacy Policy</Link>.</span>
+              <span>{termsPre} <Link to="/terms" target="_blank">{termsTos}</Link> {termsMid} <Link to="/privacy" target="_blank">{termsPrivacy}</Link>{termsSuffix}</span>
             </label>
           </>
         )}
 
         <button className="btn" disabled={busy}>
-          {mode === 'login' ? 'Sign in' : mode === 'student' ? 'Create student account' : 'Submit for review'}
+          {mode === 'login' ? t('auth.modeSignIn') : mode === 'student' ? t('auth.createStudentAccount') : t('auth.submitForReview')}
         </button>
       </form>
     </main>

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { api } from '../api.js';
 import { useAuth } from '../App.jsx';
+import { useI18n } from '../i18n.jsx';
 
 export default function Profile() {
   const { user, setUser } = useAuth();
@@ -9,6 +10,7 @@ export default function Profile() {
   const [busy, setBusy] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
   const fileInput = useRef(null);
+  const { t } = useI18n();
 
   const submit = async (e) => {
     e.preventDefault();
@@ -17,7 +19,7 @@ export default function Profile() {
     try {
       const d = await api.post('/api/auth/profile', fd);
       setUser(d.user);
-      setOk('Profile updated.');
+      setOk(t('profile.updated'));
     } catch (err) { setError(err.message); }
     finally { setBusy(false); }
   };
@@ -31,41 +33,41 @@ export default function Profile() {
     try {
       const res = await fetch('/api/auth/upload-photo', { method: 'POST', credentials: 'include', body });
       const d = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(d.error || 'Could not upload photo.');
+      if (!res.ok) throw new Error(d.error || t('profile.uploadPhotoError'));
       setUser(d.user);
-      setOk('Photo updated.');
+      setOk(t('profile.photoUpdated'));
     } catch (err) { setError(err.message); }
     finally { setPhotoBusy(false); if (fileInput.current) fileInput.current.value = ''; }
   };
 
   return (
     <main className="container" style={{ maxWidth: 560 }}>
-      <h1 style={{ fontSize: 30, marginBottom: 20 }}>Profile</h1>
+      <h1 style={{ fontSize: 30, marginBottom: 20 }}>{t('profile.title')}</h1>
       {error && <div className="alert error" role="alert">{error}</div>}
       {ok && <div className="alert ok" role="status">{ok}</div>}
 
       <div className="card" style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
         {user.photo_path
-          ? <img src={user.photo_path} alt="Profile" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }} />
+          ? <img src={user.photo_path} alt={t('profile.photoAlt')} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }} />
           : <span className="company-mono" style={{ width: 64, height: 64, fontSize: 22 }}>{user.name.charAt(0).toUpperCase()}</span>}
         <div>
-          <p style={{ fontWeight: 600 }}>Profile photo</p>
+          <p style={{ fontWeight: 600 }}>{t('profile.photoLabel')}</p>
           <label className="btn sm secondary" style={{ marginTop: 6, cursor: 'pointer', display: 'inline-flex' }}>
-            {photoBusy ? 'Uploading…' : 'Upload photo'}
+            {photoBusy ? t('profile.uploading') : t('profile.uploadPhoto')}
             <input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp" onChange={uploadPhoto} disabled={photoBusy} style={{ display: 'none' }} />
           </label>
         </div>
       </div>
 
       <form className="card" onSubmit={submit}>
-        <label className="field">Full name<input name="name" defaultValue={user.name} required /></label>
-        <label className="field">Email <span className="hint">(read-only)</span><input value={user.email} disabled /></label>
-        <label className="field">Phone<input name="phone" type="tel" defaultValue={user.phone || ''} placeholder="+36 ..." /></label>
+        <label className="field">{t('profile.fullNameLabel')}<input name="name" defaultValue={user.name} required /></label>
+        <label className="field">{t('profile.emailLabel')} <span className="hint">{t('profile.readOnlyHint')}</span><input value={user.email} disabled /></label>
+        <label className="field">{t('profile.phoneLabel')}<input name="phone" type="tel" defaultValue={user.phone || ''} placeholder="+36 ..." /></label>
 
         {user.role === 'student' && (
           <>
-            <label className="field">Major <span className="hint">(read-only — verified at signup)</span><input value={user.major || ''} disabled /></label>
-            <label className="field">Identity status <span className="hint">(read-only)</span>
+            <label className="field">{t('profile.majorLabel')} <span className="hint">{t('profile.majorReadOnlyHint')}</span><input value={user.major || ''} disabled /></label>
+            <label className="field">{t('profile.identityStatusLabel')} <span className="hint">{t('profile.readOnlyHint')}</span>
               <input value={user.doc_status} disabled />
             </label>
           </>
@@ -73,13 +75,13 @@ export default function Profile() {
 
         {user.role === 'company' && (
           <>
-            <label className="field">Company name<input name="company_name" defaultValue={user.company_name || ''} /></label>
-            <label className="field">Website<input name="website" type="url" defaultValue={user.website || ''} placeholder="https://" /></label>
-            <label className="field">What does your company do?<textarea name="description" defaultValue={user.description || ''} /></label>
+            <label className="field">{t('profile.companyNameLabel')}<input name="company_name" defaultValue={user.company_name || ''} /></label>
+            <label className="field">{t('profile.websiteLabel')}<input name="website" type="url" defaultValue={user.website || ''} placeholder="https://" /></label>
+            <label className="field">{t('profile.companyDescLabel')}<textarea name="description" defaultValue={user.description || ''} /></label>
           </>
         )}
 
-        <button className="btn" disabled={busy}>Save changes</button>
+        <button className="btn" disabled={busy}>{t('profile.saveChanges')}</button>
       </form>
     </main>
   );

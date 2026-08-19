@@ -1,4 +1,24 @@
 {
-  "hu": {},
-  "fr": {}
+  "hu": {
+    "adminDashboard.majorHeader": "Szak",
+    "auth.majorLabel": "Szak",
+    "profile.majorLabel": "Szak",
+    "auth.selectFacultyFirst": "Először válassza ki a kart",
+    "dashboard.applicationsTitle": "Az Ön jelentkezései",
+    "myApplications.title": "Jelentkezéseim ({n})",
+    "adminDashboard.matchHeader": "Párosítás",
+    "myApplications.hiredBadge": "✓ Felvéve – gratulálunk! A párosítás rögzítve:",
+    "notifications.open": "Megnyitás",
+    "companyProfile.viewApply": "Megtekintés és jelentkezés"
+  },
+  "fr": {
+    "adminDashboard.majorHeader": "Spécialisation",
+    "auth.majorLabel": "Spécialisation",
+    "profile.majorLabel": "Spécialisation",
+    "dashboard.applicationsTitle": "Vos candidatures",
+    "myApplications.title": "Mes candidatures ({n})",
+    "adminDashboard.actionsHeader": "Actions",
+    "adminDashboard.matchHeader": "Correspondance",
+    "myApplications.hiredBadge": "✓ Embauché(e) — félicitations ! Correspondance enregistrée :"
+  }
 }
