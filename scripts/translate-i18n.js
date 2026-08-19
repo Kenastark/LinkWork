@@ -58,6 +58,23 @@ function readJson(filePath, fallback) {
 // call per key.
 const MAX_SEGMENTS_PER_REQUEST = 100;
 
+// i18n.jsx's t(key, vars) fills `{varName}` placeholders at render time. Sent as-is,
+// Google Translate treats them as ordinary words — it has been seen both translating
+// the name (`{state}` -> `{état}`) and reordering distinct placeholders inconsistently
+// per language. Swapping each to a digit-only `{0}`, `{1}`... before the request and
+// restoring the real names by position afterward keeps every placeholder intact.
+function indexPlaceholders(text) {
+  let i = -1;
+  return text.replace(/\{(\w+)\}/g, () => `{${++i}}`);
+}
+
+function restorePlaceholders(text, varNames) {
+  return text.replace(/\{(\d+)\}/g, (m, idx) => {
+    const name = varNames[Number(idx)];
+    return name === undefined ? m : `{${name}}`;
+  });
+}
+
 async function translateChunk(texts, targetLang) {
   const res = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${API_KEY}`, {
     method: 'POST',
@@ -95,7 +112,9 @@ async function main() {
     const langOverrides = overrides[lang] || {};
     const keysToTranslate = enKeys.filter((k) => !(k in langOverrides) && !noMt.has(k));
 
-    const translated = await translateBatch(keysToTranslate.map((k) => en[k]), lang);
+    const varNamesByKey = keysToTranslate.map((k) => [...en[k].matchAll(/\{(\w+)\}/g)].map((m) => m[1]));
+    const rawTranslated = await translateBatch(keysToTranslate.map((k) => indexPlaceholders(en[k])), lang);
+    const translated = rawTranslated.map((text, i) => restorePlaceholders(text, varNamesByKey[i]));
 
     const result = {};
     enKeys.forEach((k) => {

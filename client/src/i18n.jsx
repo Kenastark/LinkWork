@@ -16,8 +16,9 @@ export function splitT(value, delimiter = '||') {
   return i === -1 ? [value, ''] : [value.slice(0, i), value.slice(i + delimiter.length)];
 }
 
-// Coverage: shared chrome (nav / account menu / footer) + the full homepage.
-// Other pages fall back to their hard-coded English strings until translated.
+// Coverage: shared chrome (nav / account menu / footer), the full homepage, and
+// (phase 6a) Resources/ComingSoon/Terms/Privacy/Settings/Alerts/Dashboard/Meeting/
+// Companies. Remaining pages fall back to hard-coded English until translated.
 const translations = {
   en: {
     'nav.findAJob': `Find a job`,
@@ -220,6 +221,93 @@ const translations = {
     'cta.student': `Join with your university email`,
     'cta.company': `Hire students`,
     'cta.browse': `Browse open roles`,
+
+    'resources.title': `Resources`,
+    'resources.badge': `Coming soon`,
+    'resources.body': `We're building a library of resume tips, interview prep, and career guidance for students and hiring guides for companies. Check back soon.`,
+
+    'comingSoon.title': `Coming soon`,
+    'comingSoon.badge': `Coming soon`,
+    'comingSoon.bodyWithFeature': `“{feature}” isn't available yet.`,
+    'comingSoon.bodyGeneric': `This page isn't available yet.`,
+    'comingSoon.bodySuffix': `We're building it out — check back soon.`,
+    'comingSoon.backHome': `Back to home`,
+
+    'terms.policyVersionLabel': `POLICY VERSION`,
+    'terms.title': `Terms of service`,
+    'terms.eligibilityTitle': `Eligibility`,
+    'terms.eligibilityBody': `Student accounts require a valid university email address at a partnered university. Company accounts require a work email address — personal/free-mail domains are not accepted.`,
+    'terms.commitmentsTitle': `Postings are commitments`,
+    'terms.commitmentsBody': `Companies that publish an opening on LinkWork commit to hiring for that role from the platform. Postings are removed once every position is filled and the hire is recorded on the match ledger.`,
+    'terms.fairUseTitle': `Fair use`,
+    'terms.fairUseBody': `Accounts are for individual/organizational use only. Misrepresenting your identity, faculty, employer, or interview answers is grounds for account termination.`,
+    'terms.terminationTitle': `Termination`,
+    'terms.termination': `We may suspend or remove accounts that violate these terms. You may close your account at any time; see our||Privacy Policy||for what happens to your data afterward.`,
+
+    'privacy.policyVersionLabel': `POLICY VERSION`,
+    'privacy.title': `Privacy & data retention policy`,
+    'privacy.collectTitle': `What we collect`,
+    'privacy.collectBody': `To run the verification chain, LinkWork collects: your name and email address; for students, your university, faculty and major, plus identity-verification documents you submit; for companies, your company name, website and description; and application data — skill test scores, hiring-stage progress, and your written AI interview answers.`,
+    'privacy.whyTitle': `Why we collect it`,
+    'privacy.whyBody': `This data exists solely to verify identity, match students to faculty-approved openings, and let companies review candidates who've cleared platform verification. We do not sell your data or share it with anyone outside the hiring chain for the postings you engage with.`,
+    'privacy.retentionTitle': `Retention`,
+    'privacy.retentionBody': `We keep account and application data for as long as your account is active. If you close your account, identifying data is deleted within a reasonable period, except where a hiring record (job ID ⟷ candidate ID match) has already been recorded on the public ledger as proof a posting was genuinely filled.`,
+    'privacy.rightsTitle': `Your rights`,
+    'privacy.rightsBodyPre': `You can request a copy of your data, ask us to correct it, or request deletion at any time by contacting`,
+    'privacy.contactTitle': `Contact`,
+    'privacy.contactBodyPre': `Questions about this policy:`,
+    'privacy.disclaimer': `This is a placeholder policy for an early-stage pilot and is not a substitute for legal advice — replace it with counsel-reviewed terms before handling real user data at scale.`,
+
+    'settings.title': `Settings`,
+    'settings.passwordUpdated': `Password updated.`,
+    'settings.changePasswordTitle': `Change password`,
+    'settings.staySignedIn': `You'll stay signed in on this device.`,
+    'settings.currentPasswordLabel': `Current password`,
+    'settings.newPasswordLabel': `New password`,
+    'settings.newPasswordHint': `(8+ characters)`,
+    'settings.updateButton': `Update password`,
+
+    'alerts.title': `Alerts`,
+    'alerts.subtitle': `Follow companies from their profile page to see their new openings here.`,
+    'alerts.empty': `You're not following any companies yet.`,
+    'alerts.exploreCompanies': `Explore companies`,
+    'alerts.openPositionOne': `{n} open position`,
+    'alerts.openPositionOther': `{n} open positions`,
+    'alerts.unfollow': `Unfollow`,
+
+    'dashboard.greeting': `Hello, {name}`,
+    'dashboard.idLine': `{major} · University of Debrecen`,
+    'dashboard.docsMsg': `Documents submitted. The admin will verify them shortly — you can apply once verified.`,
+    'dashboard.docsStepTitle': `One step before you can apply:`,
+    'dashboard.docsStepBody': `submit your student documents (student ID + enrollment certificate) so the admin can verify your identity.`,
+    'dashboard.submitDocuments': `Submit documents`,
+    'dashboard.docsUnderReview': `Your documents are under review. You can browse openings meanwhile.`,
+    'dashboard.docsRejected': `Your documents were rejected.`,
+    'dashboard.resubmit': `Resubmit`,
+    'dashboard.identityVerified': `Identity verified`,
+    'dashboard.verifiedBadge': `✓ Verified student`,
+    'dashboard.applicationsTitle': `Your applications`,
+    'dashboard.ongoing': `ONGOING`,
+    'dashboard.offers': `OFFERS`,
+    'dashboard.rejected': `REJECTED`,
+
+    'meeting.kindHrInterview': `HR interview`,
+    'meeting.kindTechInterview': `Technical interview`,
+    'meeting.liveVideoComingSoon': `Live video — coming soon`,
+    'meeting.roomReadyTitle': `Your meeting room is ready`,
+    'meeting.roomReadyBody': `Scheduling is live. The in-browser audio and video call will run right here on this page once the video provider is connected — no downloads, no external app.`,
+    'meeting.inThisMeeting': `In this meeting`,
+    'meeting.hostLabel': `{name} (host)`,
+    'meeting.candidateLabel': `{name} (candidate)`,
+    'meeting.moreParticipantsHint': `The hiring team can add more participants (e.g. technical interviewers) from the applicant's card.`,
+    'meeting.leaveRoom': `Leave room`,
+
+    'companies.title': `Explore companies`,
+    'companies.subtitle': `Every company here has committed to hiring from LinkWork — approved by the platform admin.`,
+    'companies.empty': `No approved companies yet.`,
+    'companies.openPositionOne': `{n} open position`,
+    'companies.openPositionOther': `{n} open positions`,
+    'companies.hiringNow': `Hiring now`,
   },
 
   hu,
