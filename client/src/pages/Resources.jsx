@@ -1,12 +1,14 @@
+import { useI18n } from '../i18n.jsx';
+
 export default function Resources() {
+  const { t } = useI18n();
   return (
     <main className="container" style={{ maxWidth: 560 }}>
-      <h1 style={{ fontSize: 30, marginBottom: 12 }}>Resources</h1>
+      <h1 style={{ fontSize: 30, marginBottom: 12 }}>{t('resources.title')}</h1>
       <div className="card">
-        <span className="badge pending">Coming soon</span>
+        <span className="badge pending">{t('resources.badge')}</span>
         <p className="muted" style={{ marginTop: 12 }}>
-          We're building a library of resume tips, interview prep, and career guidance for students
-          and hiring guides for companies. Check back soon.
+          {t('resources.body')}
         </p>
       </div>
     </main>

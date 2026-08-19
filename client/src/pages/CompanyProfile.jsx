@@ -6,6 +6,7 @@ import { useTranslatedTexts } from '../useTranslatedTexts.js';
 import Card from '../components/Card.jsx';
 import Badge from '../components/Badge.jsx';
 import Button from '../components/Button.jsx';
+import { useI18n } from '../i18n.jsx';
 
 export default function CompanyProfile() {
   const { id } = useParams();
@@ -13,11 +14,16 @@ export default function CompanyProfile() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const { t } = useI18n();
 
   const load = () => api.get(`/api/companies/${id}`).then(setData).catch(e => setError(e.message));
   useEffect(() => { load(); }, [id]);
 
-  const [description] = useTranslatedTexts([data?.company?.description || '']);
+  const [description, name] = useTranslatedTexts([
+    data?.company?.description || '', data?.company?.name || '',
+  ]);
+  const translatedTitles = useTranslatedTexts((data?.jobs || []).map(j => j.title));
+  const translatedFacultyNames = useTranslatedTexts((data?.jobs || []).map(j => j.faculty_name || ''));
 
   if (error) return <main className="container"><div className="alert error" role="alert">{error}</div></main>;
   if (!data) return <main className="container" />;
@@ -37,33 +43,35 @@ export default function CompanyProfile() {
         <div style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
           <span className="company-mono" style={{ width: 64, height: 64, fontSize: 26 }}>{company.name.charAt(0).toUpperCase()}</span>
           <div style={{ flex: 1, minWidth: 200 }}>
-            <h1 style={{ fontSize: 26 }}>{company.name}</h1>
+            <h1 style={{ fontSize: 26 }}>{name}</h1>
             {company.website && <a className="ext-link" href={company.website} target="_blank" rel="noreferrer">{company.website}</a>}
           </div>
           {user.role === 'student' && (
             <Button variant={following ? 'secondary' : ''} disabled={busy} onClick={toggleFollow}>
-              {following ? 'Following ✓' : 'Follow'}
+              {following ? t('companyProfile.following') : t('companyProfile.follow')}
             </Button>
           )}
         </div>
         {company.description && <p className="muted" style={{ marginTop: 16 }}>{description}</p>}
       </Card>
 
-      <h3 style={{ margin: '24px 0 12px', fontSize: 18 }}>Open positions ({jobs.length})</h3>
+      <h3 style={{ margin: '24px 0 12px', fontSize: 18 }}>{t('companyProfile.openPositionsTitle', { n: jobs.length })}</h3>
       {jobs.length === 0 ? (
-        <Card><p className="muted">No open positions right now.</p></Card>
-      ) : jobs.map(j => (
+        <Card><p className="muted">{t('companyProfile.noOpenPositions')}</p></Card>
+      ) : jobs.map((j, i) => (
         <Card key={j.id} className="job-card">
           <span className="id-tag">JOB-{String(j.id).padStart(4, '0')}</span>
           <div className="job-row">
             <div>
-              <h3><Link to={`/jobs/${j.id}`} style={{ color: 'inherit' }}>{j.title}</Link></h3>
+              <h3><Link to={`/jobs/${j.id}`} style={{ color: 'inherit' }}>{translatedTitles[i]}</Link></h3>
               <div className="meta">
-                {j.faculty_verified ? <Badge variant="faculty">★ Faculty partnership · {j.faculty_name || 'University-wide'}</Badge> : <Badge variant="verified">✓ Platform-committed hire</Badge>}
-                <Badge variant="pending">{j.job_type === 'internship' ? 'Internship' : 'Entry level'}</Badge>
+                {j.faculty_verified
+                  ? <Badge variant="faculty">{t('companyProfile.facultyPartnership', { faculty: translatedFacultyNames[i] || t('companyProfile.universityWide') })}</Badge>
+                  : <Badge variant="verified">{t('companyProfile.platformCommitted')}</Badge>}
+                <Badge variant="pending">{j.job_type === 'internship' ? t('companyProfile.internship') : t('companyProfile.entryLevel')}</Badge>
               </div>
             </div>
-            <Link to={`/jobs/${j.id}`} className="btn sm">View & apply</Link>
+            <Link to={`/jobs/${j.id}`} className="btn sm">{t('companyProfile.viewApply')}</Link>
           </div>
         </Card>
       ))}

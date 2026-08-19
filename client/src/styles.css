@@ -978,7 +978,7 @@ a.card:hover, .card-link:hover { box-shadow: var(--shadow-2); transform: transla
   letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 20px;
 }
 .hero h1 { font-size: clamp(45px, 6.2vw, 75px); font-weight: 800; margin-bottom: 22px; }
-.hero h1 em { font-style: normal; color: var(--verify-bright); }
+.hero h1 em { font-style: normal; color: var(--verify-bright); display: block; }
 .hero p.lede { font-size: 22px; line-height: 1.5; color: #c4cddd; max-width: 54ch; margin-bottom: 32px; }
 .hero .cta-row { display: flex; gap: 14px; flex-wrap: wrap; }
 .hero .cta-row .btn { font-size: 18px; padding: 16px 24px; }
