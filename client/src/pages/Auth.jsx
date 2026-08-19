@@ -82,7 +82,7 @@ export default function Auth() {
       <form className="card" onSubmit={submit}>
         {mode === 'login' && (
           <>
-            <h2>{t('auth.welcomeBack')}</h2>
+            <h2 style={{ marginBottom: 18 }}>{t('auth.welcomeBack')}</h2>
             <label className="field">{t('auth.emailLabel')}<input name="email" type="email" required autoComplete="email" /></label>
             <label className="field">{t('auth.passwordLabel')}<input name="password" type="password" required autoComplete="current-password" /></label>
           </>
