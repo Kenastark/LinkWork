@@ -10,6 +10,22 @@ const { notify, interviewProposed, slotPicked, applicationRejected, applicationA
 
 const app = express();
 app.use(express.json());
+
+const hasRealSessionSecret = process.env.SESSION_SECRET && process.env.SESSION_SECRET !== 'linkwork-dev-secret';
+if (!hasRealSessionSecret) {
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('[SEC-011] SESSION_SECRET is not set — using the dev fallback secret. This must not run this way outside development.');
+  } else {
+    console.error(
+      '[SEC-021] SESSION_SECRET is not set to a securely generated value.\n' +
+      'Refusing to start with the default/unset session secret outside development.\n' +
+      'Generate one with: openssl rand -base64 48\n' +
+      'Then set it as SESSION_SECRET in the environment or .env.'
+    );
+    process.exit(1);
+  }
+}
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'linkwork-dev-secret',
   resave: false,
