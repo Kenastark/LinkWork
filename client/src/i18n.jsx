@@ -66,7 +66,7 @@ const translations = {
 
     'hero.eyebrow': `University of Debrecen · Pilot`,
     'hero.title': `Real companies. Open roles. ||Actual hires.`,
-    'hero.lede': `LinkWork only lists internships and entry-level roles that companies have committed to filling — most of them negotiated directly with your faculty. No fake listings, no pre-filled positions. If you see it here, someone is getting hired for it.`,
+    'hero.lede': `LinkWork only lists internships and entry-level roles that companies have committed to filling, most of which are negotiated directly with your faculty. No fake listings, no pre-filled positions. If it's on LinkWork, someone is getting hired for it.`,
     'hero.ctaJoinStudent': `Join with your university email`,
     'hero.ctaHireStudents': `Hire students`,
     'hero.chainFacultyTitle': `Faculty`,
