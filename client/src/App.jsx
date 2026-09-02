@@ -151,8 +151,8 @@ function applyBrand(pref) {
 
 function useBrand() {
   const [brand, setBrand] = useState(() => {
-    try { return localStorage.getItem(BRAND_STORAGE_KEY) || 'blue'; }
-    catch { return 'blue'; }
+    try { return localStorage.getItem(BRAND_STORAGE_KEY) || 'green'; }
+    catch { return 'green'; }
   });
 
   useEffect(() => {
