@@ -1,5 +1,6 @@
 const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const path = require('path');
 
 const db = new Database(path.join(__dirname, 'linkwork.db'));
@@ -501,6 +502,108 @@ function seed() {
   seedHire('Embedded Systems Intern', 37);
   seedHire('Data Science Intern', 19);
   seedHire('Legal Research Assistant', 6);
+
+  // --- Seeded demo-student applications, one per pipeline stage --------------
+  // So "My applications" (student) and the applicant queue (company) each have
+  // something to show at every step, not just the hires above. HR/tech interview
+  // dates are fixed (not relative like the hires) since they're meant to read as
+  // real upcoming meetings rather than a rolling demo window.
+  const findJob = (title) => db.prepare('SELECT * FROM jobs WHERE title=? ORDER BY id LIMIT 1').get(title);
+  const insApp = db.prepare(`INSERT INTO applications (job_id, student_id, stage, skill_score, ai_summary, ai_score, company_test_score) VALUES (?,?,?,?,?,?,?)`);
+  const insInterview = db.prepare(`INSERT INTO interviews (application_id, kind, status, room_id) VALUES (?,?,'scheduled',?)`);
+  const insSlot = db.prepare(`INSERT INTO interview_slots (interview_id, start_at, duration_min) VALUES (?,?,45)`);
+
+  const stageApp = (title, stage, { skillScore = null, aiSummary = null, aiScore = null, companyTestScore = null } = {}) =>
+    insApp.run(findJob(title).id, studentId, stage, skillScore, aiSummary, aiScore, companyTestScore).lastInsertRowid;
+
+  const scheduleInterview = (applicationId, kind, startAt) => {
+    const interviewId = insInterview.run(applicationId, kind, crypto.randomUUID()).lastInsertRowid;
+    const slotId = insSlot.run(interviewId, startAt).lastInsertRowid;
+    db.prepare('UPDATE interviews SET chosen_slot_id=? WHERE id=?').run(slotId, interviewId);
+  };
+
+  const AI_SUMMARY = 'Interview answers recorded, pending company review.';
+
+  stageApp('Software Engineering Intern', 'applied');
+  stageApp('Junior Business Analyst', 'skill_test');
+  stageApp('Frontend Developer Intern', 'ai_interview', { skillScore: 80 });
+  // ai_score is set once the company has scored the AI interview, which is what
+  // unlocks (and is a prerequisite of) the company test — see index.js's
+  // /api/applications/:id/company-test 'locked' check.
+  stageApp('Mechanical Design Intern', 'company_test', { skillScore: 72, aiSummary: AI_SUMMARY, aiScore: 78 });
+
+  const hrAppId = stageApp('Agricultural Data Analyst Intern', 'hr_interview',
+    { skillScore: 88, aiSummary: AI_SUMMARY, aiScore: 86, companyTestScore: 75 });
+  scheduleInterview(hrAppId, 'hr_interview', '2026-09-09T10:00:00.000Z');
+
+  const techAppId = stageApp('Public Health Research Intern', 'tech_interview',
+    { skillScore: 91, aiSummary: AI_SUMMARY, aiScore: 93, companyTestScore: 82 });
+  scheduleInterview(techAppId, 'tech_interview', '2026-09-11T14:00:00.000Z');
+
+  // Mirrors the 'Junior Software Engineer' hire seeded above, so the hired
+  // application row is consistent with its matches entry.
+  stageApp('Junior Software Engineer', 'hired', { skillScore: 85, aiSummary: AI_SUMMARY, aiScore: 88, companyTestScore: 90 });
+
+  // --- Seeded notifications for the demo student's applications --------------
+  // Hand-written mirrors of the templates in notify.js (not imported: notify.js
+  // itself requires this file, so requiring notify.js from here would be a
+  // circular import). Each application gets the notification history that its
+  // real event sequence would have produced up to its current stage — nothing
+  // fires for 'applied' or 'skill_test' (applying and taking the skill test are
+  // self-service, un-notified steps) or for reaching 'ai_interview' (same).
+  const STUDENT_NAME = 'Anna Kovács';
+  const insNotif = db.prepare(`INSERT INTO notifications (user_id, kind, subject, body, link, read_at, created_at) VALUES (?,?,?,?,?,?,?)`);
+  const fmt = (daysAgo) => new Date(Date.now() - daysAgo * 86400000).toISOString().slice(0, 19).replace('T', ' ');
+  const seedNotif = ({ kind, subject, body, daysAgo, read = true }) => {
+    const created = fmt(daysAgo);
+    insNotif.run(studentId, kind, subject, body, '/my-applications', read ? created : null, created);
+  };
+  const STAGE_LABEL = { hr_interview: 'HR interview', tech_interview: 'technical interview' };
+
+  const aiReviewedNotif = (roleTitle, companyName) => ({
+    kind: 'ai_interview_reviewed',
+    subject: `Your AI interview for ${roleTitle} has been reviewed`,
+    body: `Hi ${STUDENT_NAME},\n\n${companyName} has reviewed your AI interview for the ${roleTitle} role. The next step — the company test — is now unlocked.\n\nOpen your application to take the company test.\n\n— The LinkWork team`,
+  });
+  const advancedNotif = (roleTitle, companyName, toStage) => ({
+    kind: 'application_advanced',
+    subject: `Good news — you've moved to the ${STAGE_LABEL[toStage]} for ${roleTitle}`,
+    body: `Hi ${STUDENT_NAME},\n\nGood news! ${companyName} has moved your application for the ${roleTitle} role forward to the ${STAGE_LABEL[toStage]} stage.\n\nOpen your application to see what's next.\n\n— The LinkWork team`,
+  });
+  const proposedNotif = (roleTitle, companyName, kind) => ({
+    kind: `${kind}_proposed`,
+    subject: `Next step: pick a time for your ${STAGE_LABEL[kind]} with ${companyName}`,
+    body: `Hi ${STUDENT_NAME},\n\nCongratulations on progressing to the ${STAGE_LABEL[kind]} stage for the ${roleTitle} role at ${companyName}.\n\nThe hiring team has proposed a few dates and times. Please open your application and pick the slot that works best for you — you can also choose your preferred duration.\n\nOnce you've picked a time, ${companyName} will be notified and your live interview will take place right here on LinkWork.\n\nOpen your application to choose a time: /my-applications\n\nGood luck,\nThe LinkWork team`,
+  });
+  const hiredNotif = (roleTitle, companyName) => ({
+    kind: 'application_hired',
+    subject: `Congratulations — you've been hired for ${roleTitle}!`,
+    body: `Hi ${STUDENT_NAME},\n\nCongratulations! ${companyName} has selected you for the ${roleTitle} role. The match has been recorded on the LinkWork ledger.\n\nThe company will be in touch with next steps. Well done!\n\n— The LinkWork team`,
+  });
+
+  // Mechanical Design Intern -> company_test: only the AI-review notification so far.
+  seedNotif({ ...aiReviewedNotif('Mechanical Design Intern', 'Precisa Engineering Kft.'), daysAgo: 2 });
+
+  // Agricultural Data Analyst Intern -> hr_interview.
+  seedNotif({ ...aiReviewedNotif('Agricultural Data Analyst Intern', 'GreenField AgroTech Zrt.'), daysAgo: 6 });
+  seedNotif({ ...advancedNotif('Agricultural Data Analyst Intern', 'GreenField AgroTech Zrt.', 'hr_interview'), daysAgo: 5 });
+  seedNotif({ ...proposedNotif('Agricultural Data Analyst Intern', 'GreenField AgroTech Zrt.', 'hr_interview'), daysAgo: 3 });
+
+  // Public Health Research Intern -> tech_interview (already advanced through its own HR round).
+  seedNotif({ ...aiReviewedNotif('Public Health Research Intern', 'Debrecen Public Health Initiative'), daysAgo: 10 });
+  seedNotif({ ...advancedNotif('Public Health Research Intern', 'Debrecen Public Health Initiative', 'hr_interview'), daysAgo: 9 });
+  seedNotif({ ...proposedNotif('Public Health Research Intern', 'Debrecen Public Health Initiative', 'hr_interview'), daysAgo: 8 });
+  seedNotif({ ...advancedNotif('Public Health Research Intern', 'Debrecen Public Health Initiative', 'tech_interview'), daysAgo: 3 });
+  // Most recent notification overall: left unread, as the freshest thing worth a badge.
+  seedNotif({ ...proposedNotif('Public Health Research Intern', 'Debrecen Public Health Initiative', 'tech_interview'), daysAgo: 1, read: false });
+
+  // Junior Software Engineer -> hired (mirrors the seedHire('Junior Software Engineer', 54) match above).
+  seedNotif({ ...aiReviewedNotif('Junior Software Engineer', 'DataTech Hungary Kft.'), daysAgo: 70 });
+  seedNotif({ ...advancedNotif('Junior Software Engineer', 'DataTech Hungary Kft.', 'hr_interview'), daysAgo: 65 });
+  seedNotif({ ...proposedNotif('Junior Software Engineer', 'DataTech Hungary Kft.', 'hr_interview'), daysAgo: 63 });
+  seedNotif({ ...advancedNotif('Junior Software Engineer', 'DataTech Hungary Kft.', 'tech_interview'), daysAgo: 58 });
+  seedNotif({ ...proposedNotif('Junior Software Engineer', 'DataTech Hungary Kft.', 'tech_interview'), daysAgo: 57 });
+  seedNotif({ ...hiredNotif('Junior Software Engineer', 'DataTech Hungary Kft.'), daysAgo: 54 });
 
   console.log('Seeded database with University of Debrecen, demo accounts, and jobs.');
 }
