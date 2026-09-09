@@ -503,23 +503,47 @@ function seed() {
   seedHire('Data Science Intern', 19);
   seedHire('Legal Research Assistant', 6);
 
-  // --- Seeded demo-student applications, one per pipeline stage --------------
-  // So "My applications" (student) and the applicant queue (company) each have
-  // something to show at every step, not just the hires above. HR/tech interview
-  // dates are fixed (not relative like the hires) since they're meant to read as
-  // real upcoming meetings rather than a rolling demo window.
+  console.log('Seeded database with University of Debrecen, demo accounts, and jobs.');
+}
+seed();
+
+// ---------- Idempotent demo-student applications + notifications (runs on every boot) ----------
+// Gives the demo student an application at every pipeline stage, each backed by the
+// notification history that stage would realistically have produced. Unlike seed()
+// above (which only ever runs once, on a completely empty database), this looks the
+// demo student and each job up by email/title and checks per-application before
+// inserting — so it also self-heals an already-seeded database, e.g. production,
+// where seed() ran (and returned early) long before this existed.
+function ensureDemoApplications() {
+  const student = db.prepare(`SELECT id FROM users WHERE email='demo.student@mailbox.unideb.hu' AND role='student'`).get();
+  if (!student) return; // not a demo environment (or the account was removed) — nothing to do
+  const studentId = student.id;
+
   const findJob = (title) => db.prepare('SELECT * FROM jobs WHERE title=? ORDER BY id LIMIT 1').get(title);
+  const existingApp = (jobId) => db.prepare('SELECT id FROM applications WHERE job_id=? AND student_id=?').get(jobId, studentId);
   const insApp = db.prepare(`INSERT INTO applications (job_id, student_id, stage, skill_score, ai_summary, ai_score, company_test_score) VALUES (?,?,?,?,?,?,?)`);
   const insInterview = db.prepare(`INSERT INTO interviews (application_id, kind, status, room_id) VALUES (?,?,'scheduled',?)`);
   const insSlot = db.prepare(`INSERT INTO interview_slots (interview_id, start_at, duration_min) VALUES (?,?,45)`);
-
-  const stageApp = (title, stage, { skillScore = null, aiSummary = null, aiScore = null, companyTestScore = null } = {}) =>
-    insApp.run(findJob(title).id, studentId, stage, skillScore, aiSummary, aiScore, companyTestScore).lastInsertRowid;
+  const insNotif = db.prepare(`INSERT INTO notifications (user_id, kind, subject, body, link, read_at, created_at) VALUES (?,?,?,?,?,?,?)`);
 
   const scheduleInterview = (applicationId, kind, startAt) => {
     const interviewId = insInterview.run(applicationId, kind, crypto.randomUUID()).lastInsertRowid;
     const slotId = insSlot.run(interviewId, startAt).lastInsertRowid;
     db.prepare('UPDATE interviews SET chosen_slot_id=? WHERE id=?').run(slotId, interviewId);
+  };
+  const fmt = (daysAgo) => new Date(Date.now() - daysAgo * 86400000).toISOString().slice(0, 19).replace('T', ' ');
+  const seedNotif = ({ kind, subject, body, daysAgo, read = true }) => {
+    const created = fmt(daysAgo);
+    insNotif.run(studentId, kind, subject, body, '/my-applications', read ? created : null, created);
+  };
+
+  // Only creates the application (job title not found, or the demo student already
+  // has one for it) when neither of those is already true — safe to call every boot.
+  // Returns the new application's id, or null if nothing was created.
+  const stageApp = (title, stage, { skillScore = null, aiSummary = null, aiScore = null, companyTestScore = null } = {}) => {
+    const job = findJob(title);
+    if (!job || existingApp(job.id)) return null;
+    return insApp.run(job.id, studentId, stage, skillScore, aiSummary, aiScore, companyTestScore).lastInsertRowid;
   };
 
   const AI_SUMMARY = 'Interview answers recorded, pending company review.';
@@ -530,34 +554,30 @@ function seed() {
   // ai_score is set once the company has scored the AI interview, which is what
   // unlocks (and is a prerequisite of) the company test — see index.js's
   // /api/applications/:id/company-test 'locked' check.
-  stageApp('Mechanical Design Intern', 'company_test', { skillScore: 72, aiSummary: AI_SUMMARY, aiScore: 78 });
+  const companyTestAppId = stageApp('Mechanical Design Intern', 'company_test', { skillScore: 72, aiSummary: AI_SUMMARY, aiScore: 78 });
 
   const hrAppId = stageApp('Agricultural Data Analyst Intern', 'hr_interview',
     { skillScore: 88, aiSummary: AI_SUMMARY, aiScore: 86, companyTestScore: 75 });
-  scheduleInterview(hrAppId, 'hr_interview', '2026-09-09T10:00:00.000Z');
+  if (hrAppId) scheduleInterview(hrAppId, 'hr_interview', '2026-09-09T10:00:00.000Z');
 
   const techAppId = stageApp('Public Health Research Intern', 'tech_interview',
     { skillScore: 91, aiSummary: AI_SUMMARY, aiScore: 93, companyTestScore: 82 });
-  scheduleInterview(techAppId, 'tech_interview', '2026-09-11T14:00:00.000Z');
+  if (techAppId) scheduleInterview(techAppId, 'tech_interview', '2026-09-11T14:00:00.000Z');
 
   // Mirrors the 'Junior Software Engineer' hire seeded above, so the hired
   // application row is consistent with its matches entry.
-  stageApp('Junior Software Engineer', 'hired', { skillScore: 85, aiSummary: AI_SUMMARY, aiScore: 88, companyTestScore: 90 });
+  const hiredAppId = stageApp('Junior Software Engineer', 'hired', { skillScore: 85, aiSummary: AI_SUMMARY, aiScore: 88, companyTestScore: 90 });
 
-  // --- Seeded notifications for the demo student's applications --------------
+  // --- Notifications for the applications just created above -----------------
   // Hand-written mirrors of the templates in notify.js (not imported: notify.js
   // itself requires this file, so requiring notify.js from here would be a
-  // circular import). Each application gets the notification history that its
-  // real event sequence would have produced up to its current stage — nothing
-  // fires for 'applied' or 'skill_test' (applying and taking the skill test are
-  // self-service, un-notified steps) or for reaching 'ai_interview' (same).
+  // circular import). Each newly-created application gets the notification
+  // history that its real event sequence would have produced up to its current
+  // stage — nothing fires for 'applied' or 'skill_test' (applying and taking the
+  // skill test are self-service, un-notified steps) or for reaching 'ai_interview'
+  // (same). Gated on the app having just been created so a later boot — once the
+  // application already exists — never re-fires (or duplicates) these.
   const STUDENT_NAME = 'Anna Kovács';
-  const insNotif = db.prepare(`INSERT INTO notifications (user_id, kind, subject, body, link, read_at, created_at) VALUES (?,?,?,?,?,?,?)`);
-  const fmt = (daysAgo) => new Date(Date.now() - daysAgo * 86400000).toISOString().slice(0, 19).replace('T', ' ');
-  const seedNotif = ({ kind, subject, body, daysAgo, read = true }) => {
-    const created = fmt(daysAgo);
-    insNotif.run(studentId, kind, subject, body, '/my-applications', read ? created : null, created);
-  };
   const STAGE_LABEL = { hr_interview: 'HR interview', tech_interview: 'technical interview' };
 
   const aiReviewedNotif = (roleTitle, companyName) => ({
@@ -581,32 +601,38 @@ function seed() {
     body: `Hi ${STUDENT_NAME},\n\nCongratulations! ${companyName} has selected you for the ${roleTitle} role. The match has been recorded on the LinkWork ledger.\n\nThe company will be in touch with next steps. Well done!\n\n— The LinkWork team`,
   });
 
-  // Mechanical Design Intern -> company_test: only the AI-review notification so far.
-  seedNotif({ ...aiReviewedNotif('Mechanical Design Intern', 'Precisa Engineering Kft.'), daysAgo: 2 });
+  if (companyTestAppId) {
+    // Mechanical Design Intern -> company_test: only the AI-review notification so far.
+    seedNotif({ ...aiReviewedNotif('Mechanical Design Intern', 'Precisa Engineering Kft.'), daysAgo: 2 });
+  }
 
-  // Agricultural Data Analyst Intern -> hr_interview.
-  seedNotif({ ...aiReviewedNotif('Agricultural Data Analyst Intern', 'GreenField AgroTech Zrt.'), daysAgo: 6 });
-  seedNotif({ ...advancedNotif('Agricultural Data Analyst Intern', 'GreenField AgroTech Zrt.', 'hr_interview'), daysAgo: 5 });
-  seedNotif({ ...proposedNotif('Agricultural Data Analyst Intern', 'GreenField AgroTech Zrt.', 'hr_interview'), daysAgo: 3 });
+  if (hrAppId) {
+    // Agricultural Data Analyst Intern -> hr_interview.
+    seedNotif({ ...aiReviewedNotif('Agricultural Data Analyst Intern', 'GreenField AgroTech Zrt.'), daysAgo: 6 });
+    seedNotif({ ...advancedNotif('Agricultural Data Analyst Intern', 'GreenField AgroTech Zrt.', 'hr_interview'), daysAgo: 5 });
+    seedNotif({ ...proposedNotif('Agricultural Data Analyst Intern', 'GreenField AgroTech Zrt.', 'hr_interview'), daysAgo: 3 });
+  }
 
-  // Public Health Research Intern -> tech_interview (already advanced through its own HR round).
-  seedNotif({ ...aiReviewedNotif('Public Health Research Intern', 'Debrecen Public Health Initiative'), daysAgo: 10 });
-  seedNotif({ ...advancedNotif('Public Health Research Intern', 'Debrecen Public Health Initiative', 'hr_interview'), daysAgo: 9 });
-  seedNotif({ ...proposedNotif('Public Health Research Intern', 'Debrecen Public Health Initiative', 'hr_interview'), daysAgo: 8 });
-  seedNotif({ ...advancedNotif('Public Health Research Intern', 'Debrecen Public Health Initiative', 'tech_interview'), daysAgo: 3 });
-  // Most recent notification overall: left unread, as the freshest thing worth a badge.
-  seedNotif({ ...proposedNotif('Public Health Research Intern', 'Debrecen Public Health Initiative', 'tech_interview'), daysAgo: 1, read: false });
+  if (techAppId) {
+    // Public Health Research Intern -> tech_interview (already advanced through its own HR round).
+    seedNotif({ ...aiReviewedNotif('Public Health Research Intern', 'Debrecen Public Health Initiative'), daysAgo: 10 });
+    seedNotif({ ...advancedNotif('Public Health Research Intern', 'Debrecen Public Health Initiative', 'hr_interview'), daysAgo: 9 });
+    seedNotif({ ...proposedNotif('Public Health Research Intern', 'Debrecen Public Health Initiative', 'hr_interview'), daysAgo: 8 });
+    seedNotif({ ...advancedNotif('Public Health Research Intern', 'Debrecen Public Health Initiative', 'tech_interview'), daysAgo: 3 });
+    // Most recent notification overall: left unread, as the freshest thing worth a badge.
+    seedNotif({ ...proposedNotif('Public Health Research Intern', 'Debrecen Public Health Initiative', 'tech_interview'), daysAgo: 1, read: false });
+  }
 
-  // Junior Software Engineer -> hired (mirrors the seedHire('Junior Software Engineer', 54) match above).
-  seedNotif({ ...aiReviewedNotif('Junior Software Engineer', 'DataTech Hungary Kft.'), daysAgo: 70 });
-  seedNotif({ ...advancedNotif('Junior Software Engineer', 'DataTech Hungary Kft.', 'hr_interview'), daysAgo: 65 });
-  seedNotif({ ...proposedNotif('Junior Software Engineer', 'DataTech Hungary Kft.', 'hr_interview'), daysAgo: 63 });
-  seedNotif({ ...advancedNotif('Junior Software Engineer', 'DataTech Hungary Kft.', 'tech_interview'), daysAgo: 58 });
-  seedNotif({ ...proposedNotif('Junior Software Engineer', 'DataTech Hungary Kft.', 'tech_interview'), daysAgo: 57 });
-  seedNotif({ ...hiredNotif('Junior Software Engineer', 'DataTech Hungary Kft.'), daysAgo: 54 });
-
-  console.log('Seeded database with University of Debrecen, demo accounts, and jobs.');
+  if (hiredAppId) {
+    // Junior Software Engineer -> hired (mirrors the seedHire('Junior Software Engineer', 54) match above).
+    seedNotif({ ...aiReviewedNotif('Junior Software Engineer', 'DataTech Hungary Kft.'), daysAgo: 70 });
+    seedNotif({ ...advancedNotif('Junior Software Engineer', 'DataTech Hungary Kft.', 'hr_interview'), daysAgo: 65 });
+    seedNotif({ ...proposedNotif('Junior Software Engineer', 'DataTech Hungary Kft.', 'hr_interview'), daysAgo: 63 });
+    seedNotif({ ...advancedNotif('Junior Software Engineer', 'DataTech Hungary Kft.', 'tech_interview'), daysAgo: 58 });
+    seedNotif({ ...proposedNotif('Junior Software Engineer', 'DataTech Hungary Kft.', 'tech_interview'), daysAgo: 57 });
+    seedNotif({ ...hiredNotif('Junior Software Engineer', 'DataTech Hungary Kft.'), daysAgo: 54 });
+  }
 }
-seed();
+ensureDemoApplications();
 
 module.exports = db;
